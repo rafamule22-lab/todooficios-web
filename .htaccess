@@ -1,0 +1,16 @@
+DirectoryIndex index.html
+
+# Fuerza codificacion UTF-8 para evitar texto raro (acentos/mojibake)
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType text/html .html
+  AddCharset UTF-8 .html .css .js .json
+</IfModule>
+
+# Durante desarrollo, evita que el navegador muestre versiones antiguas
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>
