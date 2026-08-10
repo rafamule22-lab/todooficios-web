@@ -535,6 +535,67 @@ async function getAllProfessionals(){
   }
   return list;
 }
+
+function looksMojibake(text){
+  return /Ã|Â|â€”|â€“|â€|ðŸ|âœ|â†|├|┬/.test(text);
+}
+
+function fixMojibakeText(text){
+  if(typeof text !== 'string') return text;
+  if(!looksMojibake(text)) return text;
+  try{
+    const bytes = Uint8Array.from(Array.from(text).map(ch => ch.charCodeAt(0) & 0xFF));
+    const decoded = new TextDecoder('utf-8').decode(bytes);
+    return decoded || text;
+  }catch{
+    return text;
+  }
+}
+
+function fixMojibakeDeep(value){
+  if(Array.isArray(value)) return value.map(fixMojibakeDeep);
+  if(value && typeof value === 'object'){
+    const out = {};
+    for(const [k,v] of Object.entries(value)) out[k] = fixMojibakeDeep(v);
+    return out;
+  }
+  return fixMojibakeText(value);
+}
+
+async function migrateLegacyEncoding(){
+  const migrated = await safeGet('encoding-migrated-v1', true);
+  if(migrated) return;
+
+  const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+  for(const email of index){
+    const key = 'account:'+email;
+    const raw = await safeGet(key, true);
+    if(!raw) continue;
+    const original = JSON.parse(raw);
+    const fixed = fixMojibakeDeep(original);
+    if(JSON.stringify(original) !== JSON.stringify(fixed)){
+      await safeSet(key, JSON.stringify(fixed), true);
+    }
+  }
+
+  const ratingsRaw = await safeGet('ratings', true);
+  if(ratingsRaw){
+    const originalRatings = JSON.parse(ratingsRaw);
+    const fixedRatings = fixMojibakeDeep(originalRatings);
+    if(JSON.stringify(originalRatings) !== JSON.stringify(fixedRatings)){
+      await safeSet('ratings', JSON.stringify(fixedRatings), true);
+    }
+  }
+
+  const myClientName = await safeGet('my-client-name', false);
+  if(myClientName){
+    const fixedName = fixMojibakeText(myClientName);
+    if(fixedName !== myClientName) await safeSet('my-client-name', fixedName, false);
+  }
+
+  await safeSet('encoding-migrated-v1', 'true', true);
+}
+
 async function seedDemoIfNeeded(){
   const seeded = await safeGet('seeded-v2', true);
   if(seeded) return;
@@ -1192,6 +1253,7 @@ document.querySelectorAll('.nav-btn').forEach(b=>{
 
 /* ======================= INIT ======================= */
 async function init(){
+  await migrateLegacyEncoding();
   await seedDemoIfNeeded();
   await loadSession();
   setActiveNav('home');
