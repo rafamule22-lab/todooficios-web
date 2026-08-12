@@ -7,7 +7,7 @@ window.TODOOFICIOS_LEGAL = {
   telefono: "+34 910 00 00 00",
   paypalClientId: "PENDIENTE_PAYPAL_CLIENT_ID",
   supabaseUrl: "https://tvhyodvvvcowaeyoihgn.supabase.co",
-  supabaseAnonKey: "PENDIENTE_SUPABASE_ANON_KEY",
+  supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2aHlvZHZ2dmNvd2FleW9paGduIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0Njk3NTgsImV4cCI6MjEwMjA0NTc1OH0.tcrVgUxmjK9_VdVv7NNaTiafuyC2fkiBJ59SQmw0ukw",
   showLegalAlertInProduction: true,
   social: {
     instagram: "",
