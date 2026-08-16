@@ -505,8 +505,12 @@
     <h2 id="featuredModalTitle">Activar perfil destacado</h2>
     <p class="modal-info">Paga 19,90 € y tendrás 30 días de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.</p>
     <div class="featured-modal-info">Cuenta: <strong id="featuredModalEmail"></strong></div>
+    <div class="consent-row">
+      <input type="checkbox" id="featuredConsentCheck">
+      <label for="featuredConsentCheck">He leído y acepto las <button type="button" class="inline-link" data-legal-doc="venta">Condiciones de Venta</button> del perfil destacado, y solicito expresamente que el servicio comience de inmediato, renunciando a mi derecho de desistimiento de 14 días una vez completado el pago.</label>
+    </div>
     <div id="featured-paypal-btn"></div>
-    <div class="pay-status" id="featuredModalStatus">Usa PayPal para completar el pago.</div>
+    <div class="pay-status" id="featuredModalStatus">Marca la casilla anterior para continuar con el pago.</div>
     <div class="pay-actions">
       <button class="btn btn-secondary" id="featuredModalCancel" type="button">Cancelar</button>
     </div>
@@ -685,6 +689,7 @@
         <a href="aviso-legal.html" target="_blank" rel="noopener">Aviso Legal</a>
         <a href="politica-privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>
         <a href="politica-cookies.html" target="_blank" rel="noopener">Política de Cookies</a>
+        <a href="javascript:void(0)" data-legal-doc="venta">Condiciones de Venta</a>
       </div>
     </div>
     <div class="footer-bottom">© <span id="footerYear"></span> TodoOficios.es. Todos los derechos reservados.</div>
@@ -907,7 +912,7 @@ async function verifyPasswordRecord(record, password){
   return record.password === password;
 }
 function legalConsentCopy(){
-  return 'He leído y acepto el Aviso Legal, la Política de Privacidad y la Política de Cookies';
+  return 'Confirmo que soy mayor de 14 años y he leído y acepto el Aviso Legal, la Política de Privacidad y la Política de Cookies';
 }
 function normalizeOptionalUrl(value){
   const raw = (value || '').trim();
@@ -1082,6 +1087,30 @@ const LEGAL_DOCS = {
       </ul>
       <p>Al continuar usando la web y registrarte, aceptas este uso técnico del almacenamiento local.</p>
     `
+  },
+  venta: {
+    title: 'Condiciones de Venta — Perfil Destacado',
+    body: (()=>{
+      const legal = getLegalProfile();
+      return `
+      <p>Estas condiciones regulan la contratación del servicio de pago "Perfil destacado" en TodoOficios.es.</p>
+      <h3>Vendedor</h3>
+      <ul>
+        <li>${escapeHtml(legal.razonSocial)} — NIF/CIF: ${escapeHtml(legal.nifCif)}</li>
+        <li>Contacto: ${escapeHtml(legal.emailSoporte)}</li>
+      </ul>
+      <h3>Descripción del servicio</h3>
+      <p>Visibilidad prioritaria en resultados de búsqueda y posibilidad de subir hasta 10 fotos de trabajos, durante 30 días naturales desde su activación.</p>
+      <h3>Precio y forma de pago</h3>
+      <p>19,90 € por período de 30 días, impuestos incluidos según proceda. El pago se realiza a través de PayPal en el momento de la contratación. El servicio no se renueva automáticamente: debe activarse de nuevo manualmente al finalizar cada período.</p>
+      <h3>Derecho de desistimiento</h3>
+      <p>De acuerdo con el artículo 103.m del texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios, al marcar la casilla de aceptación el usuario solicita expresamente que la prestación del servicio comience de inmediato tras el pago, por lo que pierde su derecho de desistimiento de 14 días una vez el servicio haya comenzado a prestarse.</p>
+      <h3>Reembolsos</h3>
+      <p>No se realizan reembolsos por el período ya prestado, salvo error de cobro o incidencia técnica imputable a TodoOficios.es, que se resolverá contactando con ${escapeHtml(legal.emailSoporte)}.</p>
+      <h3>Facturación</h3>
+      <p>Puedes solicitar el justificante o factura correspondiente a tu pago escribiendo a ${escapeHtml(legal.emailSoporte)}.</p>
+      `;
+    })()
   }
 };
 
@@ -1500,7 +1529,7 @@ function bindClient(){
           return;
         }
         if(!consent || !consent.checked){
-          msgBox.innerHTML = '<div class="msg err">Debes aceptar el aviso legal, privacidad y cookies para crear la cuenta.</div>';
+          msgBox.innerHTML = '<div class="msg err">Debes confirmar que eres mayor de 14 años y aceptar el aviso legal, privacidad y cookies para crear la cuenta.</div>';
           return;
         }
         const existing = await getClientByEmail(email);
@@ -1628,7 +1657,7 @@ function bindCourseProviderSignup(){
     }
     const legalAccepted = document.getElementById('cp-legal-check')?.checked;
     if(!legalAccepted){
-      msgBox.innerHTML = '<div class="msg err">Debes aceptar el aviso legal, privacidad y cookies.</div>';
+      msgBox.innerHTML = '<div class="msg err">Debes confirmar que eres mayor de 14 años y aceptar el aviso legal, privacidad y cookies.</div>';
       return;
     }
     if(website){
@@ -2035,7 +2064,7 @@ function bindPro(){
         return;
       }
       if(!document.getElementById('rg-legal-check')?.checked){
-        msgBox.innerHTML = '<div class="msg err">Debes aceptar el aviso legal, privacidad y cookies para registrarte.</div>';
+        msgBox.innerHTML = '<div class="msg err">Debes confirmar que eres mayor de 14 años y aceptar el aviso legal, privacidad y cookies para registrarte.</div>';
         return;
       }
       if(email !== emailConfirm){
@@ -2515,6 +2544,7 @@ drawerBackdrop?.addEventListener('click', toggleDrawer);
 featuredModalClose?.addEventListener('click', closeFeaturedModal);
 featuredModalCancel?.addEventListener('click', closeFeaturedModal);
 featuredModalBackdrop?.addEventListener('click', (e)=>{ if(e.target === featuredModalBackdrop) closeFeaturedModal(); });
+document.getElementById('featuredConsentCheck')?.addEventListener('change', handleFeaturedConsentChange);
 legalModalClose?.addEventListener('click', closeLegalModal);
 legalModalBackdrop?.addEventListener('click', (e)=>{ if(e.target === legalModalBackdrop) closeLegalModal(); });
 
@@ -2549,18 +2579,33 @@ async function openFeaturedModal(email){
   if(!email){ showToast('Debes indicar un email válido.'); return; }
   pendingFeaturedEmail = email;
   document.getElementById('featuredModalEmail').textContent = email;
-  document.getElementById('featuredModalStatus').textContent = 'Cargando botón de pago...';
+  const consentCheck = document.getElementById('featuredConsentCheck');
+  if(consentCheck) consentCheck.checked = false;
+  document.getElementById('featured-paypal-btn').innerHTML = '';
+  document.getElementById('featuredModalStatus').textContent = 'Marca la casilla anterior para continuar con el pago.';
   featuredModalBackdrop?.classList.add('show');
-  const loaded = await loadPaypalSdk();
-  if(!loaded){
-    document.getElementById('featuredModalStatus').textContent = 'Pago no disponible: configura un PayPal Client ID real en legal-config.js.';
-    return;
-  }
-  renderFeaturedPaypalButtons();
+  await loadPaypalSdk();
 }
 
 function closeFeaturedModal(){
   featuredModalBackdrop?.classList.remove('show');
+}
+
+async function handleFeaturedConsentChange(){
+  const status = document.getElementById('featuredModalStatus');
+  const consentCheck = document.getElementById('featuredConsentCheck');
+  if(!consentCheck?.checked){
+    document.getElementById('featured-paypal-btn').innerHTML = '';
+    status.textContent = 'Marca la casilla anterior para continuar con el pago.';
+    return;
+  }
+  status.textContent = 'Cargando botón de pago...';
+  const loaded = await loadPaypalSdk();
+  if(!loaded){
+    status.textContent = 'Pago no disponible: configura un PayPal Client ID real en legal-config.js.';
+    return;
+  }
+  renderFeaturedPaypalButtons();
 }
 
 async function markFeaturedAccount(email){
@@ -2579,6 +2624,10 @@ function renderFeaturedPaypalButtons(){
   const status = document.getElementById('featuredModalStatus');
   if(!container){ return; }
   container.innerHTML = '';
+  if(!document.getElementById('featuredConsentCheck')?.checked){
+    status.textContent = 'Marca la casilla anterior para continuar con el pago.';
+    return;
+  }
   if(!canUsePaypalClientId(paypalClientId())){
     status.textContent = 'Falta configurar PayPal en producción. Edita paypalClientId en legal-config.js.';
     return;
