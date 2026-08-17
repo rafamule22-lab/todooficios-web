@@ -966,6 +966,7 @@ function getLegalProfile(){
     razonSocial: cfg.razonSocial || 'PENDIENTE_RAZON_SOCIAL',
     nifCif: cfg.nifCif || 'PENDIENTE_NIF_CIF',
     domicilio: cfg.domicilio || 'PENDIENTE_DOMICILIO_FISCAL',
+    inscripcionRegistral: cfg.inscripcionRegistral || '',
     emailContacto: cfg.emailContacto || 'contacto@todooficios.es',
     emailSoporte: cfg.emailSoporte || 'soporte@todooficios.es',
     telefono: cfg.telefono || '+34 910 00 00 00',
@@ -1048,8 +1049,19 @@ const LEGAL_DOCS = {
         <li>NIF/CIF: ${escapeHtml(legal.nifCif)}</li>
         <li>Domicilio: ${escapeHtml(legal.domicilio)}</li>
         <li>Email: ${escapeHtml(legal.emailContacto)}</li>
+        ${legal.inscripcionRegistral ? `<li>Inscripción registral: ${escapeHtml(legal.inscripcionRegistral)}</li>` : ''}
       </ul>
+      <h3>Objeto y actividad</h3>
+      <p>TodoOficios.es es una plataforma de intermediación que pone en contacto a particulares que buscan un servicio con profesionales de distintos oficios, permitiendo publicar perfiles, dejar valoraciones y, de forma opcional, contratar un servicio de visibilidad destacada de pago.</p>
+      <h3>Papel de intermediario y responsabilidad</h3>
+      <p>TodoOficios.es actúa como intermediario tecnológico entre clientes y profesionales. No es parte del contrato de prestación de servicios que se formalice entre ambos, no verifica la cualificación profesional, seguros, licencias ni solvencia de los profesionales listados, y no garantiza la calidad, plazos, precio ni resultado de los trabajos realizados. El usuario contrata directamente con el profesional y bajo su propia responsabilidad.</p>
       <p>El usuario se compromete a hacer un uso adecuado del sitio y de sus contenidos, de conformidad con la legislación aplicable.</p>
+      <h3>Enlaces a terceros</h3>
+      <p>El sitio puede mostrar enlaces a redes sociales o páginas web de terceros facilitados voluntariamente por los usuarios. TodoOficios.es no controla ni se responsabiliza del contenido de dichos sitios externos.</p>
+      <h3>Disponibilidad del servicio</h3>
+      <p>TodoOficios.es no garantiza la disponibilidad permanente del sitio ni se responsabiliza de daños derivados de interrupciones, errores técnicos o uso indebido por parte de usuarios.</p>
+      <h3>Legislación aplicable y resolución de conflictos</h3>
+      <p>Estas condiciones se rigen por la legislación española, sin perjuicio del derecho de los consumidores a acudir a los tribunales de su propio domicilio (art. 90 del texto refundido de la Ley General para la Defensa de los Consumidores y Usuarios). Los consumidores de la Unión Europea también pueden acceder a la plataforma de resolución de litigios en línea de la Comisión Europea: <a href="https://ec.europa.eu/consumers/odr" target="_blank" rel="noopener">ec.europa.eu/consumers/odr</a>.</p>
       `;
     })()
   },
@@ -1104,12 +1116,18 @@ const LEGAL_DOCS = {
     title: 'Política de Cookies y almacenamiento local',
     body: `
       <p>Este sitio utiliza tecnologías de almacenamiento en el dispositivo (como localStorage y service worker) para recordar sesión, preferencias y datos necesarios para el funcionamiento.</p>
+      <h3>Base legal</h3>
+      <p>Al tratarse de almacenamiento estrictamente necesario para prestar el servicio solicitado por el propio usuario (iniciar sesión, mantener el perfil activo), está exento del deber de solicitar consentimiento previo conforme al art. 22.2 de la LSSI-CE. No se utilizan cookies de publicidad ni de seguimiento entre sitios.</p>
       <h3>Tipos de almacenamiento usados</h3>
       <ul>
         <li>Técnico/funcional: necesario para login, perfiles y funcionamiento básico.</li>
         <li>Persistencia local: datos de cuenta y estado de navegación en el navegador del usuario.</li>
         <li>Servicios de terceros bajo acción del usuario: el SDK de PayPal solo se carga cuando el usuario abre el flujo de pago destacado.</li>
       </ul>
+      <h3>Duración</h3>
+      <p>Estos datos permanecen guardados en el navegador hasta que el usuario cierra sesión o borra manualmente los datos de navegación; no se establece una caducidad automática.</p>
+      <h3>Gestión por el usuario</h3>
+      <p>Puedes eliminar estos datos desde la configuración de tu navegador en cualquier momento, lo que puede afectar al funcionamiento de ciertas funciones del sitio.</p>
       <p>Al continuar usando la web y registrarte, aceptas este uso técnico del almacenamiento local.</p>
     `
   },

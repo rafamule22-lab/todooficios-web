@@ -2,6 +2,8 @@ window.TODOOFICIOS_LEGAL = {
   razonSocial: "PENDIENTE_RAZON_SOCIAL",
   nifCif: "PENDIENTE_NIF_CIF",
   domicilio: "PENDIENTE_DOMICILIO_FISCAL",
+  // Solo obligatorio si el titular es una sociedad mercantil (tomo, folio, hoja e inscripción en el Registro Mercantil). Déjalo vacío si operas como autónomo.
+  inscripcionRegistral: "",
   emailContacto: "contacto@todooficios.es",
   emailSoporte: "soporte@todooficios.es",
   telefono: "+34 910 00 00 00",
