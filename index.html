@@ -1059,19 +1059,44 @@ const LEGAL_DOCS = {
       const legal = getLegalProfile();
       return `
       <p>En TodoOficios.es tratamos datos personales para facilitar el contacto entre clientes y profesionales.</p>
+      <h3>Responsable del tratamiento</h3>
+      <ul>
+        <li>Responsable: ${escapeHtml(legal.razonSocial)} — NIF/CIF: ${escapeHtml(legal.nifCif)}</li>
+        <li>Domicilio: ${escapeHtml(legal.domicilio)}</li>
+        <li>Contacto: ${escapeHtml(legal.emailSoporte)}</li>
+      </ul>
       <h3>Datos tratados</h3>
       <ul>
         <li>Identificación y contacto: nombre, email y teléfono.</li>
-        <li>Ubicación aproximada (si el usuario la comparte voluntariamente).</li>
+        <li>Ubicación geográfica (solo si el usuario pulsa "Compartir mi ubicación"; es opcional y revocable).</li>
         <li>Contenido aportado por el usuario: foto de perfil, fotos de trabajos, mensajes y reseñas.</li>
+        <li>Datos de pago: al activar el perfil destacado, PayPal procesa los datos de pago y facturación directamente; TodoOficios.es no almacena datos de tarjeta.</li>
       </ul>
       <h3>Finalidad y base jurídica</h3>
       <ul>
         <li>Gestión de cuentas y prestación del servicio: ejecución de la relación contractual.</li>
         <li>Atención de consultas: interés legítimo y/o consentimiento.</li>
+        <li>Procesamiento de pagos del perfil destacado: ejecución del contrato de compraventa del servicio.</li>
       </ul>
+      <h3>Plazo de conservación</h3>
+      <p>Los datos se conservan mientras la cuenta permanezca activa. Si el usuario solicita la baja, se eliminan en un plazo máximo de 30 días, salvo los datos que deban conservarse por obligación legal (por ejemplo, los relativos a facturación, sujetos a los plazos mínimos de conservación fiscal).</p>
+      <h3>Destinatarios y encargados del tratamiento</h3>
+      <p>No cedemos datos a terceros con fines comerciales. Para prestar el servicio, recurrimos a los siguientes encargados de tratamiento:</p>
+      <ul>
+        <li><strong>Supabase</strong>: aloja en la nube la base de datos de cuentas, mensajes y valoraciones.</li>
+        <li><strong>PayPal</strong>: procesa los pagos del perfil destacado y los datos de facturación asociados.</li>
+        <li><strong>Google Fonts</strong>: sirve las tipografías web del sitio; al cargarlas, el navegador del usuario realiza una petición técnica a los servidores de Google (dirección IP).</li>
+      </ul>
+      <h3>Transferencias internacionales</h3>
+      <p>Algunos de estos proveedores (Supabase, PayPal) pueden alojar o procesar datos en servidores ubicados fuera del Espacio Económico Europeo. En esos casos, la transferencia se realiza bajo las garantías previstas por el RGPD (cláusulas contractuales tipo u otro mecanismo de adecuación reconocido).</p>
+      <h3>Medidas de seguridad</h3>
+      <p>Las contraseñas nunca se almacenan en texto plano: se guardan cifradas mediante hash con sal (SHA-256). Las comunicaciones con el sitio viajan cifradas (HTTPS) y el acceso a la base de datos está restringido.</p>
+      <h3>Contenido visible para otros usuarios</h3>
+      <p>Las fotos de perfil y de trabajos, la descripción, la valoración y las reseñas son visibles públicamente en el sitio. Los mensajes de contacto que envíes llegan directamente al profesional o cliente destinatario.</p>
+      <h3>Menores de edad</h3>
+      <p>Este servicio no está dirigido a menores de 14 años y no se ofrece a menores de esa edad sin el consentimiento de sus tutores legales. Si detectamos una cuenta de un menor no autorizado, será eliminada.</p>
       <h3>Derechos</h3>
-      <p>Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a ${escapeHtml(legal.emailSoporte)}.</p>
+      <p>Puedes ejercer tus derechos de acceso, rectificación, supresión, oposición, limitación y portabilidad escribiendo a ${escapeHtml(legal.emailSoporte)}. Si consideras que el tratamiento de tus datos no se ajusta a la normativa, también puedes presentar una reclamación ante la Agencia Española de Protección de Datos (<a href="https://www.aepd.es" target="_blank" rel="noopener">www.aepd.es</a>).</p>
       `;
     })()
   },
