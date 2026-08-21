@@ -458,6 +458,21 @@
   }
   .legal-alert.show{display:block;}
 
+  .promo-banner{
+    max-width:920px;
+    margin:14px auto 0;
+    padding:14px 18px;
+    border:1px solid var(--amber-deep);
+    background:#fff8e0;
+    color:var(--ink);
+    border-radius:12px;
+    font-size:14px;
+    line-height:1.5;
+    text-align:center;
+  }
+  .promo-banner strong{color:var(--amber-deep);}
+  .promo-banner.promo-banner-inline{margin:0 0 18px;}
+
   .legal-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.52); z-index:130; display:none; align-items:center; justify-content:center; padding:18px;}
   .legal-modal-backdrop.show{display:flex;}
   .legal-modal{width:min(760px,100%); max-height:88vh; overflow:auto; background:#fff; color:var(--ink); border-radius:14px; padding:24px; position:relative; box-shadow:0 22px 64px rgba(0,0,0,0.28);}
@@ -583,6 +598,8 @@
         <button class="btn btn-outline" data-view="buscar">Busco un profesional</button>
       </div>
     </div>
+
+    <div class="promo-banner">🎉 <strong>Lanzamiento:</strong> los primeros 300 profesionales que se registren obtienen <strong>6 meses gratis</strong> de la versión Premium (más visibilidad y hasta 10 fotos de trabajos). Pasado ese tiempo, Premium cuesta 19,90 €, pero siempre puedes seguir con el <strong>plan gratuito para siempre</strong>.</div>
 
     <div class="section-label" style="font-size:13px; text-align:center;">Servicios destacados</div>
     <div class="trades-strip" style="margin: 0 auto 24px auto; justify-content:center; width:fit-content; max-width:100%;">
@@ -1218,6 +1235,23 @@ let activeGroupFilter = null;
 let proAuthMode = 'registro'; // 'registro' | 'login', solo aplica si no hay sesión profesional
 let clientAuthMode = 'registro';
 
+/* ======================= PROMOCIÓN DE LANZAMIENTO ======================= */
+const PAYMENTS_ENABLED = false; // Oculta el cobro real (PayPal) hasta activar la pasarela en producción
+const PROMO_FREE_PRO_LIMIT = 300;
+const PROMO_PREMIUM_MONTHS = 6;
+const PROMO_MONTH_MS = 30*24*60*60*1000;
+const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
+
+async function claimLaunchPromoSlot(){
+  if(!PROMO_ACTIVE) return { granted:false, slot:null };
+  const raw = await safeGet('promo-pro-signups', true);
+  const current = parseInt(raw || '0', 10) || 0;
+  if(current >= PROMO_FREE_PRO_LIMIT) return { granted:false, slot:null };
+  const saved = await safeSet('promo-pro-signups', String(current+1), true);
+  if(!saved) return { granted:false, slot:null };
+  return { granted:true, slot: current+1 };
+}
+
 async function loadSession(){
   const email = await safeGet('session-email', false);
   if(email){
@@ -1329,6 +1363,7 @@ async function renderPro(){
   <div class="panel">
     <div id="proMsg"></div>
     ${proAuthMode === 'registro' ? `
+      <div class="promo-banner promo-banner-inline">🎉 Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales que se registren obtienen <strong>${PROMO_PREMIUM_MONTHS} meses gratis</strong> del plan Premium (más visibilidad y hasta 10 fotos). Se activa automáticamente al crear tu cuenta.</div>
       <div class="field"><label>Nombre de la empresa</label><input type="text" id="rg-name" placeholder="Ej. Empresa SL"></div>
       <div class="field">
         <label>Foto de perfil (opcional)</label>
@@ -1370,7 +1405,7 @@ async function renderPro(){
             </button>
           </div>`).join('')}
         </div>
-        <div class="note">Para subir hasta 10 fotos, activa el perfil destacado después de registrarte. <a href="javascript:void(0)" id="rg-featured-link">Ir a destacar mi perfil</a></div>
+        <div class="note">${PROMO_ACTIVE ? `Podrás subir hasta 10 fotos si eres uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte (Premium gratis ${PROMO_PREMIUM_MONTHS} meses).` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>
       </div>
       <div class="field">
         <button type="button" class="btn btn-outline btn-sm" id="rg-locBtn">📍 Compartir mi ubicación</button>
@@ -1690,6 +1725,22 @@ function bindCourseProviderSignup(){
   };
 }
 
+function renderPremiumPanelBody(account){
+  const isPremiumActive = account.featuredUntil && account.featuredUntil > Date.now();
+  if(isPremiumActive){
+    const untilDate = new Date(account.featuredUntil).toLocaleDateString('es-ES');
+    const promoNote = account.premiumPromo ? ` Lo conseguiste gratis por ser uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte.` : '';
+    return `
+    <p>Tu Premium está activo hasta <strong>${untilDate}</strong>.${promoNote} Incluye mejor posicionamiento en búsquedas y hasta 10 fotos de trabajos.</p>
+    <p class="note">${PAYMENTS_ENABLED ? 'Al finalizar podrás renovarlo por 19,90 €.' : 'Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (19,90 €) estará disponible próximamente.'}</p>
+    ${PAYMENTS_ENABLED ? `<div class="field-row"><button class="btn btn-amber" id="dash-featured-btn">Renovar Premium — 19,90 €</button></div>` : ''}`;
+  }
+  return `
+    <p>El plan gratuito de TodoOficios.es es <strong>gratis para siempre</strong>: tu ficha sigue visible sin coste.</p>
+    <p class="note">${PAYMENTS_ENABLED ? 'Activa Premium por 19,90 € y mejora tu visibilidad.' : `Muy pronto podrás activar Premium (19,90 €) para mayor visibilidad y hasta 10 fotos. Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados lo reciben gratis ${PROMO_PREMIUM_MONTHS} meses.`}</p>
+    ${PAYMENTS_ENABLED ? `<div class="field-row"><button class="btn btn-amber" id="dash-featured-btn">Activar Premium — 19,90 €</button></div>` : ''}`;
+}
+
 function renderDashboard(){
   const stats = ratingStats(account.email, RATINGS);
   return `
@@ -1737,7 +1788,7 @@ function renderDashboard(){
           </div>`;
         }).join('')}
       </div>
-      ${account.featuredUntil && account.featuredUntil > Date.now() ? '' : `<div class="note">Contrata el perfil destacado para subir hasta 10 fotos. <a href="javascript:void(0)" id="dash-featured-link">Ir a destacar mi perfil</a></div>`}
+      ${account.featuredUntil && account.featuredUntil > Date.now() ? '' : `<div class="note">${PAYMENTS_ENABLED ? `Contrata el plan Premium para subir hasta 10 fotos. <a href="javascript:void(0)" id="dash-featured-link">Ir a Premium</a>` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>`}
     </div>
     <div class="field">
       <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">📍 ${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
@@ -1766,12 +1817,8 @@ function renderDashboard(){
     <div id="pro-message-list">Cargando mensajes...</div>
   </div>
   <div class="panel">
-    <div class="section-label">Suscripción destacada</div>
-    <p>${account.featuredUntil && account.featuredUntil > Date.now() ? `Tu destaque está activo hasta ${new Date(account.featuredUntil).toLocaleDateString('es-ES')}.` : 'Activa esta suscripción y mejora tu visibilidad en búsquedas cercanas.'}</p>
-    <div class="field-row">
-      <button class="btn btn-amber" id="dash-featured-btn">${account.featuredUntil && account.featuredUntil > Date.now() ? 'Renovar destacado — 19,90 €' : 'Activar destacado — 19,90 €'}</button>
-    </div>
-    <p class="note">Pago real a través de PayPal. La suscripción dura 30 días y permite mayor visibilidad y hasta 10 fotos de trabajos.</p>
+    <div class="section-label">Plan Premium</div>
+    ${renderPremiumPanelBody(account)}
   </div>`;
 }
 
@@ -1903,9 +1950,12 @@ function bindPro(){
       document.getElementById('dash-course-url').value = '';
     };
 
-    document.getElementById('dash-featured-btn').onclick = async ()=>{
-      openFeaturedModal(account.email);
-    };
+    const dashFeaturedBtn = document.getElementById('dash-featured-btn');
+    if(dashFeaturedBtn){
+      dashFeaturedBtn.onclick = async ()=>{
+        openFeaturedModal(account.email);
+      };
+    }
     const dashFeaturedLink = document.getElementById('dash-featured-link');
     if(dashFeaturedLink){
       dashFeaturedLink.onclick = ()=> openFeaturedModal(account.email);
@@ -2057,6 +2107,7 @@ function bindPro(){
         return;
       }
 
+      const promo = await claimLaunchPromoSlot();
       const pw = await buildPasswordRecord(password);
       const newAccount = {
         name,
@@ -2076,7 +2127,10 @@ function bindPro(){
         verificado: false,
         legalAcceptedAt: Date.now(),
         contactVerified: false,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        featuredUntil: promo.granted ? Date.now() + PROMO_PREMIUM_MONTHS*PROMO_MONTH_MS : null,
+        premiumPromo: promo.granted,
+        premiumPromoSlot: promo.granted ? promo.slot : null
       };
 
       const savedAccount = await safeSet('account:'+email, JSON.stringify(newAccount), true);
@@ -2099,21 +2153,12 @@ function bindPro(){
 
       session = {email};
       account = newAccount;
-      showToast('¡Cuenta creada! Ya estás publicado en TodoOficios.es.');
+      showToast(promo.granted
+        ? `¡Cuenta creada! Ganaste ${PROMO_PREMIUM_MONTHS} meses de Premium gratis por ser de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados.`
+        : '¡Cuenta creada! Ya estás publicado en TodoOficios.es.');
       showView('pro');
     };
 
-    const featuredLink = document.getElementById('rg-featured-link');
-    if(featuredLink){
-      featuredLink.onclick = () => {
-        const email = document.getElementById('rg-email').value.trim().toLowerCase();
-        if(!email){
-          showToast('Ingresa tu email antes de ir a activar el perfil destacado.');
-          return;
-        }
-        openFeaturedModal(email);
-      };
-    }
   } else {
     document.getElementById('lg-submit').onclick = async ()=>{
       const email = document.getElementById('lg-email').value.trim().toLowerCase();
