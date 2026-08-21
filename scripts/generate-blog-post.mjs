@@ -33,7 +33,9 @@ function slugify(text) {
 }
 
 function requireEnv(name) {
-  const v = process.env[name];
+  // .trim() por si el secret se pegó con un espacio o salto de línea de más
+  // (causa típica de "invalid header value" al construir la petición HTTP).
+  const v = (process.env[name] || '').trim();
   if (!v) throw new Error(`Falta la variable de entorno "${name}"`);
   return v;
 }
