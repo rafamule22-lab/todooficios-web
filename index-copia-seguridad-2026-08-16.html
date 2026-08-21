@@ -121,12 +121,131 @@
     color:var(--paper-light); padding:9px 14px; border-radius:7px;
     font-size:13.5px; font-weight:500; transition:.15s;
   }
-  .nav-btn:hover{background:rgba(247,245,240,0.1);}
-
+  .nav-btn:hover{background:rgba(247,245,240,0.1);}  
   .nav-menu-toggle{
     display:inline-flex; align-items:center;
     background:transparent; border:1px solid rgba(247,245,240,0.25); color:var(--paper-light);
     padding:9px 14px; border-radius:7px; font-size:13.5px; font-weight:600;
+  }
+  .mason-mascot{
+    display:inline-block; flex-shrink:0;
+    width:155px; height:56px; margin-left:8px;
+    overflow:hidden; position:relative; vertical-align:middle;
+  }
+  .mason-mascot svg{width:100%; height:100%; display:block;}
+  .mason-walker{animation:walker-move 8s linear 1 forwards;}
+  .mason-facing{transform-origin:8px 16px; animation:walker-facing 8s linear 1 forwards;}
+  .mason-thigh-back{transform-box:fill-box; transform-origin:50% 0%; animation:leg-back-thigh 8s linear 1 forwards;}
+  .mason-thigh-front{transform-box:fill-box; transform-origin:50% 0%; animation:leg-front-thigh 8s linear 1 forwards;}
+  .mason-arm-brick{transform-origin:13.1px 13.3px; animation:arm-brick-move 8s linear 1 forwards;}
+  .mason-arm-tool{transform-origin:2.9px 13.3px; animation:arm-tool-tap 8s linear 1 forwards;}
+  .mason-brick-new{animation:brick-appear 8s linear 1 forwards;}
+  .mason-hand-brick{animation:hand-brick-fade 8s linear 1 forwards;}
+  .mason-ground-brick1{animation:ground-brick1-fade 8s linear 1 forwards;}
+  @keyframes walker-move{
+    0%{transform:translate(-25px,0);}
+    25%{transform:translate(42px,0);}
+    47%{transform:translate(42px,0);}
+    72%{transform:translate(-25px,0);}
+    100%{transform:translate(-25px,0);}
+  }
+  @keyframes walker-facing{
+    0%,45%{transform:scaleX(1);}
+    46%{transform:scaleX(0.05);}
+    47%,100%{transform:scaleX(-1);}
+  }
+  @keyframes leg-back-thigh{
+    0%{transform:rotate(-18deg);} 6%{transform:rotate(18deg);} 12%{transform:rotate(-18deg);} 18%{transform:rotate(14deg);}
+    25%,47%{transform:rotate(0deg);}
+    53%{transform:rotate(-18deg);} 59%{transform:rotate(18deg);} 65%{transform:rotate(-14deg);} 71%{transform:rotate(10deg);}
+    72%,100%{transform:rotate(0deg);}
+  }
+  @keyframes leg-front-thigh{
+    0%{transform:rotate(18deg);} 6%{transform:rotate(-18deg);} 12%{transform:rotate(18deg);} 18%{transform:rotate(-14deg);}
+    25%,47%{transform:rotate(0deg);}
+    53%{transform:rotate(18deg);} 59%{transform:rotate(-18deg);} 65%{transform:rotate(14deg);} 71%{transform:rotate(-10deg);}
+    72%,100%{transform:rotate(0deg);}
+  }
+  @keyframes arm-brick-move{
+    0%{transform:rotate(-20deg);} 6%{transform:rotate(20deg);} 12%{transform:rotate(-20deg);} 18%{transform:rotate(20deg);} 24%{transform:rotate(-16deg);} 25%{transform:rotate(0deg);}
+    28%{transform:rotate(0deg);}
+    38%{transform:rotate(-30deg);} 44%{transform:rotate(-30deg);}
+    47%{transform:rotate(0deg);}
+    53%{transform:rotate(20deg);} 59%{transform:rotate(-20deg);} 65%{transform:rotate(20deg);} 71%{transform:rotate(-16deg);} 72%{transform:rotate(0deg);}
+    100%{transform:rotate(0deg);}
+  }
+  @keyframes arm-tool-tap{
+    0%{transform:rotate(20deg);} 6%{transform:rotate(-20deg);} 12%{transform:rotate(20deg);} 18%{transform:rotate(-20deg);} 24%{transform:rotate(16deg);} 25%{transform:rotate(0deg);}
+    39%{transform:rotate(0deg);} 42%{transform:rotate(-58deg);} 44%{transform:rotate(-10deg);}
+    46%{transform:rotate(-58deg);} 47%{transform:rotate(0deg);}
+    53%{transform:rotate(-20deg);} 59%{transform:rotate(20deg);} 65%{transform:rotate(-20deg);} 71%{transform:rotate(16deg);} 72%{transform:rotate(0deg);}
+    100%{transform:rotate(0deg);}
+  }
+  @keyframes arm-brick-offset{
+    0%,24%{transform:translateX(6px);} 25%,46%{transform:translateX(0px);}
+    47%,71%{transform:translateX(6px);} 72%,100%{transform:translateX(0px);}
+  }
+  @keyframes arm-tool-offset{
+    0%,24%{transform:translateX(-6px);} 25%,46%{transform:translateX(0px);}
+    47%,71%{transform:translateX(-6px);} 72%,100%{transform:translateX(0px);}
+  }
+  @keyframes brick-appear{0%,37%{opacity:0;} 40%{opacity:1;} 100%{opacity:1;}}
+  @keyframes hand-brick-fade{0%,29%{opacity:0;} 31%{opacity:1;} 37%{opacity:1;} 39%{opacity:0;} 100%{opacity:0;}}
+  @keyframes ground-brick1-fade{0%,29%{opacity:1;} 31%{opacity:0;} 100%{opacity:0;}}
+  .mason-walker2{animation:walker2-move 8s linear 1 both; animation-delay:4.2s;}
+  .mason-facing2{}
+  .mason-thigh-back2{transform-box:fill-box; transform-origin:50% 0%; animation:leg-back-thigh3 8s linear 1 both; animation-delay:4.2s;}
+  .mason-thigh-front2{transform-box:fill-box; transform-origin:50% 0%; animation:leg-front-thigh3 8s linear 1 both; animation-delay:4.2s;}
+  .mason-arm-bulb{transform-origin:2.9px 13.3px; animation:arm-bulb-twist 8s linear 1 both; animation-delay:4.2s;}
+  .mason-arm-idle2{transform-origin:13.1px 13.3px; animation:arm-idle2-swing 8s linear 1 both; animation-delay:4.2s;}
+  .mason-hand-bulb{animation:hand-bulb-fade 8s linear 1 both; animation-delay:4.2s;}
+  .mason-socket-bulb{animation:socket-bulb-fade 8s linear 1 both; animation-delay:4.2s;}
+  .mason-bulb-glow{animation:bulb-glow-flash 8s linear 1 both; animation-delay:4.2s;}
+  @keyframes walker2-move{
+    0%{transform:translate(175px,0);}
+    42%{transform:translate(75px,0);}
+    57%{transform:translate(75px,0);}
+    93%{transform:translate(-25px,0);}
+    100%{transform:translate(-25px,0);}
+  }
+  @keyframes leg-back-thigh3{
+    0%{transform:rotate(-18deg);} 6%{transform:rotate(18deg);} 12%{transform:rotate(-18deg);} 18%{transform:rotate(18deg);} 24%{transform:rotate(-18deg);} 30%{transform:rotate(18deg);} 36%{transform:rotate(-14deg);}
+    42%,57%{transform:rotate(0deg);}
+    63%{transform:rotate(-18deg);} 69%{transform:rotate(18deg);} 75%{transform:rotate(-18deg);} 81%{transform:rotate(18deg);} 87%{transform:rotate(-14deg);}
+    93%,100%{transform:rotate(0deg);}
+  }
+  @keyframes leg-front-thigh3{
+    0%{transform:rotate(18deg);} 6%{transform:rotate(-18deg);} 12%{transform:rotate(18deg);} 18%{transform:rotate(-18deg);} 24%{transform:rotate(18deg);} 30%{transform:rotate(-18deg);} 36%{transform:rotate(14deg);}
+    42%,57%{transform:rotate(0deg);}
+    63%{transform:rotate(18deg);} 69%{transform:rotate(-18deg);} 75%{transform:rotate(18deg);} 81%{transform:rotate(-18deg);} 87%{transform:rotate(14deg);}
+    93%,100%{transform:rotate(0deg);}
+  }
+  @keyframes arm-bulb-twist{
+    0%{transform:rotate(-20deg);} 6%{transform:rotate(20deg);} 12%{transform:rotate(-20deg);} 18%{transform:rotate(20deg);} 24%{transform:rotate(-20deg);} 30%{transform:rotate(20deg);} 36%{transform:rotate(-16deg);} 42%{transform:rotate(0deg);}
+    44%{transform:rotate(0deg);}
+    47%{transform:rotate(142deg);} 50%{transform:rotate(130deg);} 53%{transform:rotate(142deg);} 56%{transform:rotate(0deg);}
+    63%{transform:rotate(-20deg);} 69%{transform:rotate(20deg);} 75%{transform:rotate(-20deg);} 81%{transform:rotate(20deg);} 87%{transform:rotate(-16deg);} 93%{transform:rotate(0deg);}
+    100%{transform:rotate(0deg);}
+  }
+  @keyframes arm-idle2-swing{
+    0%{transform:rotate(20deg);} 6%{transform:rotate(-20deg);} 12%{transform:rotate(20deg);} 18%{transform:rotate(-20deg);} 24%{transform:rotate(20deg);} 30%{transform:rotate(-20deg);} 36%{transform:rotate(16deg);} 42%,57%{transform:rotate(0deg);}
+    63%{transform:rotate(20deg);} 69%{transform:rotate(-20deg);} 75%{transform:rotate(20deg);} 81%{transform:rotate(-20deg);} 87%{transform:rotate(16deg);} 93%,100%{transform:rotate(0deg);}
+  }
+  @keyframes hand-bulb-fade{0%,45%{opacity:1;} 47%{opacity:0;} 100%{opacity:0;}}
+  @keyframes socket-bulb-fade{0%,46%{opacity:0;} 48%{opacity:1;} 100%{opacity:1;}}
+  @keyframes bulb-glow-flash{0%,47%{opacity:0;} 50%{opacity:0.55;} 55%{opacity:0;} 100%{opacity:0;}}
+  @media (max-width:480px){.mason-mascot{display:none;}}
+  @media (prefers-reduced-motion: reduce){
+    .mason-walker, .mason-facing, .mason-thigh-back, .mason-thigh-front, .mason-arm-brick, .mason-arm-tool, .mason-brick-new, .mason-hand-brick, .mason-ground-brick1,
+    .mason-walker2, .mason-facing2, .mason-thigh-back2, .mason-thigh-front2, .mason-arm-bulb, .mason-arm-idle2, .mason-hand-bulb, .mason-socket-bulb, .mason-bulb-glow{animation:none;}
+    .mason-walker{transform:translate(42px,0);}
+    .mason-brick-new{opacity:1;}
+    .mason-hand-brick{opacity:0;}
+    .mason-ground-brick1{opacity:1;}
+    .mason-walker2{transform:translate(-25px,0);}
+    .mason-socket-bulb{opacity:1;}
+    .mason-hand-bulb{opacity:0;}
+    .mason-bulb-glow{opacity:0;}
   }
   .side-drawer{
     position:fixed; top:0; left:0; width:min(320px, 88vw); height:100%;
@@ -200,6 +319,11 @@
   .btn-sm{padding:9px 14px; font-size:13px; border-radius:7px;}
   .btn-block{width:100%; justify-content:center;}
   .btn[disabled]{opacity:.5; cursor:default;}
+  .btn-google{background:#fff; border:1.5px solid var(--line); color:var(--ink); justify-content:center;}
+  .btn-google:hover{background:#f7f7f5;}
+  .btn-google svg{width:18px; height:18px; flex-shrink:0;}
+  .auth-divider{display:flex; align-items:center; gap:12px; margin:18px 0; color:var(--ink-soft); font-size:13px;}
+  .auth-divider::before, .auth-divider::after{content:''; flex:1; height:1px; background:var(--line);}
 
   .trades-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; justify-content:center; max-width:760px; margin-left:auto; margin-right:auto;}
   .trade-chip{
@@ -390,6 +514,13 @@
   .review-name{font-weight:600;}
   .review-date{opacity:0.5; font-family:'IBM Plex Mono'; font-size:11.5px;}
   .review-stars{color:var(--amber-deep); font-size:13px; letter-spacing:1px;}
+  .review-overall-num{color:var(--ink-soft); font-family:'IBM Plex Mono'; letter-spacing:0; font-size:12px;}
+  .review-criteria{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0;}
+  .chip-mini{font-size:11.5px; background:var(--paper-light); border:1px solid var(--line); border-radius:999px; padding:3px 9px; color:var(--ink-soft);}
+  .review-rehire{font-size:12.5px; font-weight:600; margin-bottom:4px;}
+  .review-rehire.yes{color:#1f8a4c;}
+  .review-rehire.no{color:#b3261e;}
+  .review-title{font-weight:700; font-size:14px; margin:4px 0 2px;}
   .review-comment{font-size:13.5px; opacity:0.8; line-height:1.5;}
 
   .toast{
@@ -537,19 +668,6 @@
       <a class="side-link" href="javascript:void(0)" data-coming-soon="ofertas">Ofertas y tendencias</a>
     </div>
     <div class="side-section">
-      <h3>Calculadoras</h3>
-      <a class="side-link" href="calculadoras.html">Ver todas las calculadoras</a>
-      <div class="side-sub">
-        <a href="calculadoras.html#fundamentales">Electricidad</a>
-        <a href="calculadoras.html#materiales">Materiales de obra</a>
-        <a href="calculadoras.html#pintura">Pintura</a>
-        <a href="calculadoras.html#suelos">Suelos y revestimientos</a>
-        <a href="calculadoras.html#fontaneria">Fontanería</a>
-        <a href="calculadoras.html#reformas">Reformas</a>
-        <a href="calculadoras.html#geometria">Geometría</a>
-      </div>
-    </div>
-    <div class="side-section">
       <h3>Herramientas</h3>
       <a class="side-link" href="javascript:void(0)" data-view="buscar">Marketplace de proveedores</a>
       <div class="side-sub">
@@ -571,14 +689,101 @@
   <div class="brand">
     <img class="brand-mark" src="assets/logo.png" alt="TodoOficios.es">
     <div class="brand-tag">TodoOficios.es</div>
+    <div class="mason-mascot" aria-hidden="true">
+      <svg viewBox="0 -12 155 56" xmlns="http://www.w3.org/2000/svg">
+        <g fill="#fff" stroke="#000" stroke-width="0.6">
+          <rect x="59" y="31.1" width="8.5" height="6.7"/>
+          <rect x="67.5" y="31.1" width="8.5" height="6.7"/>
+          <rect x="76" y="31.1" width="8.5" height="6.7"/>
+          <rect x="84.5" y="31.1" width="8.5" height="6.7"/>
+          <rect x="67.5" y="24.4" width="8.5" height="6.7"/>
+          <rect x="76" y="24.4" width="8.5" height="6.7"/>
+          <rect x="84.5" y="24.4" width="8.5" height="6.7"/>
+          <rect x="76" y="17.7" width="8.5" height="6.7"/>
+          <rect x="84.5" y="17.7" width="8.5" height="6.7"/>
+          <rect x="84.5" y="11" width="8.5" height="6.7"/>
+        </g>
+        <rect class="mason-brick-new" x="59" y="24.4" width="8.5" height="6.7" fill="#fff" stroke="#000" stroke-width="0.6"/>
+        <g fill="#fff" stroke="#000" stroke-width="0.6">
+          <rect class="mason-ground-brick1" x="50.75" y="26.45" width="8.5" height="6.7"/>
+        </g>
+        <g class="mason-walker">
+          <g class="mason-facing">
+            <g fill="#fff">
+              <circle cx="8" cy="8.8" r="3.2"/>
+              <path d="M 3.8 8.5 C 3.8 5.5, 12.2 5.5, 12.2 8.5 Z"/>
+              <rect x="2.5" y="8.5" width="11" height="1" rx="0.5"/>
+              <rect x="5" y="4.3" width="6" height="3"/>
+              <path d="M 5,7.3 L 11,7.3 L 11,11.3 Z"/>
+              <rect x="3" y="12.3" width="10" height="11" rx="2"/>
+              <rect x="3" y="21.3" width="10" height="2"/>
+              <rect x="4.5" y="23.3" width="7" height="6"/>
+            </g>
+            <rect fill="#000" x="5.5" y="13.1" width="5" height="3" rx="0.4"/>
+            <g class="mason-thigh-back" fill="#fff">
+              <rect x="3.5" y="27.3" width="3.5" height="10.5" rx="1.75"/>
+            </g>
+            <g class="mason-thigh-front" fill="#fff">
+              <rect x="9" y="27.3" width="3.5" height="10.5" rx="1.75"/>
+            </g>
+            <g class="mason-arm-brick" fill="#fff">
+              <rect x="11.5" y="12.5" width="4" height="4" rx="0.5"/>
+              <rect x="11.5" y="13.3" width="3.2" height="16" rx="1.6"/>
+              <rect class="mason-hand-brick" x="9.5" y="27.3" width="7" height="5" rx="1"/>
+            </g>
+            <g class="mason-arm-tool" fill="#fff">
+              <rect x="0.5" y="12.5" width="4" height="4" rx="0.5"/>
+              <rect x="1.3" y="13.3" width="3.2" height="12" rx="1.6"/>
+            </g>
+          </g>
+        </g>
+        <polyline points="57,-2 75,-11 93,-2" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="80.5" y="-11.5" width="6.2" height="7.5" fill="#fff" stroke="#000" stroke-width="0.6"/>
+        <g fill="#fff" stroke="#000" stroke-width="0.6">
+          <rect x="55" y="0.3" width="40" height="2" rx="0.6"/>
+          <rect x="71.5" y="2.3" width="3" height="4" rx="0.6"/>
+        </g>
+        <circle cx="73" cy="7" r="3.3" fill="none" stroke="#000" stroke-width="0.6"/>
+        <circle class="mason-bulb-glow" cx="73" cy="7" r="7.5" fill="#fff"/>
+        <circle class="mason-socket-bulb" cx="73" cy="7" r="3" fill="#fff" stroke="#000" stroke-width="0.6"/>
+        <g class="mason-walker2">
+          <g class="mason-facing2">
+            <g fill="#fff">
+              <circle cx="8" cy="8.8" r="3.2"/>
+              <path d="M 3.8 8.5 C 3.8 5.5, 12.2 5.5, 12.2 8.5 Z"/>
+              <rect x="2.5" y="8.5" width="11" height="1" rx="0.5"/>
+              <rect x="5" y="4.3" width="6" height="3"/>
+              <path d="M 5,7.3 L 11,7.3 L 11,11.3 Z"/>
+              <rect x="3" y="12.3" width="10" height="11" rx="2"/>
+              <rect x="3" y="21.3" width="10" height="2"/>
+              <rect x="4.5" y="23.3" width="7" height="6"/>
+            </g>
+            <rect fill="#000" x="5.5" y="13.1" width="5" height="3" rx="0.4"/>
+            <g class="mason-thigh-back2" fill="#fff">
+              <rect x="3.5" y="27.3" width="3.5" height="10.5" rx="1.75"/>
+            </g>
+            <g class="mason-thigh-front2" fill="#fff">
+              <rect x="9" y="27.3" width="3.5" height="10.5" rx="1.75"/>
+            </g>
+            <g class="mason-arm-bulb" fill="#fff">
+              <rect x="0.9" y="12.5" width="4" height="4" rx="0.5"/>
+              <rect x="1.4" y="13.3" width="3" height="6" rx="1.5"/>
+              <circle class="mason-hand-bulb" cx="2.9" cy="21.3" r="3.2"/>
+            </g>
+            <g class="mason-arm-idle2" fill="#fff">
+              <rect x="11.1" y="12.5" width="4" height="4" rx="0.5"/>
+              <rect x="11.6" y="13.3" width="3" height="9.5" rx="1.5"/>
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
   </div>
   <div class="nav-links">
     <button class="nav-btn" data-view="home">Inicio</button>
     <button class="nav-btn" data-view="pro">Soy profesional</button>
     <button class="nav-btn" data-view="buscar">Buscar</button>
     <button class="nav-btn" data-view="client">Soy cliente</button>
-    <a class="nav-btn" href="calculadoras.html">Calculadoras</a>
-    <a class="nav-btn" href="blog.html">Blog</a>
   </div>
   <button class="nav-menu-toggle" id="openDrawerBtn" type="button">☰ Menú</button>
 </div>
@@ -698,8 +903,6 @@
         </div>
       </div>
       <div class="footer-legal">
-        <a href="calculadoras.html">Calculadoras</a>
-        <a href="blog.html">Blog</a>
         <a href="aviso-legal.html" target="_blank" rel="noopener">Aviso Legal</a>
         <a href="politica-privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>
         <a href="politica-cookies.html" target="_blank" rel="noopener">Política de Cookies</a>
@@ -796,7 +999,7 @@ async function initSupabaseClient(){
   const legal = getLegalProfile();
   try{
     supabaseClient = window.supabase.createClient(legal.supabaseUrl, legal.supabaseAnonKey, {
-      auth: { persistSession: false, autoRefreshToken: false }
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
     });
     const { error } = await supabaseClient.from('kv_store').select('key').limit(1);
     cloudEnabled = !error;
@@ -1207,6 +1410,21 @@ async function seedDemoIfNeeded(){
 }
 
 /* ======================= RESEÑAS ======================= */
+const RATING_CRITERIA = [
+  { key:'puntualidad', label:'Puntualidad y seriedad' },
+  { key:'calidad', label:'Calidad del trabajo' },
+  { key:'limpieza', label:'Limpieza y orden' },
+  { key:'trato', label:'Trato y atención' },
+  { key:'precio', label:'Relación calidad-precio' }
+];
+function ratingOverall(r){
+  if(r.overall != null) return r.overall;
+  if(r.criteria){
+    const vals = RATING_CRITERIA.map(c => r.criteria[c.key]).filter(v => v > 0);
+    return vals.length ? vals.reduce((s,v)=>s+v,0) / vals.length : 0;
+  }
+  return r.stars || 0;
+}
 async function getRatings(){
   const raw = await safeGet('ratings', true);
   return raw ? JSON.parse(raw) : [];
@@ -1218,9 +1436,11 @@ async function addRating(rating){
 }
 function ratingStats(email, allRatings){
   const list = allRatings.filter(r => r.proEmail === email);
-  if(list.length === 0) return { avg: null, count: 0 };
-  const avg = list.reduce((s,r)=> s + r.stars, 0) / list.length;
-  return { avg, count: list.length };
+  if(list.length === 0) return { avg: null, count: 0, rehirePct: null };
+  const avg = list.reduce((s,r)=> s + ratingOverall(r), 0) / list.length;
+  const rehireVotes = list.filter(r => typeof r.wouldRehire === 'boolean');
+  const rehirePct = rehireVotes.length ? Math.round(100 * rehireVotes.filter(r=>r.wouldRehire).length / rehireVotes.length) : null;
+  return { avg, count: list.length, rehirePct };
 }
 
 /* ======================= ESTADO GLOBAL ======================= */
@@ -1276,11 +1496,109 @@ async function setMyClientName(name){
   await safeSet('my-client-name', name, false);
 }
 
+/* ======================= LOGIN CON GOOGLE ======================= */
+async function signInWithGoogle(role){
+  const client = await initSupabaseClient();
+  if(!client){
+    showToast('El acceso con Google no está disponible ahora mismo.');
+    return;
+  }
+  try{ window.localStorage.setItem('oauth-pending-role', role); }catch(e){}
+  const { error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error){
+    try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){}
+    showToast('No se pudo iniciar el acceso con Google.');
+  }
+}
+async function handleGoogleAuthRedirect(){
+  let pendingRole = null;
+  try{ pendingRole = window.localStorage.getItem('oauth-pending-role'); }catch(e){}
+  if(!pendingRole) return;
+  try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){}
+
+  const client = await initSupabaseClient();
+  if(!client) return;
+  const { data, error } = await client.auth.getSession();
+  if(error || !data?.session?.user){
+    showToast('No se pudo completar el acceso con Google.');
+    return;
+  }
+  const user = data.session.user;
+  const email = (user.email || '').trim().toLowerCase();
+  if(!email){
+    showToast('Tu cuenta de Google no tiene un email disponible.');
+    return;
+  }
+  const fullName = user.user_metadata?.full_name || user.user_metadata?.name || email.split('@')[0];
+  const photo = user.user_metadata?.avatar_url || '';
+
+  if(pendingRole === 'pro'){
+    const raw = await safeGet('account:'+email, true);
+    let acc;
+    if(raw){
+      acc = JSON.parse(raw);
+    } else {
+      acc = {
+        name: fullName, email, oficio: '', phone: '', address: '', experience: '',
+        bio: '', zona: '', photo, workPhotos: [], lat: null, lng: null,
+        verificado: false, legalAcceptedAt: Date.now(), contactVerified: false,
+        createdAt: Date.now(), authProvider: 'google'
+      };
+      const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
+      if(!saved){ showToast('No se pudo crear tu cuenta profesional.'); return; }
+      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+      if(!index.includes(email)) index.push(email);
+      await safeSet('accounts-index', JSON.stringify(index), true);
+    }
+    const sessionSaved = await safeSet('session-email', email, false);
+    if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
+    session = {email}; account = acc;
+    showToast(raw ? 'Bienvenido de nuevo.' : '¡Cuenta creada con Google! Completa tu perfil para publicarlo.');
+    showView('pro');
+  } else if(pendingRole === 'client'){
+    let existing = await getClientByEmail(email);
+    if(!existing){
+      existing = {
+        name: fullName, email, phone: '', favorites: [],
+        createdAt: Date.now(), legalAcceptedAt: Date.now(),
+        contactVerified: false, authProvider: 'google'
+      };
+      const saved = await saveClientAccount(existing);
+      if(!saved){ showToast('No se pudo crear tu cuenta de cliente.'); return; }
+      await addClientIndex(email);
+    }
+    const sessionSaved = await safeSet('session-email-client', email, false);
+    if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
+    clientSession = {email}; clientAccount = existing;
+    showToast('Bienvenido a TodoOficios.es.');
+    showView('client');
+  }
+}
+function googleButtonHTML(id){
+  return `
+  <button type="button" class="btn btn-google btn-block" id="${id}">
+    <svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4c-7.4 0-13.8 4.2-17 10.3z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.1-2 13.7-5.4l-6.3-5.3C29.3 35 26.8 36 24 36c-5.3 0-9.7-3.1-11.3-7.5l-6.5 5C9.9 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.2-4.2 5.5l6.3 5.3C40.5 36.4 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+    Continuar con Google
+  </button>
+  <div class="note" style="margin-top:8px; text-align:center;">Al continuar con Google aceptas el Aviso Legal, la Política de Privacidad y de Cookies.</div>`;
+}
+
 /* ======================= ROUTER ======================= */
 function setActiveNav(name){
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.view === name);
   });
+}
+
+function playMasonAnimation(){
+  const parts = document.querySelectorAll('.mason-mascot .mason-walker, .mason-mascot .mason-facing, .mason-mascot .mason-thigh-back, .mason-mascot .mason-thigh-front, .mason-mascot .mason-arm-brick, .mason-mascot .mason-arm-tool, .mason-mascot .mason-brick-new, .mason-mascot .mason-hand-brick, .mason-mascot .mason-ground-brick1, .mason-mascot .mason-walker2, .mason-mascot .mason-facing2, .mason-mascot .mason-thigh-back2, .mason-mascot .mason-thigh-front2, .mason-mascot .mason-arm-bulb, .mason-mascot .mason-arm-idle2, .mason-mascot .mason-hand-bulb, .mason-mascot .mason-socket-bulb, .mason-mascot .mason-bulb-glow');
+  if(!parts.length) return;
+  parts.forEach(p => { p.style.animation = 'none'; });
+  void document.querySelector('.mason-mascot').offsetWidth;
+  parts.forEach(p => { p.style.animation = ''; });
 }
 
 async function showView(name){
@@ -1297,6 +1615,7 @@ async function showView(name){
 
   bindLegalActions(target);
 
+  playMasonAnimation();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
@@ -1346,6 +1665,8 @@ async function renderPro(){
   </div>
   <div class="panel">
     <div id="proMsg"></div>
+    ${googleButtonHTML('pro-google-btn')}
+    <div class="auth-divider">o con email</div>
     ${proAuthMode === 'registro' ? `
       <div class="field"><label>Nombre de la empresa</label><input type="text" id="rg-name" placeholder="Ej. Empresa SL"></div>
       <div class="field">
@@ -1455,6 +1776,8 @@ function renderClient(){
   </div>
   <div class="panel">
     <div id="clientMsg"></div>
+    ${googleButtonHTML('client-google-btn')}
+    <div class="auth-divider">o con email</div>
     ${clientAuthMode === 'registro' ? `
       <div class="field"><label>Nombre</label><input type="text" id="cl-name" placeholder="Tu nombre completo"></div>
       <div class="field-row">
@@ -1481,6 +1804,10 @@ function renderClient(){
 }
 
 function bindClient(){
+  const clientGoogleBtn = document.getElementById('client-google-btn');
+  if(clientGoogleBtn){
+    clientGoogleBtn.onclick = () => signInWithGoogle('client');
+  }
   document.querySelectorAll('[data-client-mode]').forEach(opt=>{
     opt.onclick = ()=>{
       clientAuthMode = opt.dataset.clientMode;
@@ -1767,19 +2094,6 @@ function renderDashboard(){
     </div>
   </div>
   <div class="panel">
-    <div class="section-label">Cursos de formación</div>
-    <div class="field"><label>Empresa</label><input type="text" id="dash-course-company" value="${escapeHtml(account.name)}"></div>
-    <div class="field-row">
-      <div class="field"><label>Curso</label><input type="text" id="dash-course-name" placeholder="Nombre de la formación"></div>
-      <div class="field"><label>Duración (horas)</label><input type="number" min="1" id="dash-course-duration" placeholder="Horas totales"></div>
-    </div>
-    <div class="field"><label>Enlace al proveedor</label><input type="url" id="dash-course-url" placeholder="https://ejemplo.com"></div>
-    <button class="btn btn-primary btn-block" id="dash-course-submit">Registrar Curso</button>
-    <div id="dash-course-msg" class="msg" style="display:none;"></div>
-    <div class="section-label" style="margin-top:20px;">Tus cursos</div>
-    <div id="dash-course-list">Cargando cursos...</div>
-  </div>
-  <div class="panel">
     <div class="section-label">Mensajes de clientes</div>
     <div id="pro-message-list">Cargando mensajes...</div>
   </div>
@@ -1794,6 +2108,10 @@ function renderDashboard(){
 }
 
 function bindPro(){
+  const proGoogleBtn = document.getElementById('pro-google-btn');
+  if(proGoogleBtn){
+    proGoogleBtn.onclick = () => signInWithGoogle('pro');
+  }
   if(session && account){
     document.getElementById('logoutBtn').onclick = async ()=>{
       await safeDelete('session-email', false).catch(()=>{});
@@ -1873,54 +2191,6 @@ function bindPro(){
       showView('pro');
     };
 
-    document.getElementById('dash-course-submit').onclick = async ()=>{
-      const msgBox = document.getElementById('dash-course-msg');
-      msgBox.style.display = 'none';
-      msgBox.className = 'msg';
-      msgBox.textContent = '';
-      const company = document.getElementById('dash-course-company').value.trim();
-      const courseName = document.getElementById('dash-course-name').value.trim();
-      const duration = Number(document.getElementById('dash-course-duration').value);
-      const courseUrl = document.getElementById('dash-course-url').value.trim();
-      if(!company || !courseName){
-        msgBox.textContent = 'Completa el nombre de la empresa y el curso.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      if(!duration || duration < 1){
-        msgBox.textContent = 'La duración debe ser un número mayor que cero.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      try {
-        const url = new URL(courseUrl);
-        if(!['http:', 'https:'].includes(url.protocol)) throw new Error();
-      } catch(e) {
-        msgBox.textContent = 'Introduce una URL válida que comience con http:// o https://.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      account.courses = account.courses || [];
-      account.courses.push({ company, courseName, duration, courseUrl, createdAt: Date.now() });
-      const saved = await safeSet('account:'+account.email, JSON.stringify(account), true);
-      if(!saved){
-        msgBox.textContent = 'No se pudo guardar el curso. Revisa el espacio disponible e inténtalo otra vez.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      msgBox.textContent = 'Curso registrado correctamente.';
-      msgBox.classList.add('ok');
-      msgBox.style.display = 'block';
-      renderDashCourses();
-      document.getElementById('dash-course-name').value = '';
-      document.getElementById('dash-course-duration').value = '';
-      document.getElementById('dash-course-url').value = '';
-    };
-
     document.getElementById('dash-featured-btn').onclick = async ()=>{
       openFeaturedModal(account.email);
     };
@@ -1950,25 +2220,6 @@ function bindPro(){
         </div>`).join('');
     }
 
-    function renderDashCourses(){
-      const list = document.getElementById('dash-course-list');
-      const courses = account.courses || [];
-      if(!courses.length){
-        list.innerHTML = '<div class="empty-state">Aún no registraste cursos.</div>';
-        return;
-      }
-      list.innerHTML = courses.map(c => `
-        <div class="ticket" style="padding:14px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-            <strong style="font-size:1rem;">${escapeHtml(c.courseName)}</strong>
-            <span style="font-size:0.95rem; color:#5f5a53;">${escapeHtml(String(c.duration))} h</span>
-          </div>
-          <div style="margin-top:8px; color:#5f5a53;">${escapeHtml(c.company)}</div>
-          <a href="${escapeHtml(c.courseUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; color:#141412; text-decoration:underline;">Ir al enlace</a>
-        </div>
-      `).join('');
-    }
-    renderDashCourses();
     renderProMessages();
 
     document.getElementById('dash-view').onclick = ()=>{
@@ -2335,7 +2586,7 @@ async function renderDetalle(){
       <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
       <div class="pro-meta">
         <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
-        ${p.phone ? `<span>☎️ ${escapeHtml(p.phone)}</span>` : ''}
+        ${clientSession && p.phone ? `<span>☎️ ${escapeHtml(p.phone)}</span>` : ''}
         ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
         ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
       </div>
@@ -2346,9 +2597,15 @@ async function renderDetalle(){
         <span class="num">${stats.avg==null ? '—' : stats.avg.toFixed(1)}</span>
         <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
       </div>
-      ${p.phone ? `<a href="tel:${escapeHtml(p.phone)}" class="btn btn-amber btn-sm">Llamar</a>` : ''}
-      ${waLink(p.phone, p.name) ? `<a href="${waLink(p.phone, p.name)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">${WA_ICON} WhatsApp</a>` : ''}
-      ${clientSession ? `<button class="btn btn-outline btn-sm" id="favBtn">${clientAccount?.favorites?.includes(p.email) ? 'Quitar favorito' : 'Guardar favorito'}</button>` : '<span class="note">Inicia sesión como cliente para guardar este profesional en favoritos y contactarlo desde la página.</span>'}
+      ${stats.rehirePct != null ? `<span class="verified-tag">${stats.rehirePct}% volvería a contratarlo</span>` : ''}
+      ${clientSession ? `
+        ${p.phone ? `<a href="tel:${escapeHtml(p.phone)}" class="btn btn-amber btn-sm">Llamar</a>` : ''}
+        ${waLink(p.phone, p.name) ? `<a href="${waLink(p.phone, p.name)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">${WA_ICON} WhatsApp</a>` : ''}
+        <button class="btn btn-outline btn-sm" id="favBtn">${clientAccount?.favorites?.includes(p.email) ? 'Quitar favorito' : 'Guardar favorito'}</button>
+      ` : `
+        <span class="note">Regístrate o inicia sesión como cliente para ver el teléfono y contactar a este profesional.</span>
+        <button class="btn btn-primary btn-sm" data-view="client">Registrarme como cliente</button>
+      `}
     </div>
   </div>
 
@@ -2358,25 +2615,29 @@ async function renderDetalle(){
     ${p.workPhotos.map(src => `<img src="${src}" onclick="window.open('${src}','_blank')" alt="Trabajo realizado por ${escapeHtml(p.name)}">`).join('')}
   </div>` : ''}
 
-  ${(p.courses && p.courses.length) ? `
-  <div class="section-label">Cursos registrados</div>
-  <div class="panel" style="max-width:560px; margin-bottom:26px;">
-    ${p.courses.map(course => `
-      <div style="margin-bottom:16px;">
-        <div style="font-weight:700;">${escapeHtml(course.courseName)} <span style="color:#5f5a53; font-size:0.95rem;">(${escapeHtml(String(course.duration))} h)</span></div>
-        <div style="color:#5f5a53; margin:4px 0;">${escapeHtml(course.company)}</div>
-        <a href="${escapeHtml(course.courseUrl)}" target="_blank" rel="noopener" style="color:#141412; text-decoration:underline;">Ir al enlace</a>
-      </div>`).join('')}
-  </div>` : ''}
-
+  ${p.email === (session?.email || '') ? '' : `
   <div class="panel" style="max-width:560px; margin-bottom:26px;">
     <div class="section-label" style="margin-bottom:14px;">Deja tu valoración</div>
     <div id="ratingMsg"></div>
+    ${clientSession ? `
     <div class="field"><label>Tu nombre</label><input type="text" id="rt-name" placeholder="Ej. Carlos" value="${escapeHtml(prefillName)}"></div>
-    <div class="field"><label>Puntuación</label><div class="stars-input" id="starInput"></div></div>
-    <div class="field"><label>Comentario (opcional)</label><textarea id="rt-comment" placeholder="¿Cómo fue el trabajo?"></textarea></div>
+    ${RATING_CRITERIA.map(c => `
+    <div class="field"><label>${c.label}</label><div class="stars-input" id="starInput-${c.key}"></div></div>`).join('')}
+    <div class="field">
+      <label>¿Volverías a contratar a este profesional?</label>
+      <div class="role-toggle" style="max-width:280px;">
+        <div class="role-opt" data-rehire="si">Sí</div>
+        <div class="role-opt" data-rehire="no">No</div>
+      </div>
+    </div>
+    <div class="field"><label>Título de tu opinión <small>(opcional)</small></label><input type="text" id="rt-title" placeholder="Ej. Excelente trabajo de electricidad"></div>
+    <div class="field"><label>Cuéntanos tu experiencia <small>(opcional)</small></label><textarea id="rt-comment" placeholder="Cuéntanos qué trabajo realizó y qué tal fue la experiencia..."></textarea></div>
     <button class="btn btn-primary btn-block" id="submitRatingBtn">Publicar valoración</button>
-  </div>
+    ` : `
+    <p>Debes registrarte o iniciar sesión como cliente para dejar una valoración a este profesional.</p>
+    <button class="btn btn-primary btn-block" data-view="client">Registrarme como cliente</button>
+    `}
+  </div>`}
 
   <div class="section-label">Contacto</div>
   <div class="panel" style="max-width:560px; margin-bottom:26px;">
@@ -2385,55 +2646,86 @@ async function renderDetalle(){
       <div class="field"><label>Tu mensaje</label><textarea id="contact-message" placeholder="Escribe aquí tu consulta para el profesional."></textarea></div>
       <button class="btn btn-primary btn-block" id="contactSubmit">Enviar mensaje al profesional</button>
     ` : `
-      <div class="field"><p>Debes iniciar sesión como cliente para contactar a este profesional directamente desde la página.</p></div>
+      <div class="field"><p>Debes registrarte o iniciar sesión como cliente para contactar a este profesional (llamada, WhatsApp o mensaje).</p></div>
+      <button class="btn btn-primary btn-block" data-view="client">Registrarme como cliente</button>
     `}
   </div>
   <div class="section-label">Reseñas</div>
   <div id="reviewsList">
     ${reviews.length === 0 ? '<div class="empty-state">Todavía no hay reseñas para este profesional.</div>' :
-      reviews.map(r => `
+      reviews.map(r => {
+        const overall = ratingOverall(r);
+        const rounded = Math.round(overall);
+        return `
       <div class="review">
         <div class="review-top">
           <span class="review-name">${escapeHtml(r.clientName || 'Cliente')}</span>
           <span class="review-date">${new Date(r.createdAt).toLocaleDateString('es-ES')}</span>
         </div>
-        <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+        <div class="review-stars">${'★'.repeat(rounded)}${'☆'.repeat(5-rounded)} <span class="review-overall-num">${overall.toFixed(1)}</span></div>
+        ${r.criteria ? `<div class="review-criteria">${RATING_CRITERIA.map(c => `<span class="chip-mini">${c.label}: ${r.criteria[c.key]||'—'}★</span>`).join('')}</div>` : ''}
+        ${r.wouldRehire != null ? `<div class="review-rehire ${r.wouldRehire?'yes':'no'}">${r.wouldRehire ? '✓ Volvería a contratarlo' : '✗ No volvería a contratarlo'}</div>` : ''}
+        ${r.title ? `<div class="review-title">${escapeHtml(r.title)}</div>` : ''}
         ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
-      </div>`).join('')}
+      </div>`;
+      }).join('')}
   </div>`;
 }
 
-function renderStarInput(){
-  const el = document.getElementById('starInput');
-  if(!el) return;
-  el.innerHTML = '';
-  for(let i=1;i<=5;i++){
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'star-btn' + (i <= (window.__selectedStars||0) ? ' filled' : '');
-    b.textContent = '★';
-    b.onclick = ()=>{ window.__selectedStars = i; renderStarInput(); };
-    el.appendChild(b);
-  }
+function renderCriteriaStars(){
+  window.__ratingStars = window.__ratingStars || {};
+  RATING_CRITERIA.forEach(c=>{
+    const el = document.getElementById('starInput-'+c.key);
+    if(!el) return;
+    el.innerHTML = '';
+    for(let i=1;i<=5;i++){
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'star-btn' + (i <= (window.__ratingStars[c.key]||0) ? ' filled' : '');
+      b.textContent = '★';
+      b.onclick = ()=>{ window.__ratingStars[c.key] = i; renderCriteriaStars(); };
+      el.appendChild(b);
+    }
+  });
 }
 function bindDetalle(){
-  window.__selectedStars = 0;
-  renderStarInput();
+  window.__ratingStars = {};
+  window.__ratingRehire = null;
+  renderCriteriaStars();
+  document.querySelectorAll('[data-rehire]').forEach(opt=>{
+    opt.onclick = ()=>{
+      window.__ratingRehire = opt.dataset.rehire;
+      document.querySelectorAll('[data-rehire]').forEach(o=>o.classList.toggle('active', o===opt));
+    };
+  });
   const p = window.__currentDetailPro || {};
   const btn = document.getElementById('submitRatingBtn');
   if(!btn) return;
   btn.onclick = async ()=>{
     const name = document.getElementById('rt-name').value.trim();
+    const title = document.getElementById('rt-title').value.trim();
     const comment = document.getElementById('rt-comment').value.trim();
-    const stars = window.__selectedStars || 0;
+    const criteria = window.__ratingStars || {};
     const msgBox = document.getElementById('ratingMsg');
     msgBox.innerHTML = '';
 
     if(!name){ msgBox.innerHTML = '<div class="msg err">Escribí tu nombre para dejar la valoración.</div>'; return; }
-    if(stars < 1){ msgBox.innerHTML = '<div class="msg err">Elegí una puntuación de 1 a 5 estrellas.</div>'; return; }
+    const missing = RATING_CRITERIA.find(c => !(criteria[c.key] > 0));
+    if(missing){ msgBox.innerHTML = `<div class="msg err">Puntúa "${missing.label}" de 1 a 5 estrellas.</div>`; return; }
+    if(!window.__ratingRehire){ msgBox.innerHTML = '<div class="msg err">Indica si volverías a contratar a este profesional.</div>'; return; }
 
+    const overall = RATING_CRITERIA.reduce((s,c)=> s + criteria[c.key], 0) / RATING_CRITERIA.length;
     await setMyClientName(name);
-    const saved = await addRating({ proEmail: currentDetailEmail, stars, comment, clientName: name, createdAt: Date.now() });
+    const saved = await addRating({
+      proEmail: currentDetailEmail,
+      clientName: name,
+      criteria: { ...criteria },
+      overall,
+      wouldRehire: window.__ratingRehire === 'si',
+      title,
+      comment,
+      createdAt: Date.now()
+    });
     if(!saved){
       msgBox.innerHTML = '<div class="msg err">No se pudo guardar tu valoración. Inténtalo nuevamente.</div>';
       return;
@@ -2492,7 +2784,6 @@ function bindDetalle(){
 document.querySelectorAll('.nav-btn').forEach(b=>{
   b.addEventListener('click', ()=> showView(b.dataset.view));
 });
-
 
 const openDrawerBtn = document.getElementById('openDrawerBtn');
 const closeDrawerBtn = document.getElementById('closeDrawerBtn');
@@ -2651,17 +2942,9 @@ async function init(){
   const footerYear = document.getElementById('footerYear');
   if(footerYear) footerYear.textContent = String(new Date().getFullYear());
   handlePaymentRedirect();
-  handleViewParam();
+  await handleGoogleAuthRedirect();
 }
 init();
-
-function handleViewParam(){
-  const params = new URLSearchParams(window.location.search);
-  const view = params.get('view');
-  if(view === 'pro' || view === 'client' || view === 'buscar'){
-    showView(view);
-  }
-}
 
 function handlePaymentRedirect(){
   const params = new URLSearchParams(window.location.search);

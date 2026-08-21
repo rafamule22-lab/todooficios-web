@@ -1,0 +1,39 @@
+DirectoryIndex index.html
+
+# ============================================================
+# MODO CONSTRUCCION: muestra "proximamente.html" a todo el mundo
+# Para ver la web real mientras esta en construccion, entra en:
+#   https://todooficios.es/?preview=toc-construccion-2026
+# (te deja una cookie 30 dias para no tener que repetirlo)
+# Para publicar la web, borra este bloque completo.
+# ============================================================
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteCond %{QUERY_STRING} (^|&)preview=toc-construccion-2026(&|$)
+  RewriteRule ^ - [CO=toc_preview:1:%{HTTP_HOST}:2592000:/,L]
+
+  RewriteCond %{HTTP_COOKIE} toc_preview=1
+  RewriteRule ^ - [L]
+
+  RewriteRule ^(proximamente\.html|robots\.txt|sitemap\.xml|manifest\.json|favicon\.ico)$ - [L]
+  RewriteRule ^assets/ - [L]
+
+  RewriteRule ^ /proximamente.html [L]
+</IfModule>
+# ============================================================
+
+# Fuerza codificacion UTF-8 para evitar texto raro (acentos/mojibake)
+AddDefaultCharset UTF-8
+
+<IfModule mod_mime.c>
+  AddType text/html .html
+  AddCharset UTF-8 .html .css .js .json
+</IfModule>
+
+# Durante desarrollo, evita que el navegador muestre versiones antiguas
+<IfModule mod_headers.c>
+  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>

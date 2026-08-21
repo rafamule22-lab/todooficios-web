@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Cookies | TodoOficios.es</title>
+<meta name="description" content="Política de cookies y almacenamiento local de TodoOficios.es.">
+<link rel="icon" href="assets/logo.png" type="image/png">
+<script>
+window.TODOOFICIOS_LEGAL = Object.assign({
+  razonSocial: 'PENDIENTE_RAZON_SOCIAL',
+  nifCif: 'PENDIENTE_NIF_CIF',
+  domicilio: 'PENDIENTE_DOMICILIO_FISCAL',
+  emailContacto: 'contacto@todooficios.es',
+  emailSoporte: 'soporte@todooficios.es',
+  telefono: '+34 910 00 00 00'
+}, window.TODOOFICIOS_LEGAL || {});
+</script>
+<style>
+  :root{--ink:#141412;--paper:#fff;--soft:#f3f3f1;--line:rgba(20,20,18,0.15);}
+  body{margin:0;font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6;}
+  .wrap{max-width:860px;margin:0 auto;padding:28px 16px 60px;}
+  .card{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:22px;}
+  h1,h2{font-family:'Space Grotesk',sans-serif;margin:0 0 12px;}
+  h2{font-size:1.05rem;margin-top:22px;}
+  a{color:inherit;}
+  .top{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .nav{display:flex;gap:8px;flex-wrap:wrap;}
+  .nav a{border:1px solid var(--line);border-radius:8px;padding:6px 10px;text-decoration:none;background:#fff;}
+  .alert{display:none;border:1px solid #f0b8b8;background:#fff1f1;color:#7a1f1f;border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:13px;}
+  .alert.show{display:block;}
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <strong>TodoOficios.es</strong>
+      <div class="nav">
+        <a href="index.html">Volver al inicio</a>
+        <a href="aviso-legal.html">Aviso Legal</a>
+        <a href="politica-privacidad.html">Privacidad</a>
+      </div>
+    </div>
+    <section class="card">
+      <div class="alert" id="legalPendingAlert">Faltan datos fiscales obligatorios. Completa razón social, NIF/CIF y domicilio antes de publicar.</div>
+      <h1>Política de Cookies y almacenamiento local</h1>
+      <p>Esta web usa tecnologías de almacenamiento en el dispositivo para garantizar el funcionamiento del servicio.</p>
+
+      <h2>1. Qué usamos</h2>
+      <p>En esta versión se emplean mecanismos como localStorage y service worker para guardar sesión, preferencias y datos técnicos necesarios para la plataforma.</p>
+
+      <h2>2. Finalidad</h2>
+      <p>Permitir el acceso a cuentas, mantener estado de navegación y mejorar la experiencia de uso dentro del sitio.</p>
+
+      <h2>3. Gestión por el usuario</h2>
+      <p>El usuario puede eliminar los datos guardados desde la configuración del navegador, lo que puede afectar al funcionamiento de ciertas funciones del sitio.</p>
+
+      <h2>4. Actualizaciones</h2>
+      <p>Esta política puede actualizarse para adaptarse a cambios técnicos o normativos.</p>
+      <p>Para consultas sobre esta política puedes escribir a <a id="legalEmailCookiesLink" href="mailto:soporte@todooficios.es">soporte@todooficios.es</a>.</p>
+    </section>
+  </main>
+<script>
+  (function(){
+    const legal = window.TODOOFICIOS_LEGAL || {};
+    const email = legal.emailSoporte || 'soporte@todooficios.es';
+    const emailLink = document.getElementById('legalEmailCookiesLink');
+    emailLink.textContent = email;
+    emailLink.href = 'mailto:' + email;
+    const razonSocial = legal.razonSocial || 'PENDIENTE_RAZON_SOCIAL';
+    const nifCif = legal.nifCif || 'PENDIENTE_NIF_CIF';
+    const domicilio = legal.domicilio || 'PENDIENTE_DOMICILIO_FISCAL';
+    if([razonSocial, nifCif, domicilio].some(v => String(v).includes('PENDIENTE_') || String(v).trim() === '')){
+      document.getElementById('legalPendingAlert').classList.add('show');
+    }
+  })();
+</script>
+</body>
+</html>

@@ -1,3 +1,2 @@
 User-agent: *
-Allow: /
-Sitemap: https://todooficios.es/sitemap.xml
+Disallow: /

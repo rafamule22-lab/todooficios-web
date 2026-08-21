@@ -1,0 +1,13 @@
+{
+  "name": "todooficios-blog-bot",
+  "private": true,
+  "type": "module",
+  "description": "Bot generador semanal del blog de TodoOficios.es. No forma parte del sitio estático publicado.",
+  "scripts": {
+    "generate-blog-post": "node scripts/generate-blog-post.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "@supabase/supabase-js": "latest"
+  }
+}
