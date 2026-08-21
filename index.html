@@ -2200,6 +2200,19 @@ function renderDashboard(){
     </div>
   </div>
   <div class="panel">
+    <div class="section-label">Cursos de formación</div>
+    <div class="field"><label>Empresa</label><input type="text" id="dash-course-company" value="${escapeHtml(account.name)}"></div>
+    <div class="field-row">
+      <div class="field"><label>Curso</label><input type="text" id="dash-course-name" placeholder="Nombre de la formación"></div>
+      <div class="field"><label>Duración (horas)</label><input type="number" min="1" id="dash-course-duration" placeholder="Horas totales"></div>
+    </div>
+    <div class="field"><label>Enlace al proveedor</label><input type="url" id="dash-course-url" placeholder="https://ejemplo.com"></div>
+    <button class="btn btn-primary btn-block" id="dash-course-submit">Registrar Curso</button>
+    <div id="dash-course-msg" class="msg" style="display:none;"></div>
+    <div class="section-label" style="margin-top:20px;">Tus cursos</div>
+    <div id="dash-course-list">Cargando cursos...</div>
+  </div>
+  <div class="panel">
     <div class="section-label">Mensajes de clientes</div>
     <div id="pro-message-list">Cargando mensajes...</div>
   </div>
@@ -2373,6 +2386,25 @@ function bindPro(){
         </div>`).join('');
     }
 
+    function renderDashCourses(){
+      const list = document.getElementById('dash-course-list');
+      const courses = account.courses || [];
+      if(!courses.length){
+        list.innerHTML = '<div class="empty-state">Aún no registraste cursos.</div>';
+        return;
+      }
+      list.innerHTML = courses.map(c => `
+        <div class="ticket" style="padding:14px; margin-bottom:12px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+            <strong style="font-size:1rem;">${escapeHtml(c.courseName)}</strong>
+            <span style="font-size:0.95rem; color:#5f5a53;">${escapeHtml(String(c.duration))} h</span>
+          </div>
+          <div style="margin-top:8px; color:#5f5a53;">${escapeHtml(c.company)}</div>
+          <a href="${escapeHtml(c.courseUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; color:#141412; text-decoration:underline;">Ir al enlace</a>
+        </div>
+      `).join('');
+    }
+    renderDashCourses();
     renderProMessages();
 
     document.getElementById('dash-view').onclick = ()=>{
