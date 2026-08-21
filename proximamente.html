@@ -2,69 +2,89 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#141412">
+<meta name="robots" content="noindex,follow">
+<link rel="icon" href="assets/logo.png" type="image/png" sizes="192x192">
+<link rel="shortcut icon" href="assets/logo.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/logo.png">
 <title>TodoOficios.es | Muy pronto</title>
+<meta name="description" content="TodoOficios.es está en construcción. Muy pronto podrás encontrar profesionales de oficios cerca de ti.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { color-scheme: dark; }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #141412;
-    color: #f5f3ee;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  :root{
+    --ink:#141412;
+    --ink-soft:#4a4842;
+    --paper:#FFFFFF;
+    --amber:#F2B705;
+    --amber-deep:#D9A400;
   }
-  .wrap {
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 2rem 1.5rem;
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
   }
-  .logo {
-    width: 88px;
-    height: 88px;
-    object-fit: contain;
-    margin-bottom: 1.75rem;
-    border-radius: 18px;
+  .card{
+    max-width:560px;
+    width:100%;
+    text-align:center;
   }
-  h1 {
-    font-size: clamp(1.6rem, 4vw, 2.4rem);
-    margin: 0 0 0.75rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  .logo{
+    width:88px;
+    height:88px;
+    border-radius:20px;
+    margin:0 auto 24px;
+    display:block;
+    object-fit:cover;
   }
-  p {
-    max-width: 32rem;
-    margin: 0 auto 0.5rem;
-    color: #c9c6bd;
-    line-height: 1.6;
-    font-size: 1.05rem;
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    letter-spacing:-0.01em;
+    font-size:clamp(28px,6vw,40px);
+    margin:0 0 14px;
   }
-  a {
-    color: #f5f3ee;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+  p{
+    font-size:16px;
+    line-height:1.6;
+    color:var(--ink-soft);
+    margin:0 0 10px;
   }
-  .footer {
-    margin-top: 2.5rem;
-    font-size: 0.85rem;
-    color: #8a877e;
+  .badge{
+    display:inline-block;
+    margin-top:18px;
+    padding:8px 16px;
+    background:#fff8e0;
+    border:1px solid var(--amber-deep);
+    border-radius:999px;
+    font-size:14px;
+    color:var(--ink);
   }
+  .badge strong{color:var(--amber-deep);}
+  .contact{
+    margin-top:28px;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  .contact a{color:var(--ink); font-weight:600; text-decoration:none;}
+  .contact a:hover{text-decoration:underline;}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <img class="logo" src="/assets/logo.png" alt="TodoOficios.es">
+  <div class="card">
+    <img class="logo" src="assets/logo.png" alt="TodoOficios.es">
     <h1>Estamos preparando TodoOficios.es</h1>
-    <p>Muy pronto podrás encontrar aquí profesionales de oficios verificados cerca de ti. Estamos dando los últimos retoques.</p>
-    <p>¿Necesitas contactarnos mientras tanto? Escríbenos a <a href="mailto:contacto@todooficios.es">contacto@todooficios.es</a></p>
-    <div class="footer">&copy; 2026 TodoOficios.es</div>
+    <p>Muy pronto podrás encontrar y contactar profesionales de oficios cerca de ti: fontaneros, electricistas, albañiles y muchos más.</p>
+    <div class="badge">🎉 Los primeros <strong>300 profesionales</strong> que se registren tendrán <strong>6 meses gratis</strong> de la versión Premium</div>
+    <div class="contact">¿Tienes dudas o quieres avisarnos de algo? Escríbenos a <a href="mailto:soporte@todooficios.es">soporte@todooficios.es</a></div>
   </div>
 </body>
 </html>
