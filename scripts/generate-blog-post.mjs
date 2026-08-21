@@ -45,6 +45,17 @@ async function main() {
   const supabaseUrl = requireEnv('SUPABASE_URL');
   const supabaseServiceKey = requireEnv('SUPABASE_SERVICE_ROLE_KEY');
 
+  // Diagnóstico seguro: no revela las claves, solo confirma su forma básica
+  // (longitud y si contienen caracteres fuera del rango ASCII imprimible normal,
+  // que es justo lo que rompe las cabeceras HTTP).
+  function diagnose(name, v) {
+    const hasBadChars = /[^\x20-\x7E]/.test(v);
+    console.log(`${name}: ${v.length} caracteres, prefijo "${v.slice(0, 6)}...", ¿caracteres no imprimibles? ${hasBadChars}`);
+  }
+  diagnose('ANTHROPIC_API_KEY', anthropicKey);
+  diagnose('SUPABASE_URL', supabaseUrl);
+  diagnose('SUPABASE_SERVICE_ROLE_KEY', supabaseServiceKey);
+
   const now = new Date();
   const week = isoWeekNumber(now);
   const groupIndex = week % OFICIOS_GROUPS.length;
