@@ -496,6 +496,8 @@
   .ng-add summary::before{content:'+'; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--amber); color:var(--ink); font-weight:700; font-size:14px; flex-shrink:0;}
   .ng-add[open] summary::before{content:'−';}
   .ng-add-body{margin-top:16px;}
+  .ng-limit-note{margin-top:20px; border-top:1px dashed var(--line); padding-top:16px; background:rgba(242,183,5,0.08); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
+  .ng-limit-note .note{margin:0;}
   .pend-list{display:flex; flex-direction:column; gap:9px;}
   .pend-item{background:#fff; border:1px solid var(--line); border-radius:8px; padding:13px 16px; font-size:15.5px; line-height:1.5;}
   .data-row{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:13px 16px; margin-bottom:9px; font-size:15.5px; flex-wrap:wrap;}
@@ -1605,6 +1607,12 @@ const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
 const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
 
+// Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
+// que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
+function isProPremium(acc){
+  return !!(acc && acc.featuredUntil && acc.featuredUntil > Date.now());
+}
+
 async function claimLaunchPromoSlot(){
   if(!PROMO_ACTIVE) return { granted:false, slot:null };
   const raw = await safeGet('promo-pro-signups', true);
@@ -1659,6 +1667,16 @@ async function setMyClientName(name){
 const CATEGORIAS_GASTO = ['Fontanería','Electricidad','Albañilería','Pintura y acabados','Climatización','Cerrajería','Herramientas y maquinaria','Alquiler de equipos','Transporte / desplazamientos','Otros'];
 const TIPOS_TRABAJO_AGENDA = ['Visita para presupuestar','Instalación','Reparación/avería','Revisión/mantenimiento','Entrega de obra'];
 const UNIDADES_PRESUPUESTO = ['ud','m²','ml','m³','h','pa'];
+
+// Límites del plan gratuito en el Panel de negocio. Premium (featuredUntil vigente) no tiene límite.
+// Mismo patrón que las fotos de perfil (3 gratis / 10 Premium): se puede usar la herramienta,
+// pero con tope; al llegar al tope se invita a Premium en vez de bloquear la herramienta entera.
+const FREE_LIMITS = {
+  clientes: 5,            // clientes guardados en total
+  gastosPorMes: 5,         // gastos registrados en el mes en curso
+  presupuestosPorMes: 3,   // presupuestos creados en el mes en curso
+  citasActivas: 5          // citas futuras en la agenda al mismo tiempo
+};
 
 function defaultNegocio(){
   return {
@@ -2898,6 +2916,24 @@ async function renderNegocio(){
     .sort((a,b)=> (a.fecha+(a.horaInicio||'')).localeCompare(b.fecha+(b.horaInicio||'')));
   const proximaCita = citasProximas[0];
 
+  const presupuestosMes = negocio.presupuestos.filter(p => (p.fecha||'').startsWith(inicioMes));
+
+  // Plan gratuito: se puede seguir usando cada herramienta, pero con tope mensual/total.
+  // Premium (featuredUntil vigente) no tiene límite en ninguna.
+  const premium = isProPremium(account);
+  const clientesLimitReached = !premium && negocio.clientes.length >= FREE_LIMITS.clientes;
+  const gastosLimitReached = !premium && gastosMes.length >= FREE_LIMITS.gastosPorMes;
+  const presupuestosLimitReached = !premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes;
+  const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
+
+  function premiumLockHTML(mensaje){
+    return `
+      <div class="ng-limit-note">
+        <p class="note">${mensaje}</p>
+        <a class="btn btn-amber btn-sm" href="javascript:void(0)" data-view="pro">Ver plan Premium →</a>
+      </div>`;
+  }
+
   const pendientesList = [
     ...presupuestosPendientes.map(p => ({ fecha: p.fecha || '', texto: `Presupuesto ${escapeHtml(p.numero||'')} — ${escapeHtml(p.cliente)} (${formatEUR(p.total)}) sin respuesta` })),
     ...citasProximas.slice(0,5).map(c => ({ fecha: c.fecha, texto: `${formatDateES(c.fecha)}${c.horaInicio?', '+c.horaInicio:''} — ${escapeHtml(c.tipoTrabajo||'Cita')} con ${escapeHtml(c.cliente||'cliente')}` }))
@@ -2962,6 +2998,7 @@ async function renderNegocio(){
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('clientes')} Clientes</div>
       <div id="negocio-clientes-list">${negocio.clientes.length ? negocio.clientes.slice().reverse().map(clienteRowHTML).join('') : '<div class="empty-state">Todavía no tienes clientes registrados.</div>'}</div>
+      ${clientesLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.clientes} clientes guardados del plan gratuito. Hazte Premium para guardar clientes sin límite.`) : `
       <details class="ng-add">
         <summary>Añadir cliente</summary>
         <div class="ng-add-body">
@@ -2977,7 +3014,7 @@ async function renderNegocio(){
           <button class="btn btn-outline btn-block" id="ng-cli-add">Añadir cliente</button>
           <div id="ng-cli-msg"></div>
         </div>
-      </details>
+      </details>`}
     </div>
   </div>
 
@@ -2985,6 +3022,7 @@ async function renderNegocio(){
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('gastos')} Gastos</div>
       <div id="negocio-gastos-list">${negocio.gastos.length ? negocio.gastos.slice().reverse().slice(0,10).map(gastoRowHTML).join('') : '<div class="empty-state">Todavía no registraste ningún gasto.</div>'}</div>
+      ${gastosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.gastosPorMes} gastos este mes del plan gratuito. Hazte Premium para apuntar gastos sin límite.`) : `
       <details class="ng-add">
         <summary>Añadir gasto</summary>
         <div class="ng-add-body">
@@ -3004,7 +3042,7 @@ async function renderNegocio(){
           <button class="btn btn-outline btn-block" id="ng-gas-add">Añadir gasto</button>
           <div id="ng-gas-msg"></div>
         </div>
-      </details>
+      </details>`}
     </div>
   </div>
 
@@ -3012,6 +3050,7 @@ async function renderNegocio(){
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('agenda')} Agenda</div>
       <div id="negocio-agenda-list">${citasProximas.length ? citasProximas.slice(0,8).map(citaRowHTML).join('') : '<div class="empty-state">Todavía no tienes citas próximas en la agenda.</div>'}</div>
+      ${citasLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.citasActivas} citas activas del plan gratuito. Hazte Premium para tener agenda sin límite.`) : `
       <details class="ng-add">
         <summary>Añadir cita</summary>
         <div class="ng-add-body">
@@ -3028,7 +3067,7 @@ async function renderNegocio(){
           <button class="btn btn-outline btn-block" id="ng-cit-add">Añadir cita</button>
           <div id="ng-cit-msg"></div>
         </div>
-      </details>
+      </details>`}
     </div>
   </div>
 
@@ -3054,6 +3093,7 @@ async function renderNegocio(){
         </div>
       </details>
 
+      ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
       <details class="ng-add" open>
         <summary>Crear presupuesto</summary>
         <div class="ng-add-body">
@@ -3112,7 +3152,7 @@ async function renderNegocio(){
           <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">Crear presupuesto</button>
           <div id="ng-pre-msg"></div>
         </div>
-      </details>
+      </details>`}
     </div>
   </div>`;
 }
@@ -3128,7 +3168,8 @@ function bindNegocio(){
 
   let citaOverlapAcknowledged = false;
 
-  document.getElementById('ng-cli-add').onclick = async ()=>{
+  const ngCliAddBtn = document.getElementById('ng-cli-add');
+  if(ngCliAddBtn) ngCliAddBtn.onclick = async ()=>{
     const msgBox = document.getElementById('ng-cli-msg');
     msgBox.innerHTML = '';
     const nombre = document.getElementById('ng-cli-nombre').value.trim();
@@ -3152,7 +3193,8 @@ function bindNegocio(){
     showView('negocio');
   };
 
-  document.getElementById('ng-gas-add').onclick = async ()=>{
+  const ngGasAddBtn = document.getElementById('ng-gas-add');
+  if(ngGasAddBtn) ngGasAddBtn.onclick = async ()=>{
     const msgBox = document.getElementById('ng-gas-msg');
     msgBox.innerHTML = '';
     const fecha = document.getElementById('ng-gas-fecha').value || todayISO();
@@ -3175,7 +3217,8 @@ function bindNegocio(){
     showView('negocio');
   };
 
-  document.getElementById('ng-cit-add').onclick = async ()=>{
+  const ngCitAddBtn = document.getElementById('ng-cit-add');
+  if(ngCitAddBtn) ngCitAddBtn.onclick = async ()=>{
     const msgBox = document.getElementById('ng-cit-msg');
     msgBox.innerHTML = '';
     const fecha = document.getElementById('ng-cit-fecha').value;
@@ -3236,6 +3279,10 @@ function bindNegocio(){
 }
 
 function bindPresupuestoForm(){
+  // El formulario "Crear presupuesto" no se renderiza si el plan gratuito llegó
+  // a su límite mensual (ver premiumLockHTML en renderNegocio) — sin form, nada que enlazar.
+  if(!document.getElementById('ng-pre-add')) return;
+
   let ppPartidas = [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
 
   function renderRows(){
