@@ -1895,6 +1895,7 @@ let account = null;       // cuenta del profesional logueado
 let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
 let materialesFavoritos = null; // lista de materiales guardados del profesional (clave propia: se comparte también con calculadoras.html)
 let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
+let dashboardMode = 'ficha'; // 'ficha' muestra el perfil público del profesional; 'editar' abre el formulario
 let clientSession = null;  // {email} cliente
 let clientAccount = null;  // cuenta del cliente
 let myLoc = null;         // ubicación del visitante
@@ -2145,6 +2146,7 @@ async function handleGoogleAuthRedirect(){
     const sessionSaved = await safeSet('session-email', email, false);
     if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
     session = {email}; account = acc;
+    dashboardMode = raw ? 'ficha' : 'editar';
     showToast(raw ? 'Bienvenido de nuevo.' : '¡Cuenta creada con Google! Completa tu perfil para publicarlo.');
     showView('pro');
   } else if(pendingRole === 'client'){
@@ -2692,7 +2694,7 @@ function renderPremiumPanelBody(account){
 
 function renderDashboard(){
   const stats = ratingStats(account.email, RATINGS);
-  return `
+  const negocioBannerHTML = `
   <div class="panel panel-wide biz-banner">
     <div class="biz-banner-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></svg>
@@ -2702,7 +2704,52 @@ function renderDashboard(){
       <p>Gastos, clientes, presupuestos y agenda — todo en un vistazo, sin salir de tu cuenta.</p>
     </div>
     <button class="btn btn-amber" data-view="negocio">Abrir panel de negocio →</button>
-  </div>
+  </div>`;
+
+  if(dashboardMode !== 'editar'){
+    return `
+    ${negocioBannerHTML}
+    <div class="panel panel-wide">
+      <div class="dash-head" style="margin-bottom:14px;">
+        ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
+        <div>
+          <h2 style="font-size:22px;">${escapeHtml(account.name)}</h2>
+          <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
+        </div>
+        <div class="stamp ${stats.avg==null?'empty':''}">
+          <span class="num">${stats.avg==null?'—':stats.avg.toFixed(1)}</span>
+          <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
+        </div>
+      </div>
+      <div class="pro-desc">${escapeHtml(account.bio) || 'Todavía no agregaste una descripción.'}</div>
+      <div class="pro-meta" style="margin-bottom:18px;">
+        ${account.zona ? `<span>📍 ${escapeHtml(account.zona)}</span>` : ''}
+        ${account.phone ? `<span>☎️ ${escapeHtml(account.phone)}</span>` : ''}
+      </div>
+      <button class="btn btn-primary btn-block" id="dash-edit-btn">✎ Editar mi perfil</button>
+      <div style="text-align:center; margin-top:10px;">
+        <button type="button" class="muted-link" id="dash-view">Ver ficha completa y reseñas →</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="section-label">Mensajes de clientes</div>
+      <div id="pro-message-list">Cargando mensajes...</div>
+    </div>
+    <div class="panel">
+      <div class="section-label">Plan Premium</div>
+      ${renderPremiumPanelBody(account)}
+    </div>
+    <div class="field-row">
+      <button class="btn btn-outline" id="logoutBtn" style="flex:1;">Cerrar sesión</button>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" class="danger-link" id="deleteAccountBtn">Eliminar mi cuenta y mi ficha</button>
+    </div>`;
+  }
+
+  return `
+  ${negocioBannerHTML}
+  <a href="javascript:void(0)" class="back-link" id="dash-back-to-ficha">← Volver a mi ficha</a>
   <div class="dash-head">
     ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
     <div>
@@ -2761,22 +2808,8 @@ function renderDashboard(){
     </div>
     <div class="field-row dash-save-bar">
       <button class="btn btn-primary" id="dash-save" style="flex:1;">Guardar cambios</button>
-      <button class="btn btn-outline" id="dash-view" style="flex:1;">Ver mi ficha pública</button>
+      <button class="btn btn-outline" id="dash-cancel" style="flex:1;">Cancelar</button>
     </div>
-  </div>
-  <div class="panel">
-    <div class="section-label">Mensajes de clientes</div>
-    <div id="pro-message-list">Cargando mensajes...</div>
-  </div>
-  <div class="panel">
-    <div class="section-label">Plan Premium</div>
-    ${renderPremiumPanelBody(account)}
-  </div>
-  <div class="field-row">
-    <button class="btn btn-outline" id="logoutBtn" style="flex:1;">Cerrar sesión</button>
-  </div>
-  <div style="text-align:center; margin-top:14px;">
-    <button type="button" class="danger-link" id="deleteAccountBtn">Eliminar mi cuenta y mi ficha</button>
   </div>`;
 }
 
@@ -2786,26 +2819,69 @@ function bindPro(){
     proGoogleBtn.onclick = () => signInWithGoogle('pro');
   }
   if(session && account){
-    document.getElementById('logoutBtn').onclick = async ()=>{
-      await safeDelete('session-email', false).catch(()=>{});
-      session = null; account = null;
-      showToast('Cerraste sesión.');
-      showView('home');
-    };
+    if(dashboardMode !== 'editar'){
+      document.getElementById('dash-edit-btn').onclick = ()=>{
+        dashboardMode = 'editar';
+        showView('pro');
+      };
+      document.getElementById('dash-view').onclick = ()=>{
+        currentDetailEmail = account.email;
+        showView('detalle');
+      };
+      document.getElementById('logoutBtn').onclick = async ()=>{
+        await safeDelete('session-email', false).catch(()=>{});
+        session = null; account = null;
+        dashboardMode = 'ficha';
+        showToast('Cerraste sesión.');
+        showView('home');
+      };
+      document.getElementById('deleteAccountBtn').onclick = async ()=>{
+        if(!confirm('¿Eliminar tu cuenta y tu ficha pública de TodoOficios.es? Se borrarán tu perfil, tus datos del Panel de negocio y tus reseñas recibidas. Esta acción no se puede deshacer.')) return;
+        const email = account.email;
+        const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+        await safeSet('accounts-index', JSON.stringify(index.filter(e=>e!==email)), true);
+        await safeDelete('account:'+email, true);
+        await safeDelete('negocio:'+email, true);
+        const ratings = await getRatings();
+        await safeSet('ratings', JSON.stringify(ratings.filter(r=>r.proEmail!==email)), true);
+        await safeDelete('session-email', false);
+        session = null; account = null;
+        dashboardMode = 'ficha';
+        showToast('Tu cuenta se eliminó correctamente.');
+        showView('home');
+      };
 
-    document.getElementById('deleteAccountBtn').onclick = async ()=>{
-      if(!confirm('¿Eliminar tu cuenta y tu ficha pública de TodoOficios.es? Se borrarán tu perfil, tus datos del Panel de negocio y tus reseñas recibidas. Esta acción no se puede deshacer.')) return;
-      const email = account.email;
-      const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-      await safeSet('accounts-index', JSON.stringify(index.filter(e=>e!==email)), true);
-      await safeDelete('account:'+email, true);
-      await safeDelete('negocio:'+email, true);
-      const ratings = await getRatings();
-      await safeSet('ratings', JSON.stringify(ratings.filter(r=>r.proEmail!==email)), true);
-      await safeDelete('session-email', false);
-      session = null; account = null;
-      showToast('Tu cuenta se eliminó correctamente.');
-      showView('home');
+      async function renderProMessages(){
+        const list = document.getElementById('pro-message-list');
+        if(!list) return;
+        const messages = (await getContactMessages()).filter(m => m.proEmail === account.email);
+        if(!messages.length){
+          list.innerHTML = '<div class="empty-state">Aún no recibiste mensajes de clientes.</div>';
+          return;
+        }
+        list.innerHTML = messages.sort((a,b)=>b.sentAt - a.sentAt).map(m => `
+          <div class="ticket" style="padding:14px; margin-bottom:12px;">
+            <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+              <div>
+                <strong>${escapeHtml(m.clientName || 'Cliente')}</strong>
+                <div style="font-size:13px; color:#5f5a53;">${escapeHtml(m.clientEmail)}</div>
+              </div>
+              <span style="font-size:12px; color:#5f5a53;">${new Date(m.sentAt).toLocaleDateString('es-ES')} ${new Date(m.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
+            </div>
+            <div style="margin-top:10px; color:#333; white-space:pre-wrap;">${escapeHtml(m.message)}</div>
+          </div>`).join('');
+      }
+      renderProMessages();
+      return;
+    }
+
+    document.getElementById('dash-back-to-ficha').onclick = ()=>{
+      dashboardMode = 'ficha';
+      showView('pro');
+    };
+    document.getElementById('dash-cancel').onclick = ()=>{
+      dashboardMode = 'ficha';
+      showView('pro');
     };
 
     let dashPhoto = account.photo || '';
@@ -2898,6 +2974,7 @@ function bindPro(){
         return;
       }
       showToast('Perfil actualizado.');
+      dashboardMode = 'ficha';
       showView('pro');
     };
 
@@ -2911,34 +2988,6 @@ function bindPro(){
     if(dashFeaturedLink){
       dashFeaturedLink.onclick = ()=> openFeaturedModal(account.email);
     }
-
-    async function renderProMessages(){
-      const list = document.getElementById('pro-message-list');
-      if(!list) return;
-      const messages = (await getContactMessages()).filter(m => m.proEmail === account.email);
-      if(!messages.length){
-        list.innerHTML = '<div class="empty-state">Aún no recibiste mensajes de clientes.</div>';
-        return;
-      }
-      list.innerHTML = messages.sort((a,b)=>b.sentAt - a.sentAt).map(m => `
-        <div class="ticket" style="padding:14px; margin-bottom:12px;">
-          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div>
-              <strong>${escapeHtml(m.clientName || 'Cliente')}</strong>
-              <div style="font-size:13px; color:#5f5a53;">${escapeHtml(m.clientEmail)}</div>
-            </div>
-            <span style="font-size:12px; color:#5f5a53;">${new Date(m.sentAt).toLocaleDateString('es-ES')} ${new Date(m.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
-          </div>
-          <div style="margin-top:10px; color:#333; white-space:pre-wrap;">${escapeHtml(m.message)}</div>
-        </div>`).join('');
-    }
-
-    renderProMessages();
-
-    document.getElementById('dash-view').onclick = ()=>{
-      currentDetailEmail = account.email;
-      showView('detalle');
-    };
     return;
   }
 
@@ -3085,6 +3134,7 @@ function bindPro(){
 
       session = {email};
       account = newAccount;
+      dashboardMode = 'ficha';
       showToast(promo.granted
         ? `¡Cuenta creada! Ganaste ${PROMO_PREMIUM_MONTHS} meses de Premium gratis por ser de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados.`
         : '¡Cuenta creada! Ya estás publicado en TodoOficios.es.');
@@ -3117,6 +3167,7 @@ function bindPro(){
       }
       session = {email};
       account = acc;
+      dashboardMode = 'ficha';
       showToast('¡Bienvenido de nuevo!');
       showView('pro');
     };
