@@ -164,6 +164,17 @@
     font-size:13.5px; font-weight:500; transition:.15s;
   }
   .nav-btn:hover{background:rgba(247,245,240,0.1);}
+  .nav-btn.has-chip{padding:5px 12px 5px 5px;}
+  .nav-account-chip{display:inline-flex; align-items:center; gap:7px; font-weight:600;}
+  .nav-account-chip .circle{
+    width:24px; height:24px; border-radius:50%; background:var(--amber); color:var(--ink);
+    font-family:'Space Grotesk'; font-weight:700; font-size:11px;
+    display:flex; align-items:center; justify-content:center; position:relative; flex-shrink:0;
+  }
+  .nav-account-chip .circle::after{
+    content:''; position:absolute; bottom:-1px; right:-1px; width:8px; height:8px;
+    border-radius:50%; background:#2E8F6E; border:1.5px solid var(--ink);
+  }
 
   .nav-menu-toggle{
     display:inline-flex; align-items:center;
@@ -1041,9 +1052,9 @@
   </div>
   <div class="nav-links">
     <button class="nav-btn" data-view="home">Inicio</button>
-    <button class="nav-btn" data-view="pro">Soy profesional</button>
+    <button class="nav-btn" id="navProBtn" data-view="pro">Soy profesional</button>
     <button class="nav-btn" data-view="buscar">Buscar</button>
-    <button class="nav-btn" data-view="client">Soy cliente</button>
+    <button class="nav-btn" id="navClientBtn" data-view="client">Soy cliente</button>
   </div>
   <button class="nav-menu-toggle" id="openDrawerBtn" type="button">☰ Menú</button>
 </div>
@@ -2121,6 +2132,30 @@ function setActiveNav(name){
   document.querySelectorAll('.nav-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.view === name);
   });
+  renderNavAccountChips();
+}
+
+function renderNavAccountChips(){
+  const proBtn = document.getElementById('navProBtn');
+  if(proBtn){
+    if(session && account){
+      proBtn.classList.add('has-chip');
+      proBtn.innerHTML = `<span class="nav-account-chip"><span class="circle">${escapeHtml((account.name||'?').charAt(0).toUpperCase())}</span>${escapeHtml((account.name||'Perfil').split(' ')[0])}</span>`;
+    } else {
+      proBtn.classList.remove('has-chip');
+      proBtn.textContent = 'Soy profesional';
+    }
+  }
+  const clientBtn = document.getElementById('navClientBtn');
+  if(clientBtn){
+    if(clientSession && clientAccount){
+      clientBtn.classList.add('has-chip');
+      clientBtn.innerHTML = `<span class="nav-account-chip"><span class="circle">${escapeHtml((clientAccount.name||'?').charAt(0).toUpperCase())}</span>${escapeHtml((clientAccount.name||'Cliente').split(' ')[0])}</span>`;
+    } else {
+      clientBtn.classList.remove('has-chip');
+      clientBtn.textContent = 'Soy cliente';
+    }
+  }
 }
 
 function playMasonAnimation(){
