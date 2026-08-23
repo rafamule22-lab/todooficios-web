@@ -591,6 +591,16 @@
   .pp-totales{margin-top:16px; padding:14px 18px; background:var(--paper-light); border-radius:8px; font-size:14.5px; max-width:340px;}
   .pp-totales-row{display:flex; justify-content:space-between; padding:3px 0;}
   .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
+
+  .pp-draft-banner{display:flex; align-items:center; gap:12px; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
+  .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;}
+  .pp-draft-banner .pp-draft-txt{flex:1; min-width:0; font-size:13px;}
+  .pp-draft-banner .pp-draft-txt strong{font-family:'Space Grotesk'; display:block; font-size:14px; margin-bottom:2px;}
+  .pp-draft-banner .pp-draft-txt span{color:var(--ink-soft); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .pp-draft-banner button.btn{flex-shrink:0; background:var(--c-presupuestos); color:#fff; border:none;}
+  .pp-draft-banner button.btn:hover{opacity:0.9;}
+  .pp-draft-dismiss{flex-shrink:0; background:transparent; border:none; color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px;}
+  .pp-draft-dismiss:hover{color:var(--ink);}
   .consent-row{display:flex; gap:8px; align-items:flex-start; margin:10px 0 14px;}
   .consent-row input{margin-top:3px;}
   .consent-row label{margin:0; text-transform:none; letter-spacing:0; font-size:12.5px; line-height:1.45; opacity:0.95;}
@@ -998,7 +1008,7 @@
     </div>
     <div class="side-section">
       <h3>App móvil</h3>
-      <a class="side-link" href="javascript:void(0)" data-view="app">Descargar OficiosCalc</a>
+      <a class="side-link" href="javascript:void(0)" data-view="app">OficiosCalc (próximamente)</a>
     </div>
     <div class="side-section">
       <h3>Cursos</h3>
@@ -3355,6 +3365,14 @@ function epigrafeSuggestCardHTML(asesor, oficioEntry){
   return `<div class="suggest-card ${oficioEntry.confidence==='alta'?'ok':'warn'}">${epigrafeResultCardHTML(oficioEntry.code, oficioEntry.confidence, why, false)}</div>`;
 }
 
+/* Partidas guardadas desde calculadoras.html a la espera de incorporarse a un presupuesto (ver también calculadoras.js) */
+function getPresupuestoDraft(email){
+  try { return JSON.parse(localStorage.getItem('presupuesto-draft:'+email) || '[]'); } catch(e){ return []; }
+}
+function clearPresupuestoDraft(email){
+  try { localStorage.removeItem('presupuesto-draft:'+email); } catch(e){}
+}
+
 async function renderNegocio(){
   negocio = await getNegocio(account.email);
   const hoy = todayISO();
@@ -3409,6 +3427,7 @@ async function renderNegocio(){
   const gastosLimitReached = !premium && gastosMes.length >= FREE_LIMITS.gastosPorMes;
   const presupuestosLimitReached = !premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes;
   const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
+  const presupuestoDraft = getPresupuestoDraft(account.email);
 
   function premiumLockHTML(mensaje){
     return `
@@ -3581,6 +3600,16 @@ async function renderNegocio(){
       </details>
 
       ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
+      ${presupuestoDraft.length ? `
+      <div class="pp-draft-banner">
+        <div class="pp-draft-ic">🧮</div>
+        <div class="pp-draft-txt">
+          <strong>${presupuestoDraft.length} partida${presupuestoDraft.length>1?'s':''} guardada${presupuestoDraft.length>1?'s':''} desde las calculadoras</strong>
+          <span>${presupuestoDraft.map(d=>escapeHtml(d.concepto)).join(' · ')}</span>
+        </div>
+        <button type="button" class="btn btn-sm" id="pp-draft-use">Usarlas en este presupuesto</button>
+        <button type="button" class="pp-draft-dismiss" id="pp-draft-dismiss" title="Descartar" aria-label="Descartar partidas guardadas">✕</button>
+      </div>` : ''}
       <details class="ng-add" open>
         <summary>Crear presupuesto</summary>
         <div class="ng-add-body">
@@ -4150,6 +4179,28 @@ function bindPresupuestoForm(){
   syncClienteState();
   renderRows();
 
+  const draftUseBtn = document.getElementById('pp-draft-use');
+  if(draftUseBtn){
+    draftUseBtn.onclick = ()=>{
+      const draft = getPresupuestoDraft(account.email);
+      if(!draft.length) return;
+      const nuevas = draft.map(d=>({descripcion:'🧮 '+(d.concepto||''), unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0}));
+      const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
+      ppPartidas = soloVacia ? nuevas : ppPartidas.concat(nuevas);
+      clearPresupuestoDraft(account.email);
+      renderRows();
+      document.querySelector('.pp-draft-banner')?.remove();
+      showToast(`${nuevas.length} partida${nuevas.length>1?'s':''} añadida${nuevas.length>1?'s':''} al presupuesto.`);
+    };
+  }
+  const draftDismissBtn = document.getElementById('pp-draft-dismiss');
+  if(draftDismissBtn){
+    draftDismissBtn.onclick = ()=>{
+      clearPresupuestoDraft(account.email);
+      document.querySelector('.pp-draft-banner')?.remove();
+    };
+  }
+
   document.getElementById('ng-pre-add').onclick = async ()=>{
     const msgBox = document.getElementById('ng-pre-msg');
     msgBox.innerHTML = '';
@@ -4208,42 +4259,34 @@ function bindPresupuestoForm(){
 function renderApp(){
   return `
   <div class="hero">
-    <span class="eyebrow">OficiosCalc · la app de bolsillo de TodoOficios.es</span>
-    <h1>Calculadoras de obra y presupuestos, en tu móvil.</h1>
-    <p class="lead">Calcula materiales al momento, guarda tus proyectos y comparte un presupuesto en PDF desde la propia obra — y todo lo que crees en la app aparece también en tu Panel de negocio de esta web.</p>
+    <span class="eyebrow">OficiosCalc · próximamente en Google Play</span>
+    <h1>La app de calculadoras de obra está en camino.</h1>
+    <p class="lead">OficiosCalc se está preparando como una app independiente para Android. Mientras llega, ya puedes usar las mismas calculadoras y crear tus presupuestos aquí, en la web — sin esperar a nada.</p>
     <div class="hero-actions">
-      <button class="btn btn-amber" data-coming-soon="app-oficioscalc">📲 Descargar OficiosCalc</button>
-      <button class="btn btn-outline" data-view="negocio">Ver mi Panel de negocio</button>
+      <a class="btn btn-amber" href="calculadoras.html">🧮 Ver calculadoras</a>
+      <button class="btn btn-outline" data-view="negocio">Ir a mi Panel de negocio</button>
     </div>
-    <p style="margin-top:10px; font-size:13.5px; opacity:0.7;">App para Android · gratuita · muy pronto en Google Play.</p>
+    <p style="margin-top:10px; font-size:13.5px; opacity:0.7;">App para Android · gratuita · fecha de publicación por confirmar.</p>
   </div>
 
-  <div class="section-heading">Qué puedes hacer con la app</div>
+  <div class="section-heading">Qué encontrarás cuando llegue</div>
   <div class="how-grid">
     <div class="how-card">
-      <h3>🧮 Más de 30 calculadoras</h3>
-      <p>Pintura, pladur, azulejos, hormigón, electricidad (ley de Ohm, sección de cable...), fontanería y geometría — sin necesidad de conexión.</p>
+      <h3>🧮 Más de 90 calculadoras</h3>
+      <p>Pintura, pladur, azulejos, hormigón, electricidad (ley de Ohm, sección de cable...), fontanería y geometría — ya disponibles hoy en la web, sin necesidad de cuenta de la app.</p>
     </div>
     <div class="how-card">
       <h3>📁 Mis proyectos</h3>
-      <p>Añade partidas de distintas calculadoras a un mismo proyecto y súmalas en un presupuesto, con IVA y descuento incluidos.</p>
+      <p>Agrupa varios cálculos en un mismo proyecto de obra antes de convertirlo en presupuesto.</p>
     </div>
     <div class="how-card">
       <h3>📄 Presupuesto en PDF</h3>
-      <p>Genera el PDF con tus datos fiscales y compártelo directamente por WhatsApp o correo desde la obra, sin volver a la oficina.</p>
+      <p>Ya puedes generarlo desde tu Panel de negocio: con tus datos fiscales, IVA y listo para compartir por WhatsApp o correo.</p>
     </div>
     <div class="how-card">
-      <h3>🔄 Sincronizada con tu panel web</h3>
-      <p>Conecta el mismo email que usas aquí y los presupuestos y clientes que crees en el móvil aparecen en tu Panel de negocio — y al revés.</p>
+      <h3>🧮 → 📄 De la calculadora al presupuesto</h3>
+      <p>Desde cualquier calculadora, pulsa "Añadir a un presupuesto" y esa partida te espera lista para usar en tu Panel de negocio. Pruébalo ya en las calculadoras de la web.</p>
     </div>
-  </div>
-
-  <div class="panel panel-wide" style="margin: 28px auto 0 auto; text-align:center;">
-    <div class="section-label" style="justify-content:center;">📲 Cómo conectar la app con tu panel web</div>
-    <p style="max-width:560px; margin:0 auto 18px auto; color:var(--ink-soft); font-size:15px; line-height:1.55;">
-      En la app, abre <strong>Ajustes → Mi Panel de negocio (web)</strong> e introduce el mismo email de tu cuenta de profesional aquí. No hace falta la contraseña: en cuanto lo guardes, tus presupuestos y clientes se sincronizan solos entre el móvil y esta web.
-    </p>
-    <button class="btn btn-outline" data-view="negocio">Ir a mi Panel de negocio</button>
   </div>
   `;
 }
