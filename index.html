@@ -371,15 +371,6 @@
   .auth-divider{display:flex; align-items:center; gap:12px; margin:18px 0; color:var(--ink-soft); font-size:13px;}
   .auth-divider::before, .auth-divider::after{content:''; flex:1; height:1px; background:var(--line);}
 
-  .trades-strip{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; justify-content:center; max-width:760px; margin-left:auto; margin-right:auto;}
-  .trade-chip{
-    font-family:'IBM Plex Mono'; font-size:14px; padding:8px 12px; border-radius:999px;
-    border:1px solid var(--line); background:#f4f4f2 !important; display:inline-flex; align-items:center; gap:6px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.04);
-    color:var(--ink-soft) !important;
-  }
-  .trade-chip:hover{border-color:var(--ink); background:#ecece8 !important;}
-  .trade-chip.active{background:#ecece8 !important; border-color:var(--line); font-weight:700; color:var(--ink) !important;}
 
   .hex-strip{display:flex; flex-wrap:wrap; gap:20px 16px; justify-content:center; max-width:820px; margin:0 auto;}
   .hex-item{display:flex; flex-direction:column; align-items:center; gap:9px; width:88px;}
@@ -391,6 +382,8 @@
   .hex-item:hover .hex-shape{transform:translateY(-4px);}
   .hex-icon{width:26px; height:26px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
   .hex-item span{font-family:'IBM Plex Mono'; font-size:12.5px; font-weight:600; color:var(--ink); text-align:center;}
+  .hex-item.filter-chip{cursor:pointer;}
+  .hex-item.filter-chip.active .hex-shape{box-shadow:0 0 0 3px var(--paper), 0 0 0 6px var(--ink);}
   @media (max-width:640px){ .hex-item{width:76px;} .hex-shape{width:62px; height:62px;} .hex-icon{width:22px; height:22px;} }
 
   .section-label{
@@ -849,11 +842,6 @@
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
 
-  .dash-banner{
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background:var(--ink); color:var(--paper-light); padding:15px 18px; border-radius:9px;
-    margin-bottom:14px; font-size:14px; flex-wrap:wrap;
-  }
   .dash-head{display:flex; gap:16px; align-items:center; margin-bottom:22px; flex-wrap:wrap;}
   .dash-head img, .dash-head .ph-fallback{
     width:64px; height:64px; border-radius:50%; border:1.5px solid var(--line); object-fit:cover; background:#fff;
@@ -946,8 +934,6 @@
     .hero p.lead{font-size:15px; margin-top:12px;}
     .hero-actions{flex-direction:column; width:100%; gap:10px;}
     .hero-actions .btn{width:100%; justify-content:center;}
-    .trades-strip{justify-content:center; gap:8px;}
-    .trade-chip{font-size:12px; padding:8px 10px;}
     .profiles-grid{grid-template-columns:1fr; gap:12px;}
     .profile-card{padding:16px;}
     .how-grid{grid-template-columns:1fr; gap:12px;}
@@ -1234,6 +1220,24 @@ function oficioOptionsHTML(selected){
     <optgroup label="${g.group}">
       ${g.items.map(o => `<option ${o===selected?'selected':''}>${o}</option>`).join('')}
     </optgroup>`).join('') + `<option ${!OFICIOS_GROUPS.some(g=>g.items.includes(selected))&&selected?'selected':''}>Otro</option>`;
+}
+const GROUP_VISUALS = {
+  'Instalaciones y reparaciones': { color:'#C05A3A', icon:'<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/>' },
+  'Obra y reformas': { color:'#8C6D46', icon:'<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/>' },
+  'Carpintería y metal': { color:'#5C6B73', icon:'<path d="M3 15l7-7 3 3-7 7-3-3z"/><path d="M13 8l3-3 5 5-3 3"/><circle cx="6.5" cy="17.5" r="1.4"/>' },
+  'Acabados': { color:'#B4407A', icon:'<path d="M20 4c-4 0-9 1-12.5 4.5S3 16 3 20c4 0 9-1 12.5-4.5S20 8 20 4Z"/><circle cx="8.5" cy="15.5" r="1.4"/>' },
+  'Cerramientos y vidrio': { color:'#3E5FBF', icon:'<rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M12 4v16M4 12h16"/>' },
+  'Techos y exteriores': { color:'#A66A2E', icon:'<path d="M3 11 12 4l9 7"/><path d="M5 10v9h14v-9"/>' },
+  'Seguridad y automatización': { color:'#1C7A8C', icon:'<circle cx="12" cy="10" r="4.2"/><path d="M12 14v6M9 20h6"/>' },
+  'Mantenimiento general': { color:'#2E8F6E', icon:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>' }
+};
+function groupBadgeHTML(groupName, active){
+  const v = GROUP_VISUALS[groupName] || { color:'#141412', icon:'' };
+  return `
+  <div class="hex-item filter-chip ${active?'active':''}" data-group="${escapeHtml(groupName)}">
+    <div class="hex-shape" style="background:${v.color};"><svg class="hex-icon" viewBox="0 0 24 24">${v.icon}</svg></div>
+    <span>${escapeHtml(groupName)}</span>
+  </div>`;
 }
 function sfDropdownGroupsHTML(){
   return OFICIOS_GROUPS.map(g => `
@@ -2586,10 +2590,6 @@ function renderPremiumPanelBody(account){
 function renderDashboard(){
   const stats = ratingStats(account.email, RATINGS);
   return `
-  <div class="dash-banner">
-    <span>✓ Sesión activa como <strong>${escapeHtml(account.name)}</strong>. Tu ficha ya es visible para quien busque en TodoOficios.es.</span>
-    <button class="btn btn-outline btn-sm" id="logoutBtn" style="background:transparent; border-color:rgba(247,245,240,.4); color:#fff;">Cerrar sesión</button>
-  </div>
   <div class="panel panel-wide biz-banner">
     <div class="biz-banner-icon" aria-hidden="true">
       <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></svg>
@@ -2666,7 +2666,8 @@ function renderDashboard(){
   <div class="panel">
     <div class="section-label">Plan Premium</div>
     ${renderPremiumPanelBody(account)}
-  </div>`;
+  </div>
+  <button class="btn btn-outline" id="logoutBtn">Cerrar sesión</button>`;
 }
 
 function bindPro(){
@@ -4179,8 +4180,8 @@ async function renderBuscar(){
   <div class="section-label">Buscar profesional</div>
   <h2 style="font-size:24px; margin-bottom:18px;">¿Qué necesitas resolver hoy?</h2>
 
-  <div class="trades-strip" id="tradesStrip" style="margin-bottom:22px;">
-    ${OFICIOS_GROUPS.map(g => `<span class="trade-chip ${activeGroupFilter===g.group?'active':''}" data-group="${g.group}">${g.ic} ${g.group}</span>`).join('')}
+  <div class="hex-strip" id="tradesStrip" style="margin-bottom:22px;">
+    ${OFICIOS_GROUPS.map(g => groupBadgeHTML(g.group, activeGroupFilter===g.group)).join('')}
   </div>
 
   <div class="filter-bar">
@@ -4273,7 +4274,7 @@ function bindBuscar(){
     };
   }
 
-  document.querySelectorAll('#tradesStrip .trade-chip').forEach(chip=>{
+  document.querySelectorAll('#tradesStrip .filter-chip').forEach(chip=>{
     chip.onclick = ()=>{
       const g = chip.dataset.group;
       activeGroupFilter = (activeGroupFilter === g) ? null : g;
