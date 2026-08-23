@@ -849,6 +849,7 @@
   .search-field-highlight label{
     font-size:15px; font-weight:700; color:var(--ink); opacity:1;
     text-transform:none; letter-spacing:normal; margin-bottom:8px;
+    display:block; text-align:center;
   }
   .search-field-highlight .search-input-wrap{position:relative; flex:1;}
   .search-field-highlight .search-icon{
@@ -1925,6 +1926,8 @@ const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
 const PREMIUM_PRICE_FIRST_YEAR = 4.99; // €/mes de enganche durante los primeros 12 meses pagados
 const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes a partir del mes 13
 const PREMIUM_DURATION_MS = 30*24*60*60*1000; // cada pago cubre 1 mes
+const PREMIUM_TRIAL_DAYS = 14; // prueba gratis de Premium para profesionales recién inscritos que no entran en la promo de lanzamiento
+const PREMIUM_TRIAL_MS = PREMIUM_TRIAL_DAYS*24*60*60*1000;
 function premiumPrice(acc){ return (acc.premiumMonthsPaid||0) < 12 ? PREMIUM_PRICE_FIRST_YEAR : PREMIUM_PRICE_RENEWAL; }
 
 // Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
@@ -2149,7 +2152,8 @@ async function handleGoogleAuthRedirect(){
         name: fullName, email, oficio: '', phone: '', address: '', experience: '',
         bio: '', zona: '', photo, workPhotos: [], lat: null, lng: null,
         verificado: false, legalAcceptedAt: Date.now(), contactVerified: false,
-        createdAt: Date.now(), authProvider: 'google'
+        createdAt: Date.now(), authProvider: 'google',
+        featuredUntil: Date.now() + PREMIUM_TRIAL_MS, premiumTrial: true
       };
       const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
       if(!saved){ showToast('No se pudo crear tu cuenta profesional.'); return; }
@@ -2300,7 +2304,7 @@ async function renderPro(){
     ${googleButtonHTML('pro-google-btn')}
     <div class="auth-divider">o con email</div>
     ${proAuthMode === 'registro' ? `
-      <div class="promo-banner promo-banner-inline">🎉 Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales que se registren obtienen <strong>${PROMO_PREMIUM_MONTHS} meses gratis</strong> del plan Premium (más visibilidad y hasta 10 fotos). Se activa automáticamente al crear tu cuenta.</div>
+      <div class="promo-banner promo-banner-inline">🎉 Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales que se registren obtienen <strong>${PROMO_PREMIUM_MONTHS} meses gratis</strong> del plan Premium; el resto tiene igualmente <strong>${PREMIUM_TRIAL_DAYS} días de prueba gratis</strong> para probarlo (más visibilidad y hasta 10 fotos). Se activa automáticamente al crear tu cuenta.</div>
       <div class="ficha-grid">
         <div class="ficha-col-left">
           <div class="field"><label>Nombre de la empresa</label><input type="text" id="rg-name" placeholder="Ej. Empresa SL"></div>
@@ -2349,7 +2353,7 @@ async function renderPro(){
               </button>
             </div>`).join('')}
           </div>
-          <div class="note">${PROMO_ACTIVE ? `Podrás subir hasta 10 fotos si eres uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte (Premium gratis ${PROMO_PREMIUM_MONTHS} meses).` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>
+          <div class="note">${PROMO_ACTIVE ? `Podrás subir hasta 10 fotos desde el primer día: si eres uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte tendrás Premium gratis ${PROMO_PREMIUM_MONTHS} meses, y el resto ${PREMIUM_TRIAL_DAYS} días de prueba gratis.` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>
         </div>
       </details>
       <div class="field">
@@ -2695,22 +2699,27 @@ function renderPremiumPanelBody(account){
   const price = formatEUR(premiumPrice(account));
   if(isPremiumActive){
     const untilDate = new Date(account.featuredUntil).toLocaleDateString('es-ES');
-    const promoNote = account.premiumPromo ? ` (conseguido gratis por ser de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales)` : '';
+    let statusNote = '';
+    if(account.premiumPromo) statusNote = ` (conseguido gratis por ser de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales)`;
+    else if(account.premiumTrial){
+      const daysLeft = Math.max(1, Math.ceil((account.featuredUntil - Date.now()) / (24*60*60*1000)));
+      statusNote = ` — te quedan ${daysLeft} día${daysLeft===1?'':'s'} de tu prueba gratis de bienvenida`;
+    }
     return `
     <div class="premium-banner">
       <span class="premium-banner-ic">★</span>
-      <span class="premium-banner-txt"><strong>Premium activo</strong> hasta ${untilDate}${promoNote}. Mejor posicionamiento y hasta 10 fotos.</span>
-      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Renovar — ${price}/mes</button>` : ''}
+      <span class="premium-banner-txt"><strong>Premium activo</strong> hasta ${untilDate}${statusNote}. Mejor posicionamiento y hasta 10 fotos.</span>
+      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">${account.premiumTrial ? 'Activar Premium ya' : 'Renovar'} — ${price}/mes</button>` : ''}
     </div>
     ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (${price}/mes) estará disponible próximamente.</p>`}`;
   }
   return `
     <div class="premium-banner">
       <span class="premium-banner-ic">★</span>
-      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price}/mes durante el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes) da más visibilidad y hasta 10 fotos.</span>
+      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price}/mes durante el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes) da más visibilidad, hasta 10 fotos y presupuestos en PDF sin marca de agua.</span>
       ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}/mes</button>` : ''}
     </div>
-    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos. Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados lo reciben gratis ${PROMO_PREMIUM_MONTHS} meses.</p>`}`;
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">${account.premiumTrial ? 'Tu prueba gratis de bienvenida ya terminó — ' : ''}Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos.</p>`}`;
 }
 
 function renderDashboard(){
@@ -3125,9 +3134,10 @@ function bindPro(){
         legalAcceptedAt: Date.now(),
         contactVerified: false,
         createdAt: Date.now(),
-        featuredUntil: promo.granted ? Date.now() + PROMO_PREMIUM_MONTHS*PROMO_MONTH_MS : null,
+        featuredUntil: promo.granted ? Date.now() + PROMO_PREMIUM_MONTHS*PROMO_MONTH_MS : Date.now() + PREMIUM_TRIAL_MS,
         premiumPromo: promo.granted,
-        premiumPromoSlot: promo.granted ? promo.slot : null
+        premiumPromoSlot: promo.granted ? promo.slot : null,
+        premiumTrial: !promo.granted
       };
 
       const savedAccount = await safeSet('account:'+email, JSON.stringify(newAccount), true);
@@ -3153,7 +3163,7 @@ function bindPro(){
       dashboardMode = 'ficha';
       showToast(promo.granted
         ? `¡Cuenta creada! Ganaste ${PROMO_PREMIUM_MONTHS} meses de Premium gratis por ser de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados.`
-        : '¡Cuenta creada! Ya estás publicado en TodoOficios.es.');
+        : `¡Cuenta creada! Tienes ${PREMIUM_TRIAL_DAYS} días de Premium gratis para probar todos los beneficios.`);
       showView('pro');
     };
 
@@ -3238,6 +3248,7 @@ function materialRowHTML(m){
 function abrirPresupuestoPDF(id){
   const p = negocio.presupuestos.find(x=>x.id===id);
   if(!p) return;
+  const isPremiumActive = account.featuredUntil && account.featuredUntil > Date.now();
   const d = negocio.datos || {};
   const emisorNombre = d.nombreFiscal || account.name || '';
   const emisorNif = d.nif || '';
@@ -3279,6 +3290,7 @@ function abrirPresupuestoPDF(id){
   .condiciones{margin-top:30px; font-size:12px; color:#4a4842; line-height:1.6;}
   .firma{margin-top:50px; display:flex; justify-content:space-between;}
   .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
+  .watermark{margin-top:40px; text-align:center; font-size:10.5px; color:#9a958c; letter-spacing:0.03em;}
   @media print{ body{padding:14mm;} }
 </style></head><body>
   <div class="doc-head">
@@ -3331,6 +3343,8 @@ function abrirPresupuestoPDF(id){
     <div>Firma del profesional</div>
     <div>Firma y aceptación del cliente</div>
   </div>
+
+  ${isPremiumActive ? '' : '<div class="watermark">Presupuesto generado con TodoOficios.es — todooficios.es</div>'}
 
   <sc` + `ript>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</sc` + `ript>
 </bod` + `y></html>`;
