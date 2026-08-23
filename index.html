@@ -758,6 +758,10 @@
     border:1.5px dashed var(--line); border-radius:10px; padding:34px 20px; text-align:center;
     opacity:0.7; font-size:14px;
   }
+  .view-loading{
+    text-align:center; padding:60px 20px; opacity:0.6;
+    font-family:'IBM Plex Mono'; font-size:14px;
+  }
 
   /* ---------- Search filters ---------- */
   .filter-bar{display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:16px;}
@@ -959,6 +963,13 @@
     <button class="nav-menu-toggle" id="closeDrawerBtn" type="button">Cerrar</button>
   </div>
   <div class="side-drawer-body">
+    <div class="side-section">
+      <h3>Navegación</h3>
+      <a class="side-link" href="javascript:void(0)" data-view="home">Inicio</a>
+      <a class="side-link" href="javascript:void(0)" data-view="pro">Soy profesional</a>
+      <a class="side-link" href="javascript:void(0)" data-view="buscar">Buscar</a>
+      <a class="side-link" href="javascript:void(0)" data-view="client">Soy cliente</a>
+    </div>
     <div class="side-section">
       <h3>App móvil</h3>
       <a class="side-link" href="javascript:void(0)" data-view="app">Descargar OficiosCalc</a>
@@ -2088,6 +2099,7 @@ async function showView(name){
   const target = document.getElementById('view-'+name);
   target.classList.add('active');
   setActiveNav(name);
+  if(['pro','negocio','buscar','detalle'].includes(name)) target.innerHTML = '<div class="view-loading">Cargando…</div>';
 
   if(name === 'pro'){ target.innerHTML = await renderPro(); bindPro(); }
   if(name === 'negocio'){ target.innerHTML = await renderNegocio(); bindNegocio(); }
@@ -2147,55 +2159,63 @@ async function renderPro(){
     <div class="role-opt ${proAuthMode==='registro'?'active':''}" data-mode="registro">Crear cuenta</div>
     <div class="role-opt ${proAuthMode==='login'?'active':''}" data-mode="login">Ya tengo cuenta</div>
   </div>
-  <div class="panel">
+  <div class="panel ${proAuthMode === 'registro' ? 'panel-wide' : ''}">
     <div id="proMsg"></div>
     ${googleButtonHTML('pro-google-btn')}
     <div class="auth-divider">o con email</div>
     ${proAuthMode === 'registro' ? `
       <div class="promo-banner promo-banner-inline">🎉 Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales que se registren obtienen <strong>${PROMO_PREMIUM_MONTHS} meses gratis</strong> del plan Premium (más visibilidad y hasta 10 fotos). Se activa automáticamente al crear tu cuenta.</div>
-      <div class="field"><label>Nombre de la empresa</label><input type="text" id="rg-name" placeholder="Ej. Empresa SL"></div>
-      <div class="field">
-        <label>Foto de perfil (opcional)</label>
-        <div class="photo-upload">
-          <div class="photo-preview" id="photoPreview">Sin foto</div>
-          <button type="button" class="btn btn-outline btn-sm file-btn">Subir foto
-            <input type="file" accept="image/*" id="photoInput">
-          </button>
+      <div class="ficha-grid">
+        <div class="ficha-col-left">
+          <div class="field"><label>Nombre de la empresa</label><input type="text" id="rg-name" placeholder="Ej. Empresa SL"></div>
+          <div class="field">
+            <label>Foto de perfil (opcional)</label>
+            <div class="photo-upload">
+              <div class="photo-preview" id="photoPreview">Sin foto</div>
+              <button type="button" class="btn btn-outline btn-sm file-btn">Subir foto
+                <input type="file" accept="image/*" id="photoInput">
+              </button>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Años de experiencia</label><select id="rg-experience"><option value="">Selecciona años</option>${Array.from({length:50}, (_,i)=>`<option value="${i+1}">${i+1} año${i>0?'s':''}</option>`).join('')}</select></div>
+            <div class="field"><label>Oficio</label><select id="rg-oficio">${oficioOptionsHTML('')}</select></div>
+          </div>
+          <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="rg-address" placeholder="Calle, número, ciudad"></div>
+          <div class="field"><label>Ciudad / zona</label><input type="text" id="rg-city" placeholder="Ej. Madrid — Chamberí"></div>
+        </div>
+        <div class="ficha-col-right">
+          <div class="field-row">
+            <div class="field"><label>Email</label><input type="email" id="rg-email" placeholder="tu@email.com"></div>
+            <div class="field"><label>Repite el email</label><input type="email" id="rg-email-confirm" placeholder="Repite tu email"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Teléfono de contacto</label><input type="tel" id="rg-phone" placeholder="Ej. 600 123 456"></div>
+            <div class="field"><label>Repite el teléfono</label><input type="tel" id="rg-phone-confirm" placeholder="Repite el teléfono"></div>
+          </div>
+          <div class="field"><label>Contraseña</label><input type="password" id="rg-password" placeholder="Mínimo 8 caracteres" minlength="8"></div>
+          <div class="consent-row">
+            <input type="checkbox" id="rg-legal-check">
+            <label for="rg-legal-check">${legalConsentCopy()}. <button type="button" class="inline-link" data-legal-doc="aviso">Aviso Legal</button>, <button type="button" class="inline-link" data-legal-doc="privacidad">Privacidad</button> y <button type="button" class="inline-link" data-legal-doc="cookies">Cookies</button>.</label>
+          </div>
+          <div class="field"><label>Describe tu experiencia</label><textarea id="rg-desc" placeholder="Ej. 8 años de experiencia en instalaciones eléctricas residenciales y averías urgentes."></textarea></div>
         </div>
       </div>
-      <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="rg-address" placeholder="Calle, número, ciudad"></div>
-      <div class="field-row">
-        <div class="field"><label>Años de experiencia</label><select id="rg-experience"><option value="">Selecciona años</option>${Array.from({length:50}, (_,i)=>`<option value="${i+1}">${i+1} año${i>0?'s':''}</option>`).join('')}</select></div>
-        <div class="field"><label>Oficio</label><select id="rg-oficio">${oficioOptionsHTML('')}</select></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Email</label><input type="email" id="rg-email" placeholder="tu@email.com"></div>
-        <div class="field"><label>Repite el email</label><input type="email" id="rg-email-confirm" placeholder="Repite tu email"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Teléfono de contacto</label><input type="tel" id="rg-phone" placeholder="Ej. 600 123 456"></div>
-        <div class="field"><label>Repite el teléfono</label><input type="tel" id="rg-phone-confirm" placeholder="Repite el teléfono"></div>
-      </div>
-      <div class="field"><label>Contraseña</label><input type="password" id="rg-password" placeholder="Mínimo 8 caracteres" minlength="8"></div>
-      <div class="consent-row">
-        <input type="checkbox" id="rg-legal-check">
-        <label for="rg-legal-check">${legalConsentCopy()}. <button type="button" class="inline-link" data-legal-doc="aviso">Aviso Legal</button>, <button type="button" class="inline-link" data-legal-doc="privacidad">Privacidad</button> y <button type="button" class="inline-link" data-legal-doc="cookies">Cookies</button>.</label>
-      </div>
-      <div class="field"><label>Describe tu experiencia</label><textarea id="rg-desc" placeholder="Ej. 8 años de experiencia en instalaciones eléctricas residenciales y averías urgentes."></textarea></div>
-      <div class="field"><label>Ciudad / zona</label><input type="text" id="rg-city" placeholder="Ej. Madrid — Chamberí"></div>
-      <div class="field">
-        <label>Fotos de trabajos realizados (opcional, hasta 3)</label>
-        <div class="work-photos-row">
-          ${Array.from({length:3}, (_,i) => `
-          <div class="work-photo-slot">
-            <div class="work-photo-preview" id="rg-wp-preview-${i}">+</div>
-            <button type="button" class="btn btn-outline btn-sm file-btn">Subir
-              <input type="file" accept="image/*" class="rg-wp-input" data-idx="${i}">
-            </button>
-          </div>`).join('')}
+      <details class="ng-add">
+        <summary>Fotos de trabajos realizados (opcional, hasta 3)</summary>
+        <div class="ng-add-body">
+          <div class="work-photos-row">
+            ${Array.from({length:3}, (_,i) => `
+            <div class="work-photo-slot">
+              <div class="work-photo-preview" id="rg-wp-preview-${i}">+</div>
+              <button type="button" class="btn btn-outline btn-sm file-btn">Subir
+                <input type="file" accept="image/*" class="rg-wp-input" data-idx="${i}">
+              </button>
+            </div>`).join('')}
+          </div>
+          <div class="note">${PROMO_ACTIVE ? `Podrás subir hasta 10 fotos si eres uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte (Premium gratis ${PROMO_PREMIUM_MONTHS} meses).` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>
         </div>
-        <div class="note">${PROMO_ACTIVE ? `Podrás subir hasta 10 fotos si eres uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte (Premium gratis ${PROMO_PREMIUM_MONTHS} meses).` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>
-      </div>
+      </details>
       <div class="field">
         <button type="button" class="btn btn-outline btn-sm" id="rg-locBtn">📍 Compartir mi ubicación</button>
         <div class="loc-status" id="rg-locStatus">Así apareces ordenado por cercanía. Es opcional.</div>
@@ -4532,6 +4552,12 @@ featuredModalCancel?.addEventListener('click', closeFeaturedModal);
 featuredModalBackdrop?.addEventListener('click', (e)=>{ if(e.target === featuredModalBackdrop) closeFeaturedModal(); });
 legalModalClose?.addEventListener('click', closeLegalModal);
 legalModalBackdrop?.addEventListener('click', (e)=>{ if(e.target === legalModalBackdrop) closeLegalModal(); });
+document.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Escape') return;
+  if(featuredModalBackdrop?.classList.contains('show')) closeFeaturedModal();
+  else if(legalModalBackdrop?.classList.contains('show')) closeLegalModal();
+  else if(sideDrawer?.classList.contains('open')) toggleDrawer();
+});
 
 let paypalSdkPromise = null;
 function paypalClientId(){
