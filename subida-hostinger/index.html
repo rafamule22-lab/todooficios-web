@@ -417,6 +417,14 @@
   .how-card h3{font-size:16px; margin-bottom:8px;}
   .how-card p{font-size:13.5px; opacity:0.75; line-height:1.5; margin:0;}
 
+  .how-grid-ic{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:10px;}
+  @media (max-width:640px){.how-grid-ic{grid-template-columns:1fr;}}
+  .how-card-ic{background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:22px; display:flex; flex-direction:column; gap:12px; align-items:flex-start;}
+  .how-card-ic .ic-circle{width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .how-card-ic .ic-circle svg{width:24px; height:24px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .how-card-ic h3{font-size:16px; margin:0;}
+  .how-card-ic p{font-size:13.5px; opacity:0.8; line-height:1.5; margin:0; color:var(--ink-soft);}
+
   .profiles-grid{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:8px; max-width:960px; margin-left:auto; margin-right:auto;}
   .profile-card{background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
   .example-tag{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); background:#ecece8; border:1px solid var(--line); padding:3px 8px; border-radius:999px;}
@@ -1166,21 +1174,25 @@
     </div>
 
     <div class="section-heading">Cómo funciona</div>
-    <div class="how-grid">
-      <div class="how-card">
-        <h3>🔧 Para profesionales</h3>
+    <div class="how-grid-ic">
+      <div class="how-card-ic">
+        <div class="ic-circle" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
+        <h3>Para profesionales</h3>
         <p>Crea tu ficha en un minuto: tu oficio, tu experiencia y tu zona de trabajo. Los clientes cercanos te encuentran solos.</p>
       </div>
-      <div class="how-card">
-        <h3>📍 Ubicación real</h3>
+      <div class="how-card-ic">
+        <div class="ic-circle" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
+        <h3>Ubicación real</h3>
         <p>Compartimos tu ubicación aproximada para ordenar los resultados por cercanía — nunca la dirección exacta de nadie.</p>
       </div>
-      <div class="how-card">
-        <h3>⭐ Valoraciones honestas</h3>
+      <div class="how-card-ic">
+        <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
+        <h3>Valoraciones honestas</h3>
         <p>Cada cliente puede valorar el trabajo recibido. La reputación se construye trabajo a trabajo, no con publicidad.</p>
       </div>
-      <div class="how-card">
-        <h3>☎️ Contacto directo</h3>
+      <div class="how-card-ic">
+        <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
+        <h3>Contacto directo</h3>
         <p>Sin intermediarios ni comisiones ocultas: hablas directamente con el profesional para acordar el trabajo.</p>
       </div>
     </div>
