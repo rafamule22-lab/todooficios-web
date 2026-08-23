@@ -1013,7 +1013,7 @@
   <div class="featured-modal" role="dialog" aria-modal="true" aria-labelledby="featuredModalTitle">
     <button type="button" class="modal-close" id="featuredModalClose" aria-label="Cerrar">×</button>
     <h2 id="featuredModalTitle">Activar perfil destacado</h2>
-    <p class="modal-info" id="featuredModalInfo">Paga 4,99 € y tendrás 1 año de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.</p>
+    <p class="modal-info" id="featuredModalInfo">Paga 4,99 €/mes y tendrás 1 mes de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.</p>
     <div class="featured-modal-info">Cuenta: <strong id="featuredModalEmail"></strong></div>
     <div id="featured-paypal-btn"></div>
     <div class="pay-status" id="featuredModalStatus">Usa PayPal para completar el pago.</div>
@@ -1922,10 +1922,10 @@ const PROMO_FREE_PRO_LIMIT = 300;
 const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
 const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
-const PREMIUM_PRICE_FIRST_YEAR = 4.99; // precio de enganche del primer año pagado de Premium
-const PREMIUM_PRICE_RENEWAL = 9.99;    // precio de renovación a partir del segundo año
-const PREMIUM_DURATION_MS = 365*24*60*60*1000;
-function premiumPrice(acc){ return acc.premiumPaidBefore ? PREMIUM_PRICE_RENEWAL : PREMIUM_PRICE_FIRST_YEAR; }
+const PREMIUM_PRICE_FIRST_YEAR = 4.99; // €/mes de enganche durante los primeros 12 meses pagados
+const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes a partir del mes 13
+const PREMIUM_DURATION_MS = 30*24*60*60*1000; // cada pago cubre 1 mes
+function premiumPrice(acc){ return (acc.premiumMonthsPaid||0) < 12 ? PREMIUM_PRICE_FIRST_YEAR : PREMIUM_PRICE_RENEWAL; }
 
 // Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
 // que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
@@ -2700,17 +2700,17 @@ function renderPremiumPanelBody(account){
     <div class="premium-banner">
       <span class="premium-banner-ic">★</span>
       <span class="premium-banner-txt"><strong>Premium activo</strong> hasta ${untilDate}${promoNote}. Mejor posicionamiento y hasta 10 fotos.</span>
-      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Renovar — ${price}</button>` : ''}
+      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Renovar — ${price}/mes</button>` : ''}
     </div>
-    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (${price}/año) estará disponible próximamente.</p>`}`;
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (${price}/mes) estará disponible próximamente.</p>`}`;
   }
   return `
     <div class="premium-banner">
       <span class="premium-banner-ic">★</span>
-      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price} el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/año) da más visibilidad y hasta 10 fotos.</span>
-      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}</button>` : ''}
+      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price}/mes durante el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes) da más visibilidad y hasta 10 fotos.</span>
+      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}/mes</button>` : ''}
     </div>
-    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Muy pronto podrás activar Premium (${price} el primer año) para mayor visibilidad y hasta 10 fotos. Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados lo reciben gratis ${PROMO_PREMIUM_MONTHS} meses.</p>`}`;
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos. Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados lo reciben gratis ${PROMO_PREMIUM_MONTHS} meses.</p>`}`;
 }
 
 function renderDashboard(){
@@ -5012,7 +5012,7 @@ async function openFeaturedModal(email){
   window.__pendingFeaturedAccount = raw ? JSON.parse(raw) : null;
   const price = window.__pendingFeaturedAccount ? premiumPrice(window.__pendingFeaturedAccount) : PREMIUM_PRICE_FIRST_YEAR;
   const infoEl = document.getElementById('featuredModalInfo');
-  if(infoEl) infoEl.textContent = `Paga ${formatEUR(price)} y tendrás 1 año de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.`;
+  if(infoEl) infoEl.textContent = `Paga ${formatEUR(price)}/mes y tendrás 1 mes de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.`;
   featuredModalBackdrop?.classList.add('show');
   const loaded = await loadPaypalSdk();
   if(!loaded){
@@ -5031,7 +5031,7 @@ async function markFeaturedAccount(email){
   if(!raw) return false;
   const acc = JSON.parse(raw);
   acc.featuredUntil = Date.now() + PREMIUM_DURATION_MS;
-  acc.premiumPaidBefore = true;
+  acc.premiumMonthsPaid = (acc.premiumMonthsPaid||0) + 1;
   const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
   if(!saved) return false;
   if(session?.email === email){ account = acc; }
@@ -5058,7 +5058,7 @@ function renderFeaturedPaypalButtons(){
       return actions.order.create({
         purchase_units: [{
           amount: { value: price.toFixed(2) },
-          description: 'Suscripción Premium TodoOficios - 1 año'
+          description: 'Suscripción Premium TodoOficios - 1 mes'
         }]
       });
     },
