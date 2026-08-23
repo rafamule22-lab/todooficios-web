@@ -557,6 +557,16 @@
     .biz-banner .btn{width:100%; justify-content:center;}
   }
 
+  .premium-banner{display:flex; align-items:center; gap:12px; background:rgba(242,183,5,0.08); border:1px solid rgba(242,183,5,0.35); border-radius:10px; padding:12px 14px; flex-wrap:wrap;}
+  .premium-banner-ic{font-size:16px; flex-shrink:0; color:var(--amber-deep);}
+  .premium-banner-txt{flex:1; min-width:180px; font-size:12.5px; color:var(--ink-soft); line-height:1.45;}
+  .premium-banner-txt strong{color:var(--ink);}
+  .premium-banner button{flex-shrink:0; background:var(--ink); color:#fff; border:none; padding:7px 12px; border-radius:7px; font-size:11.5px; font-weight:600; white-space:nowrap; cursor:pointer;}
+  .premium-banner button:hover{opacity:0.88;}
+
+  .edit-pill{display:inline-flex; align-items:center; gap:5px; background:transparent; border:1.5px solid var(--line); color:var(--ink); padding:6px 12px; border-radius:999px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; flex-shrink:0;}
+  .edit-pill:hover{border-color:var(--ink);}
+
   .ng-add{margin-top:20px; border-top:1px dashed var(--line); padding-top:16px;}
   .ng-add summary{cursor:pointer; font-family:'IBM Plex Mono'; font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px;}
   .ng-add summary::-webkit-details-marker{display:none;}
@@ -1003,7 +1013,7 @@
   <div class="featured-modal" role="dialog" aria-modal="true" aria-labelledby="featuredModalTitle">
     <button type="button" class="modal-close" id="featuredModalClose" aria-label="Cerrar">×</button>
     <h2 id="featuredModalTitle">Activar perfil destacado</h2>
-    <p class="modal-info">Paga 19,90 € y tendrás 30 días de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.</p>
+    <p class="modal-info" id="featuredModalInfo">Paga 4,99 € y tendrás 1 año de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.</p>
     <div class="featured-modal-info">Cuenta: <strong id="featuredModalEmail"></strong></div>
     <div id="featured-paypal-btn"></div>
     <div class="pay-status" id="featuredModalStatus">Usa PayPal para completar el pago.</div>
@@ -1912,6 +1922,10 @@ const PROMO_FREE_PRO_LIMIT = 300;
 const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
 const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
+const PREMIUM_PRICE_FIRST_YEAR = 4.99; // precio de enganche del primer año pagado de Premium
+const PREMIUM_PRICE_RENEWAL = 9.99;    // precio de renovación a partir del segundo año
+const PREMIUM_DURATION_MS = 365*24*60*60*1000;
+function premiumPrice(acc){ return acc.premiumPaidBefore ? PREMIUM_PRICE_RENEWAL : PREMIUM_PRICE_FIRST_YEAR; }
 
 // Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
 // que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
@@ -2678,18 +2692,25 @@ function bindCourseProviderSignup(){
 
 function renderPremiumPanelBody(account){
   const isPremiumActive = account.featuredUntil && account.featuredUntil > Date.now();
+  const price = formatEUR(premiumPrice(account));
   if(isPremiumActive){
     const untilDate = new Date(account.featuredUntil).toLocaleDateString('es-ES');
-    const promoNote = account.premiumPromo ? ` Lo conseguiste gratis por ser uno de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales en registrarte.` : '';
+    const promoNote = account.premiumPromo ? ` (conseguido gratis por ser de los primeros ${PROMO_FREE_PRO_LIMIT} profesionales)` : '';
     return `
-    <p>Tu Premium está activo hasta <strong>${untilDate}</strong>.${promoNote} Incluye mejor posicionamiento en búsquedas y hasta 10 fotos de trabajos.</p>
-    <p class="note">${PAYMENTS_ENABLED ? 'Al finalizar podrás renovarlo por 19,90 €.' : 'Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (19,90 €) estará disponible próximamente.'}</p>
-    ${PAYMENTS_ENABLED ? `<div class="field-row"><button class="btn btn-amber" id="dash-featured-btn">Renovar Premium — 19,90 €</button></div>` : ''}`;
+    <div class="premium-banner">
+      <span class="premium-banner-ic">★</span>
+      <span class="premium-banner-txt"><strong>Premium activo</strong> hasta ${untilDate}${promoNote}. Mejor posicionamiento y hasta 10 fotos.</span>
+      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Renovar — ${price}</button>` : ''}
+    </div>
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (${price}/año) estará disponible próximamente.</p>`}`;
   }
   return `
-    <p>El plan gratuito de TodoOficios.es es <strong>gratis para siempre</strong>: tu ficha sigue visible sin coste.</p>
-    <p class="note">${PAYMENTS_ENABLED ? 'Activa Premium por 19,90 € y mejora tu visibilidad.' : `Muy pronto podrás activar Premium (19,90 €) para mayor visibilidad y hasta 10 fotos. Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados lo reciben gratis ${PROMO_PREMIUM_MONTHS} meses.`}</p>
-    ${PAYMENTS_ENABLED ? `<div class="field-row"><button class="btn btn-amber" id="dash-featured-btn">Activar Premium — 19,90 €</button></div>` : ''}`;
+    <div class="premium-banner">
+      <span class="premium-banner-ic">★</span>
+      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price} el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/año) da más visibilidad y hasta 10 fotos.</span>
+      ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}</button>` : ''}
+    </div>
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Muy pronto podrás activar Premium (${price} el primer año) para mayor visibilidad y hasta 10 fotos. Los primeros ${PROMO_FREE_PRO_LIMIT} profesionales registrados lo reciben gratis ${PROMO_PREMIUM_MONTHS} meses.</p>`}`;
 }
 
 function renderDashboard(){
@@ -2710,24 +2731,24 @@ function renderDashboard(){
     return `
     ${negocioBannerHTML}
     <div class="panel panel-wide">
-      <div class="dash-head" style="margin-bottom:14px;">
+      <div class="dash-head" style="justify-content:flex-start; margin-bottom:14px;">
         ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
-        <div>
-          <h2 style="font-size:22px;">${escapeHtml(account.name)}</h2>
+        <div style="flex:1; min-width:0;">
+          <h2 style="font-size:22px; margin:0;">${escapeHtml(account.name)}</h2>
           <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
         </div>
+        <button type="button" class="edit-pill" id="dash-edit-btn">✎ Editar</button>
         <div class="stamp ${stats.avg==null?'empty':''}">
           <span class="num">${stats.avg==null?'—':stats.avg.toFixed(1)}</span>
           <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
         </div>
       </div>
       <div class="pro-desc">${escapeHtml(account.bio) || 'Todavía no agregaste una descripción.'}</div>
-      <div class="pro-meta" style="margin-bottom:18px;">
+      <div class="pro-meta" style="margin-bottom:14px;">
         ${account.zona ? `<span>📍 ${escapeHtml(account.zona)}</span>` : ''}
         ${account.phone ? `<span>☎️ ${escapeHtml(account.phone)}</span>` : ''}
       </div>
-      <button class="btn btn-primary btn-block" id="dash-edit-btn">✎ Editar mi perfil</button>
-      <div style="text-align:center; margin-top:10px;">
+      <div style="text-align:center;">
         <button type="button" class="muted-link" id="dash-view">Ver ficha completa y reseñas →</button>
       </div>
     </div>
@@ -2735,14 +2756,9 @@ function renderDashboard(){
       <div class="section-label">Mensajes de clientes</div>
       <div id="pro-message-list">Cargando mensajes...</div>
     </div>
-    <div class="panel">
-      <div class="section-label">Plan Premium</div>
-      ${renderPremiumPanelBody(account)}
-    </div>
-    <div class="field-row">
-      <button class="btn btn-outline" id="logoutBtn" style="flex:1;">Cerrar sesión</button>
-    </div>
-    <div style="text-align:center; margin-top:14px;">
+    ${renderPremiumPanelBody(account)}
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:18px;">
+      <button class="btn btn-outline btn-sm" id="logoutBtn">Cerrar sesión</button>
       <button type="button" class="danger-link" id="deleteAccountBtn">Eliminar mi cuenta y mi ficha</button>
     </div>`;
   }
@@ -4992,6 +5008,11 @@ async function openFeaturedModal(email){
   pendingFeaturedEmail = email;
   document.getElementById('featuredModalEmail').textContent = email;
   document.getElementById('featuredModalStatus').textContent = 'Cargando botón de pago...';
+  const raw = await safeGet('account:'+email, true);
+  window.__pendingFeaturedAccount = raw ? JSON.parse(raw) : null;
+  const price = window.__pendingFeaturedAccount ? premiumPrice(window.__pendingFeaturedAccount) : PREMIUM_PRICE_FIRST_YEAR;
+  const infoEl = document.getElementById('featuredModalInfo');
+  if(infoEl) infoEl.textContent = `Paga ${formatEUR(price)} y tendrás 1 año de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.`;
   featuredModalBackdrop?.classList.add('show');
   const loaded = await loadPaypalSdk();
   if(!loaded){
@@ -5009,7 +5030,8 @@ async function markFeaturedAccount(email){
   const raw = await safeGet('account:'+email, true);
   if(!raw) return false;
   const acc = JSON.parse(raw);
-  acc.featuredUntil = Date.now() + 30*24*60*60*1000;
+  acc.featuredUntil = Date.now() + PREMIUM_DURATION_MS;
+  acc.premiumPaidBefore = true;
   const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
   if(!saved) return false;
   if(session?.email === email){ account = acc; }
@@ -5031,10 +5053,12 @@ function renderFeaturedPaypalButtons(){
   }
   paypal.Buttons({
     createOrder: function(data, actions) {
+      const pendingRaw = window.__pendingFeaturedAccount;
+      const price = pendingRaw ? premiumPrice(pendingRaw) : PREMIUM_PRICE_FIRST_YEAR;
       return actions.order.create({
         purchase_units: [{
-          amount: { value: '19.90' },
-          description: 'Suscripción destacada TodoOficios - 30 días'
+          amount: { value: price.toFixed(2) },
+          description: 'Suscripción Premium TodoOficios - 1 año'
         }]
       });
     },
