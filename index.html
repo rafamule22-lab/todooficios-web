@@ -585,6 +585,8 @@
   .consent-row label{margin:0; text-transform:none; letter-spacing:0; font-size:12.5px; line-height:1.45; opacity:0.95;}
   .inline-link{color:var(--ink); text-decoration:underline; background:none; border:none; padding:0; font:inherit; cursor:pointer;}
   .muted-link{font-size:12.5px; color:var(--ink-soft); text-decoration:underline; background:none; border:none; padding:0; cursor:pointer;}
+  .danger-link{font-size:12.5px; color:#a12626; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; opacity:0.75;}
+  .danger-link:hover{opacity:1;}
   .msg{font-size:13px; padding:10px 12px; border-radius:7px; margin-bottom:16px; font-weight:600;}
   .msg.err{background:#fde8e8; color:#a12626; border:1px solid #f0b8b8;}
   .msg.ok{background:#eaf7e6; color:#1e6b2e; border:1px solid #b9e2ae;}
@@ -842,7 +844,7 @@
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px);}
 
-  .dash-head{display:flex; gap:16px; align-items:center; margin-bottom:22px; flex-wrap:wrap;}
+  .dash-head{display:flex; gap:16px; align-items:center; justify-content:center; margin-bottom:22px; flex-wrap:wrap;}
   .dash-head img, .dash-head .ph-fallback{
     width:64px; height:64px; border-radius:50%; border:1.5px solid var(--line); object-fit:cover; background:#fff;
     display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; color:var(--ink-soft); flex-shrink:0;
@@ -1827,6 +1829,10 @@ async function addRating(rating){
   list.push(rating);
   return await safeSet('ratings', JSON.stringify(list), true);
 }
+async function deleteRating(id){
+  const list = await getRatings();
+  return await safeSet('ratings', JSON.stringify(list.filter(r=>r.id!==id)), true);
+}
 function ratingStats(email, allRatings){
   const list = allRatings.filter(r => r.proEmail === email);
   if(list.length === 0) return { avg: null, count: 0, rehirePct: null };
@@ -2301,6 +2307,9 @@ function renderClient(){
       </div>
       <div class="field"><label>Mis profesionales favoritos</label></div>
       <div id="client-favorites-list"></div>
+    </div>
+    <div style="text-align:center; margin-top:14px;">
+      <button type="button" class="danger-link" id="deleteClientAccountBtn">Eliminar mi cuenta de cliente</button>
     </div>`;
   }
   return `
@@ -2446,6 +2455,17 @@ function bindClient(){
       await safeDelete('session-email-client', false).catch(()=>{});
       clientSession = null; clientAccount = null;
       showToast('Cerraste sesión de cliente.');
+      showView('home');
+    };
+  }
+  const deleteClientBtn = document.getElementById('deleteClientAccountBtn');
+  if(deleteClientBtn){
+    deleteClientBtn.onclick = async ()=>{
+      if(!confirm('¿Eliminar tu cuenta de cliente de TodoOficios.es? Se borrarán tus datos y tus favoritos. Esta acción no se puede deshacer.')) return;
+      await safeDelete('client:'+clientAccount.email, true);
+      await safeDelete('session-email-client', false);
+      clientSession = null; clientAccount = null;
+      showToast('Tu cuenta de cliente se eliminó correctamente.');
       showView('home');
     };
   }
@@ -2606,7 +2626,7 @@ function renderDashboard(){
       <h2 style="font-size:22px;">${escapeHtml(account.name)}</h2>
       <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
     </div>
-    <div class="stamp ${stats.avg==null?'empty':''}" style="margin-left:auto;">
+    <div class="stamp ${stats.avg==null?'empty':''}">
       <span class="num">${stats.avg==null?'—':stats.avg.toFixed(1)}</span>
       <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
     </div>
@@ -2620,6 +2640,7 @@ function renderDashboard(){
           <button type="button" class="btn btn-outline btn-sm file-btn">Cambiar foto
             <input type="file" accept="image/*" id="dashPhotoInput">
           </button>
+          ${account.photo ? `<button type="button" class="btn btn-outline btn-sm" id="dashPhotoRemove">Quitar</button>` : ''}
         </div>
         <div class="field-row">
           <div class="field"><label>Oficio</label><select id="dash-oficio">${oficioOptionsHTML(account.oficio)}</select></div>
@@ -2642,6 +2663,7 @@ function renderDashboard(){
                   <button type="button" class="btn btn-outline btn-sm file-btn">${existing?'Cambiar':'Subir'}
                     <input type="file" accept="image/*" class="dash-wp-input" data-idx="${i}">
                   </button>
+                  ${existing ? `<button type="button" class="btn btn-outline btn-sm dash-wp-remove" data-idx="${i}">Quitar</button>` : ''}
                 </div>`;
               }).join('')}
             </div>
@@ -2667,7 +2689,12 @@ function renderDashboard(){
     <div class="section-label">Plan Premium</div>
     ${renderPremiumPanelBody(account)}
   </div>
-  <button class="btn btn-outline" id="logoutBtn">Cerrar sesión</button>`;
+  <div class="field-row">
+    <button class="btn btn-outline" id="logoutBtn" style="flex:1;">Cerrar sesión</button>
+  </div>
+  <div style="text-align:center; margin-top:14px;">
+    <button type="button" class="danger-link" id="deleteAccountBtn">Eliminar mi cuenta y mi ficha</button>
+  </div>`;
 }
 
 function bindPro(){
@@ -2680,6 +2707,21 @@ function bindPro(){
       await safeDelete('session-email', false).catch(()=>{});
       session = null; account = null;
       showToast('Cerraste sesión.');
+      showView('home');
+    };
+
+    document.getElementById('deleteAccountBtn').onclick = async ()=>{
+      if(!confirm('¿Eliminar tu cuenta y tu ficha pública de TodoOficios.es? Se borrarán tu perfil, tus datos del Panel de negocio y tus reseñas recibidas. Esta acción no se puede deshacer.')) return;
+      const email = account.email;
+      const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+      await safeSet('accounts-index', JSON.stringify(index.filter(e=>e!==email)), true);
+      await safeDelete('account:'+email, true);
+      await safeDelete('negocio:'+email, true);
+      const ratings = await getRatings();
+      await safeSet('ratings', JSON.stringify(ratings.filter(r=>r.proEmail!==email)), true);
+      await safeDelete('session-email', false);
+      session = null; account = null;
+      showToast('Tu cuenta se eliminó correctamente.');
       showView('home');
     };
 
@@ -2701,6 +2743,17 @@ function bindPro(){
       }catch(err){ showToast('No se pudo procesar la imagen.'); }
     });
 
+    const dashPhotoRemove = document.getElementById('dashPhotoRemove');
+    if(dashPhotoRemove){
+      dashPhotoRemove.onclick = ()=>{
+        dashPhoto = '';
+        const preview = document.getElementById('dashPhotoPreview');
+        preview.style.backgroundImage = '';
+        preview.textContent = 'Sin foto';
+        dashPhotoRemove.remove();
+      };
+    }
+
     document.querySelectorAll('.dash-wp-input').forEach(inp=>{
       inp.addEventListener('change', async (e)=>{
         const idx = +inp.dataset.idx;
@@ -2715,6 +2768,17 @@ function bindPro(){
           preview.textContent = '';
         }catch(err){ showToast('No se pudo procesar la imagen.'); }
       });
+    });
+
+    document.querySelectorAll('.dash-wp-remove').forEach(btn=>{
+      btn.onclick = ()=>{
+        const idx = +btn.dataset.idx;
+        dashWorkPhotos[idx] = '';
+        const preview = document.getElementById('dash-wp-preview-'+idx);
+        preview.style.backgroundImage = '';
+        preview.textContent = '+';
+        btn.remove();
+      };
     });
 
     document.getElementById('dash-locBtn').onclick = async ()=>{
@@ -2981,17 +3045,20 @@ function bindPro(){
 function clienteRowHTML(c){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}</span></div>
+    <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">🗑</button>
   </div>`;
 }
 function gastoRowHTML(g){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(g.concepto || g.categoria)}</strong><br><span class="drow-meta">${formatDateES(g.fecha)} · ${escapeHtml(g.proveedor||'Sin proveedor')} · ${escapeHtml(g.categoria||'')}</span></div>
     <div class="drow-amount">${formatEUR(g.total)}</div>
+    <button type="button" class="pp-mini-btn bad" data-del-gasto="${g.id}" title="Eliminar gasto">🗑</button>
   </div>`;
 }
 function citaRowHTML(c){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(c.tipoTrabajo||'Cita')}</strong> con ${escapeHtml(c.cliente||'cliente')}<br><span class="drow-meta">${formatDateES(c.fecha)}${c.horaInicio?' · '+c.horaInicio+(c.horaFin?'–'+c.horaFin:''):''}${c.direccion?' · '+escapeHtml(c.direccion):''}</span></div>
+    <button type="button" class="pp-mini-btn bad" data-del-cita="${c.id}" title="Eliminar cita">🗑</button>
   </div>`;
 }
 function presupuestoRowHTML(p){
@@ -3003,7 +3070,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -3783,6 +3850,48 @@ function bindNegocio(){
       if(saved){ showToast(`Presupuesto ${p.numero}: ${p.estado}.`); showView('negocio'); }
       return;
     }
+    const delBtn = e.target.closest('[data-del-presupuesto]');
+    if(delBtn){
+      const p = negocio.presupuestos.find(x=>x.id===delBtn.dataset.delPresupuesto);
+      if(!p) return;
+      if(!confirm(`¿Eliminar el presupuesto ${p.numero}? Esta acción no se puede deshacer.`)) return;
+      negocio.presupuestos = negocio.presupuestos.filter(x=>x.id!==p.id);
+      const saved = await saveNegocio(account.email, negocio);
+      if(saved){ showToast('Presupuesto eliminado.'); showView('negocio'); }
+    }
+  });
+
+  document.getElementById('negocio-clientes-list').addEventListener('click', async (e)=>{
+    const delBtn = e.target.closest('[data-del-cliente]');
+    if(!delBtn) return;
+    const c = negocio.clientes.find(x=>x.id===delBtn.dataset.delCliente);
+    if(!c) return;
+    if(!confirm(`¿Eliminar a ${c.nombre} de tus clientes? Esta acción no se puede deshacer.`)) return;
+    negocio.clientes = negocio.clientes.filter(x=>x.id!==c.id);
+    const saved = await saveNegocio(account.email, negocio);
+    if(saved){ showToast('Cliente eliminado.'); showView('negocio'); }
+  });
+
+  document.getElementById('negocio-gastos-list').addEventListener('click', async (e)=>{
+    const delBtn = e.target.closest('[data-del-gasto]');
+    if(!delBtn) return;
+    const g = negocio.gastos.find(x=>x.id===delBtn.dataset.delGasto);
+    if(!g) return;
+    if(!confirm('¿Eliminar este gasto? Esta acción no se puede deshacer.')) return;
+    negocio.gastos = negocio.gastos.filter(x=>x.id!==g.id);
+    const saved = await saveNegocio(account.email, negocio);
+    if(saved){ showToast('Gasto eliminado.'); showView('negocio'); }
+  });
+
+  document.getElementById('negocio-agenda-list').addEventListener('click', async (e)=>{
+    const delBtn = e.target.closest('[data-del-cita]');
+    if(!delBtn) return;
+    const c = negocio.agenda.find(x=>x.id===delBtn.dataset.delCita);
+    if(!c) return;
+    if(!confirm('¿Eliminar esta cita de la agenda? Esta acción no se puede deshacer.')) return;
+    negocio.agenda = negocio.agenda.filter(x=>x.id!==c.id);
+    const saved = await saveNegocio(account.email, negocio);
+    if(saved){ showToast('Cita eliminada.'); showView('negocio'); }
   });
 
   bindAsesorFinanciero();
@@ -4417,6 +4526,7 @@ async function renderDetalle(){
         ${r.wouldRehire != null ? `<div class="review-rehire ${r.wouldRehire?'yes':'no'}">${r.wouldRehire ? '✓ Volvería a contratarlo' : '✗ No volvería a contratarlo'}</div>` : ''}
         ${r.title ? `<div class="review-title">${escapeHtml(r.title)}</div>` : ''}
         ${r.comment ? `<div class="review-comment">${escapeHtml(r.comment)}</div>` : ''}
+        ${(r.id && clientSession && r.clientEmail === clientSession.email) ? `<button type="button" class="danger-link" data-del-review="${r.id}" style="margin-top:8px;">Eliminar mi reseña</button>` : ''}
       </div>`;
       }).join('')}
   </div>`;
@@ -4448,6 +4558,13 @@ function bindDetalle(){
       document.querySelectorAll('[data-rehire]').forEach(o=>o.classList.toggle('active', o===opt));
     };
   });
+  document.querySelectorAll('[data-del-review]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      if(!confirm('¿Eliminar tu reseña? Esta acción no se puede deshacer.')) return;
+      const saved = await deleteRating(btn.dataset.delReview);
+      if(saved){ showToast('Reseña eliminada.'); showView('detalle'); }
+    };
+  });
   const p = window.__currentDetailPro || {};
   const btn = document.getElementById('submitRatingBtn');
   if(!btn) return;
@@ -4467,7 +4584,9 @@ function bindDetalle(){
     const overall = RATING_CRITERIA.reduce((s,c)=> s + criteria[c.key], 0) / RATING_CRITERIA.length;
     await setMyClientName(name);
     const saved = await addRating({
+      id: 'rt'+Date.now(),
       proEmail: currentDetailEmail,
+      clientEmail: clientSession ? clientSession.email : null,
       clientName: name,
       criteria: { ...criteria },
       overall,
