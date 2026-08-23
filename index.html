@@ -2752,7 +2752,7 @@ function renderDashboard(){
         <button type="button" class="muted-link" id="dash-view">Ver ficha completa y reseñas →</button>
       </div>
     </div>
-    <div class="panel">
+    <div class="panel panel-wide">
       <div class="section-label">Mensajes de clientes</div>
       <div id="pro-message-list">Cargando mensajes...</div>
     </div>
@@ -4559,7 +4559,7 @@ async function renderBuscar(){
   const pros = applyFilters(sortPros(await getAllProfessionals()), '');
   return `
   <div class="section-label">Buscar profesional</div>
-  <h2 style="font-size:24px; margin-bottom:18px;">¿Qué necesitas resolver hoy?</h2>
+  <div class="section-heading">¿Qué necesitas resolver hoy?</div>
 
   <div class="hex-strip" id="tradesStrip" style="margin-bottom:22px;">
     ${OFICIOS_GROUPS.map(g => groupBadgeHTML(g.group, activeGroupFilter===g.group)).join('')}
