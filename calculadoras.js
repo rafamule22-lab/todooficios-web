@@ -1791,11 +1791,11 @@
   var elHome, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate;
 
   function isRegistered(){
+    // La cuenta (account:/client:) puede vivir solo en Supabase cuando el sitio
+    // usa backend en la nube, así que basta con que exista el token de sesión local.
     try {
-      var proEmail = localStorage.getItem('session-email');
-      if(proEmail && localStorage.getItem('account:'+proEmail)) return true;
-      var cliEmail = localStorage.getItem('session-email-client');
-      if(cliEmail && localStorage.getItem('client:'+cliEmail)) return true;
+      if(localStorage.getItem('session-email')) return true;
+      if(localStorage.getItem('session-email-client')) return true;
     } catch(e){}
     return false;
   }
@@ -1805,8 +1805,7 @@
 
   function isProfessionalLoggedIn(){
     try {
-      var proEmail = localStorage.getItem('session-email');
-      return !!(proEmail && localStorage.getItem('account:'+proEmail));
+      return !!localStorage.getItem('session-email');
     } catch(e){ return false; }
   }
 
