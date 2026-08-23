@@ -8,7 +8,7 @@ window.TODOOFICIOS_LEGAL = {
   paypalClientId: "PENDIENTE_PAYPAL_CLIENT_ID",
   supabaseUrl: "https://tvhyodvvvcowaeyoihgn.supabase.co",
   supabaseAnonKey: "sb_publishable_CGw6LfpaSzuwwwMPMM57qg_XrWbmJf1",
-  showLegalAlertInProduction: true,
+  showLegalAlertInProduction: false,
   social: {
     instagram: "",
     facebook: "",
