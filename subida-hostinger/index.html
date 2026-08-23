@@ -2,6 +2,39 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+/* ============================================================
+   MODO CONSTRUCCION — se ejecuta antes de cargar cualquier otra cosa,
+   asi que funciona sin depender de que el hosting respete .htaccess
+   (el de Hostinger conectado a GitHub no lo hace).
+   Para publicar la web de verdad: cambia UNDER_CONSTRUCTION a false
+   y despliega (commit + push a main).
+   Para ver el sitio real mientras esta en construccion, entra en:
+     https://todooficios.es/?preview=toc-construccion-2026
+   (queda guardado en este navegador 30 dias, no hace falta repetirlo).
+   ============================================================ */
+(function(){
+  var UNDER_CONSTRUCTION = true;
+  if(!UNDER_CONSTRUCTION) return;
+  var PREVIEW_KEY = 'toc_preview_2026';
+  var THIRTY_DAYS_MS = 30*24*60*60*1000;
+  try{
+    var params = new URLSearchParams(location.search);
+    if(params.get('preview') === 'toc-construccion-2026'){
+      localStorage.setItem(PREVIEW_KEY, String(Date.now() + THIRTY_DAYS_MS));
+    }
+  }catch(e){}
+  var hasPreviewAccess = false;
+  try{
+    var expiry = parseInt(localStorage.getItem(PREVIEW_KEY) || '0', 10);
+    hasPreviewAccess = expiry > Date.now();
+  }catch(e){}
+  var onProximamente = /\/proximamente\.html$/.test(location.pathname);
+  if(!hasPreviewAccess && !onProximamente){
+    location.replace('/proximamente.html');
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#141412">
 <meta name="apple-mobile-web-app-capable" content="yes">
