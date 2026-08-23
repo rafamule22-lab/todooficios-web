@@ -448,6 +448,12 @@
     background:var(--paper-light); border-top:1px solid var(--line);
     padding-top:14px; margin-top:6px;
   }
+  .ficha-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 28px;}
+  .ficha-col-left{border-right:1.5px solid var(--line); padding-right:28px;}
+  @media (max-width:720px){
+    .ficha-grid{grid-template-columns:1fr;}
+    .ficha-col-left{border-right:none; padding-right:0; border-bottom:1.5px solid var(--line); padding-bottom:18px; margin-bottom:6px;}
+  }
   @media (max-width:820px){
     .field-row{flex-direction:column;}
     .field-row .field{min-width:0;}
@@ -2558,44 +2564,48 @@ function renderDashboard(){
       <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
     </div>
   </div>
-  <div class="panel" id="dashPanel">
+  <div class="panel panel-wide" id="dashPanel">
     <div id="dashMsg"></div>
-    <div class="photo-upload">
-      <div class="photo-preview" id="dashPhotoPreview" style="${account.photo?`background-image:url(${account.photo});`:''}">${account.photo?'':'Sin foto'}</div>
-      <button type="button" class="btn btn-outline btn-sm file-btn">Cambiar foto
-        <input type="file" accept="image/*" id="dashPhotoInput">
-      </button>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Oficio</label><select id="dash-oficio">${oficioOptionsHTML(account.oficio)}</select></div>
-      <div class="field"><label>Teléfono</label><input type="tel" id="dash-phone" value="${escapeHtml(account.phone||'')}"></div>
-    </div>
-    <div class="field-row">
-      <div class="field"><label>Nombre</label><input type="text" id="dash-name" value="${escapeHtml(account.name)}"></div>
-      <div class="field"><label>Ciudad / zona</label><input type="text" id="dash-city" value="${escapeHtml(account.zona||'')}"></div>
-    </div>
-    <div class="field"><label>Descripción</label><textarea id="dash-desc">${escapeHtml(account.bio||'')}</textarea></div>
-    <details class="ng-add">
-      <summary>Fotos de trabajos realizados (opcional, hasta ${account.featuredUntil && account.featuredUntil > Date.now() ? '10' : '3'})</summary>
-      <div class="ng-add-body">
-        <div class="work-photos-row">
-          ${Array.from({length: account.featuredUntil && account.featuredUntil > Date.now() ? 10 : 3}, (_,i) => {
-            const existing = (account.workPhotos && account.workPhotos[i]) || '';
-            return `
-            <div class="work-photo-slot">
-              <div class="work-photo-preview" id="dash-wp-preview-${i}" style="${existing?`background-image:url(${existing});`:''}">${existing?'':'+'}</div>
-              <button type="button" class="btn btn-outline btn-sm file-btn">${existing?'Cambiar':'Subir'}
-                <input type="file" accept="image/*" class="dash-wp-input" data-idx="${i}">
-              </button>
-            </div>`;
-          }).join('')}
+    <div class="ficha-grid">
+      <div class="ficha-col-left">
+        <div class="photo-upload">
+          <div class="photo-preview" id="dashPhotoPreview" style="${account.photo?`background-image:url(${account.photo});`:''}">${account.photo?'':'Sin foto'}</div>
+          <button type="button" class="btn btn-outline btn-sm file-btn">Cambiar foto
+            <input type="file" accept="image/*" id="dashPhotoInput">
+          </button>
         </div>
-        ${account.featuredUntil && account.featuredUntil > Date.now() ? '' : `<div class="note">${PAYMENTS_ENABLED ? `Contrata el plan Premium para subir hasta 10 fotos. <a href="javascript:void(0)" id="dash-featured-link">Ir a Premium</a>` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>`}
+        <div class="field-row">
+          <div class="field"><label>Oficio</label><select id="dash-oficio">${oficioOptionsHTML(account.oficio)}</select></div>
+          <div class="field"><label>Teléfono</label><input type="tel" id="dash-phone" value="${escapeHtml(account.phone||'')}"></div>
+        </div>
+        <div class="field"><label>Nombre</label><input type="text" id="dash-name" value="${escapeHtml(account.name)}"></div>
+        <div class="field"><label>Ciudad / zona</label><input type="text" id="dash-city" value="${escapeHtml(account.zona||'')}"></div>
       </div>
-    </details>
-    <div class="field">
-      <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">📍 ${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
-      <div class="loc-status ${account.lat?'ok':''}" id="dash-locStatus">${account.lat?'Ubicación activa para búsquedas por cercanía.':'Todavía no compartiste tu ubicación.'}</div>
+      <div class="ficha-col-right">
+        <div class="field"><label>Descripción</label><textarea id="dash-desc" style="min-height:132px;">${escapeHtml(account.bio||'')}</textarea></div>
+        <details class="ng-add">
+          <summary>Fotos de trabajos realizados (opcional, hasta ${account.featuredUntil && account.featuredUntil > Date.now() ? '10' : '3'})</summary>
+          <div class="ng-add-body">
+            <div class="work-photos-row">
+              ${Array.from({length: account.featuredUntil && account.featuredUntil > Date.now() ? 10 : 3}, (_,i) => {
+                const existing = (account.workPhotos && account.workPhotos[i]) || '';
+                return `
+                <div class="work-photo-slot">
+                  <div class="work-photo-preview" id="dash-wp-preview-${i}" style="${existing?`background-image:url(${existing});`:''}">${existing?'':'+'}</div>
+                  <button type="button" class="btn btn-outline btn-sm file-btn">${existing?'Cambiar':'Subir'}
+                    <input type="file" accept="image/*" class="dash-wp-input" data-idx="${i}">
+                  </button>
+                </div>`;
+              }).join('')}
+            </div>
+            ${account.featuredUntil && account.featuredUntil > Date.now() ? '' : `<div class="note">${PAYMENTS_ENABLED ? `Contrata el plan Premium para subir hasta 10 fotos. <a href="javascript:void(0)" id="dash-featured-link">Ir a Premium</a>` : 'Muy pronto podrás activar el plan Premium para subir hasta 10 fotos.'}</div>`}
+          </div>
+        </details>
+        <div class="field">
+          <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">📍 ${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
+          <div class="loc-status ${account.lat?'ok':''}" id="dash-locStatus">${account.lat?'Ubicación activa para búsquedas por cercanía.':'Todavía no compartiste tu ubicación.'}</div>
+        </div>
+      </div>
     </div>
     <div class="field-row dash-save-bar">
       <button class="btn btn-primary" id="dash-save" style="flex:1;">Guardar cambios</button>
