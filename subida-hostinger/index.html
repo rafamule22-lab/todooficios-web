@@ -735,6 +735,35 @@
     .ticket-divider::after{left:auto; right:-9px;}
     .ticket-stub{width:auto; flex-direction:row; justify-content:space-between; padding:14px 20px;}
   }
+
+  #results-list{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px;}
+  #results-list .empty-state{grid-column:1 / -1;}
+  @media (max-width:900px){ #results-list{grid-template-columns:1fr 1fr;} }
+  @media (max-width:600px){ #results-list{grid-template-columns:1fr;} }
+  .pro-card{
+    background:var(--paper-light); border:1.5px solid var(--ink); border-radius:12px;
+    padding:16px; display:flex; flex-direction:column; gap:8px;
+  }
+  .pro-card-top{display:flex; align-items:center; gap:10px;}
+  .pro-card .ticket-photo, .pro-card .ticket-photo-fallback{width:40px; height:40px; font-size:14px;}
+  .pro-card .pro-name{font-size:15px;}
+  .pro-card .pro-desc{
+    font-size:12.5px; margin:0; flex:1;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .pro-card .pro-meta{gap:8px 10px; font-size:11.5px;}
+  .pro-card-divider{border-top:2px dashed var(--line); margin:2px -16px 0; position:relative;}
+  .pro-card-divider::before, .pro-card-divider::after{
+    content:''; position:absolute; top:50%; transform:translateY(-50%);
+    width:16px; height:16px; border-radius:50%; background:var(--paper);
+  }
+  .pro-card-divider::before{left:-8px;}
+  .pro-card-divider::after{right:-8px;}
+  .pro-card-foot{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .pro-card .stamp{width:46px; height:46px; flex-shrink:0;}
+  .pro-card .stamp .num{font-size:13px;}
+  .pro-card .stamp .lbl{font-size:6.5px;}
+  .pro-card-foot .btn{flex:1;}
   .pro-name{font-size:17px; font-weight:700; font-family:'Space Grotesk';}
   .pro-oficio{
     display:inline-block; font-family:'IBM Plex Mono'; font-size:11px; text-transform:uppercase;
@@ -4120,25 +4149,23 @@ function proCardHTML(p){
   const stats = ratingStats(p.email, RATINGS);
   const dist = (myLoc && p.lat != null) ? haversineKm(myLoc, {lat:p.lat, lng:p.lng}) : null;
   return `
-  <div class="ticket">
-    <div class="ticket-main">
-      <div class="ticket-top">
-        ${p.photo ? `<img class="ticket-photo" src="${p.photo}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
-        <div>
-          <div class="pro-name">${escapeHtml(p.name)}</div>
-          <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>
-        </div>
-      </div>
-      <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
-      <div class="pro-meta">
-        <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
-        ${dist != null ? `<span class="distance-tag">≈ ${dist.toFixed(1)} km</span>` : ''}
-        ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
-        ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
+  <div class="pro-card">
+    <div class="pro-card-top">
+      ${p.photo ? `<img class="ticket-photo" src="${p.photo}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
+      <div>
+        <div class="pro-name">${escapeHtml(p.name)}</div>
+        <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>
       </div>
     </div>
-    <div class="ticket-divider"></div>
-    <div class="ticket-stub">
+    <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
+    <div class="pro-meta">
+      <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
+      ${dist != null ? `<span class="distance-tag">≈ ${dist.toFixed(1)} km</span>` : ''}
+      ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
+      ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
+    </div>
+    <div class="pro-card-divider"></div>
+    <div class="pro-card-foot">
       <div class="stamp ${stats.avg==null?'empty':''}">
         <span class="num">${stats.avg==null ? '—' : stats.avg.toFixed(1)}</span>
         <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
