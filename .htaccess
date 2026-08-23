@@ -10,11 +10,9 @@ DirectoryIndex index.html
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  RewriteCond %{QUERY_STRING} (^|&)preview=toc-construccion-2026(&|$)
-  RewriteRule ^ - [CO=toc_preview:1:%{HTTP_HOST}:2592000:/,L]
-
+  RewriteCond %{QUERY_STRING} preview=toc-construccion-2026 [OR]
   RewriteCond %{HTTP_COOKIE} toc_preview=1
-  RewriteRule ^ - [L]
+  RewriteRule ^ - [CO=toc_preview:1:%{HTTP_HOST}:2592000:/,L]
 
   RewriteRule ^(proximamente\.html|robots\.txt|sitemap\.xml|manifest\.json|favicon\.ico)$ - [L]
   RewriteRule ^assets/ - [L]

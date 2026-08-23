@@ -499,6 +499,26 @@
   .ng-tab-panel .section-label .ng-icon svg{width:16px; height:16px;}
   .ng-tab-panel .note{font-size:13.5px; line-height:1.55;}
 
+  .biz-banner{
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    background:var(--paper-light); border:1.5px solid var(--line); border-left:4px solid var(--amber-deep);
+    padding:22px 24px; margin-bottom:22px;
+  }
+  .biz-banner-icon{
+    width:46px; height:46px; border-radius:10px; flex-shrink:0;
+    background:rgba(217,164,0,0.16); color:var(--amber-deep);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .biz-banner-icon svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .biz-banner-text{flex:1; min-width:220px;}
+  .biz-banner-text h3{font-size:21px; font-weight:700; margin:0 0 5px; color:var(--ink); letter-spacing:normal;}
+  .biz-banner-text p{font-size:15px; color:var(--ink-soft); line-height:1.5; margin:0; max-width:480px;}
+  .biz-banner .btn{white-space:nowrap; font-size:14.5px; padding:12px 20px;}
+  @media (max-width:560px){
+    .biz-banner{padding:18px;}
+    .biz-banner .btn{width:100%; justify-content:center;}
+  }
+
   .ng-add{margin-top:20px; border-top:1px dashed var(--line); padding-top:16px;}
   .ng-add summary{cursor:pointer; font-family:'IBM Plex Mono'; font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px;}
   .ng-add summary::-webkit-details-marker{display:none;}
@@ -767,8 +787,8 @@
 
   .dash-banner{
     display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background:var(--ink); color:var(--paper-light); padding:14px 18px; border-radius:9px;
-    margin-bottom:22px; font-size:13px; flex-wrap:wrap;
+    background:var(--ink); color:var(--paper-light); padding:15px 18px; border-radius:9px;
+    margin-bottom:14px; font-size:14px; flex-wrap:wrap;
   }
   .dash-head{display:flex; gap:16px; align-items:center; margin-bottom:22px; flex-wrap:wrap;}
   .dash-head img, .dash-head .ph-fallback{
@@ -2487,17 +2507,18 @@ function renderDashboard(){
   const stats = ratingStats(account.email, RATINGS);
   return `
   <div class="dash-banner">
-    <span>Sesión activa como <strong>${escapeHtml(account.name)}</strong>. Tu ficha ya es visible para quien busque en TodoOficios.es.</span>
+    <span>✓ Sesión activa como <strong>${escapeHtml(account.name)}</strong>. Tu ficha ya es visible para quien busque en TodoOficios.es.</span>
     <button class="btn btn-outline btn-sm" id="logoutBtn" style="background:transparent; border-color:rgba(247,245,240,.4); color:#fff;">Cerrar sesión</button>
   </div>
-  <div class="panel panel-wide" style="background:var(--ink); border-color:var(--ink); margin-bottom:22px;">
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <div>
-        <div class="section-label" style="color:var(--amber);">Panel de negocio</div>
-        <p style="color:var(--paper-light); margin:4px 0 0; font-size:14px; max-width:480px;">Gastos, clientes, presupuestos y agenda — todo en un vistazo, sin salir de tu cuenta.</p>
-      </div>
-      <button class="btn btn-amber" data-view="negocio">Abrir panel →</button>
+  <div class="panel panel-wide biz-banner">
+    <div class="biz-banner-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></svg>
     </div>
+    <div class="biz-banner-text">
+      <h3>Panel de negocio</h3>
+      <p>Gastos, clientes, presupuestos y agenda — todo en un vistazo, sin salir de tu cuenta.</p>
+    </div>
+    <button class="btn btn-amber" data-view="negocio">Abrir panel de negocio →</button>
   </div>
   <div class="dash-head">
     ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
@@ -2549,19 +2570,6 @@ function renderDashboard(){
       <button class="btn btn-primary" id="dash-save" style="flex:1;">Guardar cambios</button>
       <button class="btn btn-outline" id="dash-view" style="flex:1;">Ver mi ficha pública</button>
     </div>
-  </div>
-  <div class="panel">
-    <div class="section-label">Cursos de formación</div>
-    <div class="field"><label>Empresa</label><input type="text" id="dash-course-company" value="${escapeHtml(account.name)}"></div>
-    <div class="field-row">
-      <div class="field"><label>Curso</label><input type="text" id="dash-course-name" placeholder="Nombre de la formación"></div>
-      <div class="field"><label>Duración (horas)</label><input type="number" min="1" id="dash-course-duration" placeholder="Horas totales"></div>
-    </div>
-    <div class="field"><label>Enlace al proveedor</label><input type="url" id="dash-course-url" placeholder="https://ejemplo.com"></div>
-    <button class="btn btn-primary btn-block" id="dash-course-submit">Registrar Curso</button>
-    <div id="dash-course-msg" class="msg" style="display:none;"></div>
-    <div class="section-label" style="margin-top:20px;">Tus cursos</div>
-    <div id="dash-course-list">Cargando cursos...</div>
   </div>
   <div class="panel">
     <div class="section-label">Mensajes de clientes</div>
@@ -2657,54 +2665,6 @@ function bindPro(){
       showView('pro');
     };
 
-    document.getElementById('dash-course-submit').onclick = async ()=>{
-      const msgBox = document.getElementById('dash-course-msg');
-      msgBox.style.display = 'none';
-      msgBox.className = 'msg';
-      msgBox.textContent = '';
-      const company = document.getElementById('dash-course-company').value.trim();
-      const courseName = document.getElementById('dash-course-name').value.trim();
-      const duration = Number(document.getElementById('dash-course-duration').value);
-      const courseUrl = document.getElementById('dash-course-url').value.trim();
-      if(!company || !courseName){
-        msgBox.textContent = 'Completa el nombre de la empresa y el curso.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      if(!duration || duration < 1){
-        msgBox.textContent = 'La duración debe ser un número mayor que cero.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      try {
-        const url = new URL(courseUrl);
-        if(!['http:', 'https:'].includes(url.protocol)) throw new Error();
-      } catch(e) {
-        msgBox.textContent = 'Introduce una URL válida que comience con http:// o https://.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      account.courses = account.courses || [];
-      account.courses.push({ company, courseName, duration, courseUrl, createdAt: Date.now() });
-      const saved = await safeSet('account:'+account.email, JSON.stringify(account), true);
-      if(!saved){
-        msgBox.textContent = 'No se pudo guardar el curso. Revisa el espacio disponible e inténtalo otra vez.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      msgBox.textContent = 'Curso registrado correctamente.';
-      msgBox.classList.add('ok');
-      msgBox.style.display = 'block';
-      renderDashCourses();
-      document.getElementById('dash-course-name').value = '';
-      document.getElementById('dash-course-duration').value = '';
-      document.getElementById('dash-course-url').value = '';
-    };
-
     const dashFeaturedBtn = document.getElementById('dash-featured-btn');
     if(dashFeaturedBtn){
       dashFeaturedBtn.onclick = async ()=>{
@@ -2737,25 +2697,6 @@ function bindPro(){
         </div>`).join('');
     }
 
-    function renderDashCourses(){
-      const list = document.getElementById('dash-course-list');
-      const courses = account.courses || [];
-      if(!courses.length){
-        list.innerHTML = '<div class="empty-state">Aún no registraste cursos.</div>';
-        return;
-      }
-      list.innerHTML = courses.map(c => `
-        <div class="ticket" style="padding:14px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-            <strong style="font-size:1rem;">${escapeHtml(c.courseName)}</strong>
-            <span style="font-size:0.95rem; color:#5f5a53;">${escapeHtml(String(c.duration))} h</span>
-          </div>
-          <div style="margin-top:8px; color:#5f5a53;">${escapeHtml(c.company)}</div>
-          <a href="${escapeHtml(c.courseUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; color:#141412; text-decoration:underline;">Ir al enlace</a>
-        </div>
-      `).join('');
-    }
-    renderDashCourses();
     renderProMessages();
 
     document.getElementById('dash-view').onclick = ()=>{
@@ -3078,7 +3019,7 @@ function abrirPresupuestoPDF(id){
   </div>
 
   <sc` + `ript>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</sc` + `ript>
-</body></html>`;
+</bod` + `y></html>`;
 
   const win = window.open('', '_blank');
   if(!win){ showToast('Tu navegador bloqueó la ventana. Permite ventanas emergentes para ver el PDF.'); return; }
