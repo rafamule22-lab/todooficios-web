@@ -2,6 +2,39 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<script>
+/* ============================================================
+   MODO CONSTRUCCION — se ejecuta antes de cargar cualquier otra cosa,
+   asi que funciona sin depender de que el hosting respete .htaccess
+   (el de Hostinger conectado a GitHub no lo hace).
+   Para publicar la web de verdad: cambia UNDER_CONSTRUCTION a false
+   y despliega (commit + push a main).
+   Para ver el sitio real mientras esta en construccion, entra en:
+     https://todooficios.es/?preview=toc-construccion-2026
+   (queda guardado en este navegador 30 dias, no hace falta repetirlo).
+   ============================================================ */
+(function(){
+  var UNDER_CONSTRUCTION = true;
+  if(!UNDER_CONSTRUCTION) return;
+  var PREVIEW_KEY = 'toc_preview_2026';
+  var THIRTY_DAYS_MS = 30*24*60*60*1000;
+  try{
+    var params = new URLSearchParams(location.search);
+    if(params.get('preview') === 'toc-construccion-2026'){
+      localStorage.setItem(PREVIEW_KEY, String(Date.now() + THIRTY_DAYS_MS));
+    }
+  }catch(e){}
+  var hasPreviewAccess = false;
+  try{
+    var expiry = parseInt(localStorage.getItem(PREVIEW_KEY) || '0', 10);
+    hasPreviewAccess = expiry > Date.now();
+  }catch(e){}
+  var onProximamente = /\/proximamente\.html$/.test(location.pathname);
+  if(!hasPreviewAccess && !onProximamente){
+    location.replace('/proximamente.html');
+  }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#141412">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -81,6 +114,15 @@
     --amber:#F2B705;
     --amber-deep:#D9A400;
     --line: rgba(20,20,18,0.15);
+    /* Acentos del panel de negocio: uno por módulo, solo para el back-office del profesional (no la web pública) */
+    --c-pendientes:#D9A400;
+    --c-clientes:#3E5FBF;
+    --c-gastos:#C05A3A;
+    --c-agenda:#2E8F6E;
+    --c-presupuestos:#7458C2;
+    --c-fiscal:#1C7A8C;
+    --c-envio:#B4407A;
+    --c-agente:#C77C1E;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -281,7 +323,7 @@
     .nav-menu-toggle{display:inline-flex;}
     .featured-modal{padding:18px;}
   }
-  .nav-btn.active{background:var(--amber); color:var(--ink); border-color:var(--amber); font-weight:600;}
+  .nav-btn.active{background:var(--ink); color:var(--paper-light); border-color:var(--paper-light); font-weight:600; box-shadow:inset 0 -2px 0 var(--amber);}
 
   .wrap{max-width:920px; margin:0 auto; padding:36px 20px 90px;}
   .view{display:none;}
@@ -344,6 +386,11 @@
     color:var(--ink); opacity:0.55; margin-bottom:12px; font-weight:600;
     text-align:center;
   }
+  .section-heading{
+    font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:700;
+    color:var(--ink); text-align:center; margin:0 0 18px; letter-spacing:normal;
+  }
+  @media (max-width:768px){ .section-heading{font-size:21px;} }
 
   .how-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:10px;}
   @media (max-width:640px){.how-grid{grid-template-columns:1fr;}}
@@ -355,6 +402,7 @@
 
   .profiles-grid{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:8px; max-width:960px; margin-left:auto; margin-right:auto;}
   .profile-card{background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
+  .example-tag{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); background:#ecece8; border:1px solid var(--line); padding:3px 8px; border-radius:999px;}
   .profile-card .avatar{width:48px; height:48px; border-radius:50%; background:var(--amber); display:grid; place-items:center; font-weight:700; font-family:'Space Grotesk'; font-size:16px; color:var(--ink);} 
   .profile-card h3{font-size:18px;}
   .profile-card .role{font-family:'IBM Plex Mono'; font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft);} 
@@ -369,6 +417,7 @@
     background:var(--paper-light); border:1px solid var(--line); border-radius:12px;
     padding:28px; max-width:560px;
   }
+  .panel.panel-wide{max-width:760px;}
   .field{margin-bottom:18px;}
   label{display:block; font-size:12.5px; font-weight:600; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.03em; opacity:0.7;}
   input[type=text], input[type=email], input[type=tel], input[type=password], select, textarea{
@@ -395,6 +444,118 @@
   .loc-status.err{color:#a12626; opacity:1;}
   .helptext{font-size:12px; opacity:0.55; margin-top:6px;}
   .note{font-size:12px; color:var(--ink-soft); margin-top:8px; line-height:1.45;}
+
+  /* ---------- Panel de negocio ---------- */
+  .panel.panel-wide{max-width:900px;}
+  .ng-intro{max-width:900px; margin-bottom:10px; text-align:center;}
+  .ng-intro .section-label{text-align:center; margin-bottom:14px; font-size:13.5px; letter-spacing:0.12em; color:var(--amber-deep); opacity:1; display:flex; align-items:center; justify-content:center; gap:9px;}
+  .ng-intro .section-label .ng-icon{width:24px; height:24px;}
+  .ng-intro .section-label .ng-icon svg{width:14px; height:14px;}
+  .ng-intro h2{text-align:center; font-size:38px; font-weight:700; margin-bottom:12px; line-height:1.15;}
+  .ng-intro p{text-align:center; font-size:16.5px; color:var(--ink-soft); line-height:1.5; max-width:620px; margin:0 auto 28px;}
+  @media (max-width:640px){ .ng-intro h2{font-size:28px;} .ng-intro p{font-size:15px;} }
+
+  .ng-icon{display:inline-flex; align-items:center; justify-content:center; border-radius:8px; flex-shrink:0;}
+  .ng-icon svg{stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .ng-icon.c-pendientes{background:rgba(217,164,0,0.16); color:var(--c-pendientes);}
+  .ng-icon.c-clientes{background:rgba(62,95,191,0.14); color:var(--c-clientes);}
+  .ng-icon.c-gastos{background:rgba(192,90,58,0.14); color:var(--c-gastos);}
+  .ng-icon.c-agenda{background:rgba(46,143,110,0.14); color:var(--c-agenda);}
+  .ng-icon.c-presupuestos{background:rgba(116,88,194,0.14); color:var(--c-presupuestos);}
+  .ng-icon.c-fiscal{background:rgba(28,122,140,0.14); color:var(--c-fiscal);}
+  .ng-icon.c-envio{background:rgba(180,64,122,0.14); color:var(--c-envio);}
+  .ng-icon.c-agente{background:rgba(199,124,30,0.14); color:var(--c-agente);}
+
+  .negocio-stats{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:14px; margin-bottom:20px; max-width:900px;}
+  .stat-card{background:var(--ink); color:var(--paper-light); border-radius:12px; padding:16px 18px; display:flex; flex-direction:column; gap:4px; cursor:pointer; transition:.15s; border:1.5px solid var(--ink);}
+  .stat-card:hover{border-color:var(--amber);}
+  .stat-card .ng-icon{width:30px; height:30px; margin-bottom:8px;}
+  .stat-card .ng-icon svg{width:17px; height:17px;}
+  .stat-label{font-family:'IBM Plex Mono'; font-size:12.5px; text-transform:uppercase; letter-spacing:0.05em; opacity:0.75;}
+  .stat-value{font-family:'Space Grotesk'; font-size:27px; font-weight:600;}
+  .stat-sub{font-size:14px; opacity:0.8;}
+  @media (max-width:820px){.negocio-stats{grid-template-columns:1fr 1fr;}}
+  @media (max-width:560px){.negocio-stats{grid-template-columns:1fr;}}
+
+  .ng-tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; max-width:900px;}
+  .ng-tab-btn{background:#fff; border:1.5px solid var(--line); border-radius:999px; padding:9px 20px 9px 12px; font-size:15px; font-weight:600; color:var(--ink-soft); white-space:nowrap; display:inline-flex; align-items:center; gap:9px;}
+  .ng-tab-btn .ng-icon{width:26px; height:26px;}
+  .ng-tab-btn .ng-icon svg{width:15px; height:15px;}
+  .ng-tab-btn:hover{border-color:var(--ink); color:var(--ink);}
+  .ng-tab-btn.active{background:var(--ink); border-color:var(--ink); color:#fff;}
+  .ng-tab-panel{display:none;}
+  .ng-tab-panel.active{display:block;}
+  .ng-tab-panel .panel-wide{border-left:4px solid var(--tab-accent, var(--amber-deep));}
+  .ng-tab-panel[data-tab="pendientes"] .panel-wide{--tab-accent:var(--c-pendientes);}
+  .ng-tab-panel[data-tab="clientes"] .panel-wide{--tab-accent:var(--c-clientes);}
+  .ng-tab-panel[data-tab="gastos"] .panel-wide{--tab-accent:var(--c-gastos);}
+  .ng-tab-panel[data-tab="agenda"] .panel-wide{--tab-accent:var(--c-agenda);}
+  .ng-tab-panel[data-tab="presupuestos"] .panel-wide{--tab-accent:var(--c-presupuestos);}
+  .ng-tab-panel[data-tab="fiscal"] .panel-wide{--tab-accent:var(--c-fiscal);}
+  .ng-tab-panel[data-tab="envio"] .panel-wide{--tab-accent:var(--c-envio);}
+  .ng-tab-panel[data-tab="agente"] .panel-wide{--tab-accent:var(--c-agente);}
+  .ng-tab-panel .section-label{font-size:15px; opacity:0.9; text-align:left; letter-spacing:0.05em; margin-bottom:16px; display:flex; align-items:center; gap:10px;}
+  .ng-tab-panel .section-label .ng-icon{width:28px; height:28px;}
+  .ng-tab-panel .section-label .ng-icon svg{width:16px; height:16px;}
+  .ng-tab-panel .note{font-size:13.5px; line-height:1.55;}
+
+  .biz-banner{
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+    background:var(--paper-light); border:1.5px solid var(--line); border-left:4px solid var(--amber-deep);
+    padding:22px 24px; margin-bottom:22px;
+  }
+  .biz-banner-icon{
+    width:46px; height:46px; border-radius:10px; flex-shrink:0;
+    background:rgba(217,164,0,0.16); color:var(--amber-deep);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .biz-banner-icon svg{width:24px; height:24px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .biz-banner-text{flex:1; min-width:220px;}
+  .biz-banner-text h3{font-size:21px; font-weight:700; margin:0 0 5px; color:var(--ink); letter-spacing:normal;}
+  .biz-banner-text p{font-size:15px; color:var(--ink-soft); line-height:1.5; margin:0; max-width:480px;}
+  .biz-banner .btn{white-space:nowrap; font-size:14.5px; padding:12px 20px;}
+  @media (max-width:560px){
+    .biz-banner{padding:18px;}
+    .biz-banner .btn{width:100%; justify-content:center;}
+  }
+
+  .ng-add{margin-top:20px; border-top:1px dashed var(--line); padding-top:16px;}
+  .ng-add summary{cursor:pointer; font-family:'IBM Plex Mono'; font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px;}
+  .ng-add summary::-webkit-details-marker{display:none;}
+  .ng-add summary::before{content:'+'; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--amber); color:var(--ink); font-weight:700; font-size:14px; flex-shrink:0;}
+  .ng-add[open] summary::before{content:'−';}
+  .ng-add-body{margin-top:16px;}
+  .ng-limit-note{margin-top:20px; border-top:1px dashed var(--line); padding-top:16px; background:rgba(242,183,5,0.08); border-radius:8px; padding:14px 16px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
+  .ng-limit-note .note{margin:0;}
+  .pend-list{display:flex; flex-direction:column; gap:9px;}
+  .pend-item{background:#fff; border:1px solid var(--line); border-radius:8px; padding:13px 16px; font-size:15.5px; line-height:1.5;}
+  .data-row{display:flex; align-items:center; justify-content:space-between; gap:12px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:13px 16px; margin-bottom:9px; font-size:15.5px; flex-wrap:wrap;}
+  .data-row .drow-main{flex:1; min-width:160px; line-height:1.6;}
+  .data-row .drow-meta{font-family:'IBM Plex Mono'; font-size:13.5px; color:var(--ink-soft);}
+  .data-row .drow-amount{font-weight:700; font-size:16px; white-space:nowrap;}
+  .badge{display:inline-block; font-family:'IBM Plex Mono'; font-size:12px; text-transform:uppercase; letter-spacing:0.03em; padding:3px 10px; border-radius:999px; background:var(--paper-light); border:1px solid var(--line);}
+  .badge.ok{background:#e4f3e6; border-color:#bfe3c5; color:#1e6b2e;}
+  .badge.warn{background:#fff3d6; border-color:#f0d98a; color:#8a6400;}
+  .badge.bad{background:#fbe4e4; border-color:#f0bcbc; color:#a12626;}
+
+  .drow-row-actions{margin-top:8px;}
+  .pp-mini-btn{font-family:'IBM Plex Mono'; font-size:11.5px; text-transform:uppercase; letter-spacing:0.02em; padding:5px 10px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); margin-right:6px; cursor:pointer;}
+  .pp-mini-btn.ok{border-color:#bfe3c5; color:#1e6b2e;}
+  .pp-mini-btn.bad{border-color:#f0bcbc; color:#a12626;}
+  .pp-mini-btn:hover{border-color:var(--ink); color:var(--ink);}
+
+  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2.2fr 0.8fr 0.8fr 1fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
+  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:2fr 0.6fr 0.7fr 0.85fr 0.85fr 0.85fr 0.3fr;}
+  #pp-partidas-table .pp-coste-cell{display:none;}
+  #pp-partidas-table.has-coste .pp-coste-cell{display:block;}
+  .pp-partidas-head{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:2px;}
+  .pp-partidas-row input, .pp-partidas-row select{padding:8px 9px; font-size:13.5px;}
+  .pp-importe-cell{font-weight:700; font-size:13.5px;}
+  .pp-row-remove{background:transparent; border:none; color:var(--c-gastos); font-weight:700; font-size:17px; cursor:pointer; padding:4px; line-height:1;}
+  .pp-check-label{display:flex; align-items:center; gap:8px; text-transform:none; font-size:13.5px; opacity:1; font-weight:500;}
+  .pp-totales{margin-top:16px; padding:14px 18px; background:var(--paper-light); border-radius:8px; font-size:14.5px; max-width:340px;}
+  .pp-totales-row{display:flex; justify-content:space-between; padding:3px 0;}
+  .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
   .consent-row{display:flex; gap:8px; align-items:flex-start; margin:10px 0 14px;}
   .consent-row input{margin-top:3px;}
   .consent-row label{margin:0; text-transform:none; letter-spacing:0; font-size:12.5px; line-height:1.45; opacity:0.95;}
@@ -403,6 +564,71 @@
   .msg{font-size:13px; padding:10px 12px; border-radius:7px; margin-bottom:16px; font-weight:600;}
   .msg.err{background:#fde8e8; color:#a12626; border:1px solid #f0b8b8;}
   .msg.ok{background:#eaf7e6; color:#1e6b2e; border:1px solid #b9e2ae;}
+
+  /* ---------- Asesor financiero (fiscal / envío / agente) ---------- */
+  .suggest-card{margin-top:16px; border:1px solid var(--line); border-radius:10px; overflow:hidden;}
+  .suggest-card .sc-head{display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--paper-light);}
+  .suggest-card .sc-head .code{font-family:'IBM Plex Mono'; font-weight:700; font-size:19px; min-width:54px;}
+  .suggest-card .sc-head .txt{flex:1;}
+  .suggest-card .sc-head .txt .lbl{font-weight:700; font-size:14.5px;}
+  .suggest-card .sc-head .txt .grp{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .suggest-card .sc-why{padding:10px 16px; font-size:12.5px; color:var(--ink-soft); border-top:1px solid var(--line); line-height:1.5;}
+  .suggest-card.ok .sc-head{background:#eaf7e6;}
+  .suggest-card.ok .code{color:#1e6b2e;}
+  .suggest-card.warn .sc-head{background:#fff3d6;}
+  .suggest-card.warn .code{color:#8a6400;}
+  .clarify{padding:14px 16px; border-top:1px solid var(--line);}
+  .clarify .q{font-size:13.5px; font-weight:600; margin-bottom:10px;}
+  .clarify .opts{display:flex; gap:8px; flex-wrap:wrap;}
+  .clarify .opt{border:1px solid var(--line); border-radius:9px; padding:9px 13px; font:inherit; font-size:13.5px; font-weight:600; cursor:pointer; background:#fff; color:var(--ink-soft); flex:1 1 180px; text-align:left;}
+  .clarify .opt:hover{border-color:var(--ink);}
+  .clarify .opt.picked{background:var(--amber); border-color:var(--amber-deep); color:var(--ink);}
+  .search-toggle{margin-top:2px; background:none; border:none; padding:0; font:inherit; font-size:12.5px; font-weight:700; color:var(--amber-deep); cursor:pointer;}
+  .search-box{margin-top:10px;}
+  .search-results{margin-top:8px; display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;}
+  .result-item{display:flex; justify-content:space-between; gap:10px; padding:9px 12px; border:1px solid var(--line); border-radius:8px; background:var(--paper-light); font-size:13px; cursor:pointer;}
+  .result-item:hover{border-color:var(--ink);}
+  .result-item .rcode{font-family:'IBM Plex Mono'; font-weight:600; color:var(--ink-soft); white-space:nowrap;}
+  .confirm-row{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 16px; border-top:1px solid var(--line); background:var(--paper-light);}
+  .confirm-row .txt{flex:1; font-size:12.5px; color:var(--ink-soft);}
+
+  .deadline-hero{display:flex; gap:16px; align-items:stretch; background:var(--paper-light); border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-top:16px;}
+  .deadline-hero .days{font-family:'Space Grotesk'; font-size:30px; font-weight:700; align-self:center; text-align:center; min-width:74px; color:var(--c-fiscal);}
+  .deadline-hero .days small{display:block; font-family:'IBM Plex Sans'; font-size:10.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase;}
+  .deadline-hero .body{flex:1;}
+  .deadline-hero .label{font-family:'IBM Plex Mono'; font-size:11.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em;}
+  .deadline-hero h3{font-size:19px; margin:4px 0 2px; font-family:'Space Grotesk';}
+  .deadline-hero .when{font-size:13px; color:var(--ink-soft);}
+  @media (max-width:560px){.deadline-hero{flex-direction:column;} .deadline-hero .days{align-self:flex-start;}}
+
+  .fiscal-timeline{margin-top:10px; display:flex; flex-direction:column; gap:8px;}
+  .ft-item{display:flex; gap:12px; align-items:center; padding:11px 14px; border:1px solid var(--line); border-radius:9px; background:#fff;}
+  .ft-item .model{font-weight:700; font-size:14px;}
+  .ft-item .desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+  .ft-item .when{font-size:12.5px; color:var(--ink-soft); text-align:right; min-width:100px; white-space:nowrap;}
+  @media (max-width:560px){.ft-item{flex-wrap:wrap;} .ft-item .when{text-align:left;}}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-top:16px;}
+  .fin-stat{background:var(--paper-light); border:1px solid var(--line); border-radius:9px; padding:14px;}
+  .fin-stat .k{font-size:12px; color:var(--ink-soft); font-weight:600;}
+  .fin-stat .v{font-family:'Space Grotesk'; font-size:22px; font-weight:700; margin-top:4px;}
+  .fin-stat .v.est{color:#8a6400;}
+
+  .exp-list{margin-top:14px; display:flex; flex-direction:column; gap:8px;}
+  .exp-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--paper-light); font-size:13.5px;}
+  .exp-row input[type=checkbox]{width:16px; height:16px; accent-color:var(--amber-deep);}
+  .exp-row .prov{font-weight:600; flex:1;}
+  .exp-row .edate{color:var(--ink-soft); min-width:70px;}
+  .exp-row .amt{font-family:'IBM Plex Mono'; font-weight:600; min-width:70px; text-align:right;}
+
+  .asesor-cardgrid{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; margin-top:16px;}
+  .asesor-card{border:1px solid var(--line); border-radius:10px; padding:14px; background:var(--paper-light); display:flex; gap:12px; cursor:default;}
+  .asesor-card[data-ng-tab]{cursor:pointer;}
+  .asesor-card:hover[data-ng-tab]{border-color:var(--ink);}
+  .asesor-card .ng-icon{width:34px; height:34px;}
+  .asesor-card .ng-icon svg{width:18px; height:18px;}
+  .asesor-card h4{font-size:14px; font-weight:700; margin:0;}
+  .asesor-card p{font-size:12.8px; color:var(--ink-soft); margin:5px 0 0; line-height:1.5;}
 
   .role-toggle{display:flex; gap:10px; margin-bottom:22px;}
   .role-opt{
@@ -504,6 +730,22 @@
   .filter-bar{display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom:16px;}
   .filter-bar .field{margin-bottom:0; min-width:180px; flex:1;}
   .search-combo{position:relative;}
+  .search-field-highlight label{
+    font-size:15px; font-weight:700; color:var(--ink); opacity:1;
+    text-transform:none; letter-spacing:normal; margin-bottom:8px;
+  }
+  .search-field-highlight .search-input-wrap{position:relative; flex:1;}
+  .search-field-highlight .search-icon{
+    position:absolute; left:14px; top:50%; transform:translateY(-50%);
+    font-size:16px; opacity:0.5; pointer-events:none;
+  }
+  .search-field-highlight input[type=text]{
+    border:2px solid var(--ink); border-radius:10px;
+    padding:14px 16px 14px 40px; font-size:16px;
+  }
+  .search-field-highlight input[type=text]:focus{
+    box-shadow:0 0 0 3px rgba(20,20,18,0.1);
+  }
   .sf-dropdown{display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; max-height:300px; overflow-y:auto; background:#fff; border:1.5px solid var(--line); border-radius:10px; box-shadow:0 10px 28px rgba(20,20,18,0.14); z-index:40; padding:6px 0;}
   .sf-dropdown.open{display:block;}
   .sf-dropdown-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; opacity:0.5; padding:9px 14px 4px;}
@@ -545,8 +787,8 @@
 
   .dash-banner{
     display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background:var(--ink); color:var(--paper-light); padding:14px 18px; border-radius:9px;
-    margin-bottom:22px; font-size:13px; flex-wrap:wrap;
+    background:var(--ink); color:var(--paper-light); padding:15px 18px; border-radius:9px;
+    margin-bottom:14px; font-size:14px; flex-wrap:wrap;
   }
   .dash-head{display:flex; gap:16px; align-items:center; margin-bottom:22px; flex-wrap:wrap;}
   .dash-head img, .dash-head .ph-fallback{
@@ -614,7 +856,7 @@
     line-height:1.5;
     text-align:center;
   }
-  .promo-banner strong{color:var(--amber-deep);}
+  .promo-banner strong{color:var(--ink);}
   .promo-banner.promo-banner-inline{margin:0 0 18px;}
 
   .legal-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.52); z-index:130; display:none; align-items:center; justify-content:center; padding:18px;}
@@ -632,8 +874,8 @@
     .brand{width:100%;}
     .brand-mark{height:72px;}
     .brand-tag{font-size:14px;}
-    .nav-links{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); width:100%; gap:8px; margin-left:0;}
-    .nav-btn{width:100%; padding:10px 8px; font-size:12.5px; justify-content:center;}
+    .nav-links{display:none;}
+    .nav-menu-toggle{width:100%; justify-content:center; padding:12px 8px; font-size:14px;}
     .wrap{padding:20px 14px 72px;}
     .hero{padding:28px 16px 24px; border-radius:16px;}
     .hero h1{font-size:clamp(26px, 8vw, 36px);}
@@ -685,6 +927,10 @@
   </div>
   <div class="side-drawer-body">
     <div class="side-section">
+      <h3>App móvil</h3>
+      <a class="side-link" href="javascript:void(0)" data-view="app">Descargar OficiosCalc</a>
+    </div>
+    <div class="side-section">
       <h3>Cursos</h3>
       <a class="side-link" href="javascript:void(0)" data-view="course-providers">Alta proveedores de cursos</a>
       <a class="side-link" href="javascript:void(0)" data-view="course-providers">Capacitación de oficios</a>
@@ -693,6 +939,10 @@
       <h3>Noticias</h3>
       <a class="side-link" href="javascript:void(0)" data-coming-soon="noticias">Novedades del mercado</a>
       <a class="side-link" href="javascript:void(0)" data-coming-soon="ofertas">Ofertas y tendencias</a>
+    </div>
+    <div class="side-section">
+      <h3>Blog</h3>
+      <a class="side-link" href="blog.html">Ver el blog</a>
     </div>
     <div class="side-section">
       <h3>Calculadoras</h3>
@@ -729,103 +979,12 @@
   <div class="brand">
     <img class="brand-mark" src="assets/logo.png" alt="TodoOficios.es">
     <div class="brand-tag">TodoOficios.es</div>
-    <div class="mason-mascot" aria-hidden="true">
-      <svg viewBox="0 -12 155 56" xmlns="http://www.w3.org/2000/svg">
-        <g fill="#fff" stroke="#000" stroke-width="0.6">
-          <rect x="59" y="31.1" width="8.5" height="6.7"/>
-          <rect x="67.5" y="31.1" width="8.5" height="6.7"/>
-          <rect x="76" y="31.1" width="8.5" height="6.7"/>
-          <rect x="84.5" y="31.1" width="8.5" height="6.7"/>
-          <rect x="67.5" y="24.4" width="8.5" height="6.7"/>
-          <rect x="76" y="24.4" width="8.5" height="6.7"/>
-          <rect x="84.5" y="24.4" width="8.5" height="6.7"/>
-          <rect x="76" y="17.7" width="8.5" height="6.7"/>
-          <rect x="84.5" y="17.7" width="8.5" height="6.7"/>
-          <rect x="84.5" y="11" width="8.5" height="6.7"/>
-        </g>
-        <rect class="mason-brick-new" x="59" y="24.4" width="8.5" height="6.7" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <g fill="#fff" stroke="#000" stroke-width="0.6">
-          <rect class="mason-ground-brick1" x="50.75" y="26.45" width="8.5" height="6.7"/>
-        </g>
-        <g class="mason-walker">
-          <g class="mason-facing">
-            <g fill="#fff">
-              <circle cx="8" cy="8.8" r="3.2"/>
-              <path d="M 3.8 8.5 C 3.8 5.5, 12.2 5.5, 12.2 8.5 Z"/>
-              <rect x="2.5" y="8.5" width="11" height="1" rx="0.5"/>
-              <rect x="5" y="4.3" width="6" height="3"/>
-              <path d="M 5,7.3 L 11,7.3 L 11,11.3 Z"/>
-              <rect x="3" y="12.3" width="10" height="11" rx="2"/>
-              <rect x="3" y="21.3" width="10" height="2"/>
-              <rect x="4.5" y="23.3" width="7" height="6"/>
-            </g>
-            <rect fill="#000" x="5.5" y="13.1" width="5" height="3" rx="0.4"/>
-            <g class="mason-thigh-back" fill="#fff">
-              <rect x="3.5" y="27.3" width="3.5" height="10.5" rx="1.75"/>
-            </g>
-            <g class="mason-thigh-front" fill="#fff">
-              <rect x="9" y="27.3" width="3.5" height="10.5" rx="1.75"/>
-            </g>
-            <g class="mason-arm-brick" fill="#fff">
-              <rect x="11.5" y="12.5" width="4" height="4" rx="0.5"/>
-              <rect x="11.5" y="13.3" width="3.2" height="16" rx="1.6"/>
-              <rect class="mason-hand-brick" x="9.5" y="27.3" width="7" height="5" rx="1"/>
-            </g>
-            <g class="mason-arm-tool" fill="#fff">
-              <rect x="0.5" y="12.5" width="4" height="4" rx="0.5"/>
-              <rect x="1.3" y="13.3" width="3.2" height="12" rx="1.6"/>
-            </g>
-          </g>
-        </g>
-        <polyline points="57,-2 75,-11 93,-2" fill="none" stroke="#fff" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="80.5" y="-11.5" width="6.2" height="7.5" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <g fill="#fff" stroke="#000" stroke-width="0.6">
-          <rect x="55" y="0.3" width="40" height="2" rx="0.6"/>
-          <rect x="71.5" y="2.3" width="3" height="4" rx="0.6"/>
-        </g>
-        <circle cx="73" cy="7" r="3.3" fill="none" stroke="#000" stroke-width="0.6"/>
-        <circle class="mason-bulb-glow" cx="73" cy="7" r="7.5" fill="#fff"/>
-        <circle class="mason-socket-bulb" cx="73" cy="7" r="3" fill="#fff" stroke="#000" stroke-width="0.6"/>
-        <g class="mason-walker2">
-          <g class="mason-facing2">
-            <g fill="#fff">
-              <circle cx="8" cy="8.8" r="3.2"/>
-              <path d="M 3.8 8.5 C 3.8 5.5, 12.2 5.5, 12.2 8.5 Z"/>
-              <rect x="2.5" y="8.5" width="11" height="1" rx="0.5"/>
-              <rect x="5" y="4.3" width="6" height="3"/>
-              <path d="M 5,7.3 L 11,7.3 L 11,11.3 Z"/>
-              <rect x="3" y="12.3" width="10" height="11" rx="2"/>
-              <rect x="3" y="21.3" width="10" height="2"/>
-              <rect x="4.5" y="23.3" width="7" height="6"/>
-            </g>
-            <rect fill="#000" x="5.5" y="13.1" width="5" height="3" rx="0.4"/>
-            <g class="mason-thigh-back2" fill="#fff">
-              <rect x="3.5" y="27.3" width="3.5" height="10.5" rx="1.75"/>
-            </g>
-            <g class="mason-thigh-front2" fill="#fff">
-              <rect x="9" y="27.3" width="3.5" height="10.5" rx="1.75"/>
-            </g>
-            <g class="mason-arm-bulb" fill="#fff">
-              <rect x="0.9" y="12.5" width="4" height="4" rx="0.5"/>
-              <rect x="1.4" y="13.3" width="3" height="6" rx="1.5"/>
-              <circle class="mason-hand-bulb" cx="2.9" cy="21.3" r="3.2"/>
-            </g>
-            <g class="mason-arm-idle2" fill="#fff">
-              <rect x="11.1" y="12.5" width="4" height="4" rx="0.5"/>
-              <rect x="11.6" y="13.3" width="3" height="9.5" rx="1.5"/>
-            </g>
-          </g>
-        </g>
-      </svg>
-    </div>
   </div>
   <div class="nav-links">
     <button class="nav-btn" data-view="home">Inicio</button>
     <button class="nav-btn" data-view="pro">Soy profesional</button>
     <button class="nav-btn" data-view="buscar">Buscar</button>
     <button class="nav-btn" data-view="client">Soy cliente</button>
-    <a class="nav-btn" href="calculadoras.html">Calculadoras</a>
-    <a class="nav-btn" href="blog.html">Blog</a>
   </div>
   <button class="nav-menu-toggle" id="openDrawerBtn" type="button">☰ Menú</button>
 </div>
@@ -842,14 +1001,12 @@
       <h1>El profesional correcto está más cerca de ti.</h1>
       <p class="lead">TodoOficios.es conecta a quien necesita una mano experta con quien sabe hacer el trabajo. Perfiles reales, ubicación cercana y valoraciones de clientes de verdad.</p>
       <div class="hero-actions">
-        <button class="btn btn-amber" data-view="pro">Soy profesional</button>
-        <button class="btn btn-outline" data-view="buscar">Busco un profesional</button>
+        <button class="btn btn-amber" data-view="buscar">Busco un profesional</button>
+        <button class="btn btn-outline" data-view="pro">Soy profesional</button>
       </div>
     </div>
 
-    <div class="promo-banner">🎉 <strong>Lanzamiento:</strong> los primeros 300 profesionales que se registren obtienen <strong>6 meses gratis</strong> de la versión Premium (más visibilidad y hasta 10 fotos de trabajos). Pasado ese tiempo, Premium cuesta 19,90 €, pero siempre puedes seguir con el <strong>plan gratuito para siempre</strong>.</div>
-
-    <div class="section-label" style="font-size:13px; text-align:center;">Servicios destacados</div>
+    <div class="section-heading">Servicios destacados</div>
     <div class="trades-strip" style="margin: 0 auto 24px auto; justify-content:center; width:fit-content; max-width:100%;">
       <span class="trade-chip active" style="font-size:15px; padding:10px 14px;">🔧 Fontanería</span>
       <span class="trade-chip active" style="font-size:15px; padding:10px 14px;">⚡ Electricidad</span>
@@ -860,9 +1017,10 @@
       <span class="trade-chip active" style="font-size:15px; padding:10px 14px;">🪚 Carpintería</span>
     </div>
 
-    <div class="section-label" style="font-size:13px; text-align:center;">Perfiles destacados</div>
+    <div class="section-heading">Perfiles destacados</div>
     <div class="profiles-grid" style="margin: 14px auto 0 auto; max-width:980px;">
       <div class="profile-card" style="font-size:15px;">
+        <span class="example-tag">Perfil de ejemplo</span>
         <div class="avatar">FM</div>
         <h3 style="font-size:18px;">Franco Medina</h3>
         <div class="role">Electricista</div>
@@ -871,6 +1029,7 @@
         <button class="btn btn-outline btn-sm" data-view="buscar">Ver perfil</button>
       </div>
       <div class="profile-card" style="font-size:15px;">
+        <span class="example-tag">Perfil de ejemplo</span>
         <div class="avatar">CB</div>
         <h3 style="font-size:18px;">Cecilia Basle</h3>
         <div class="role">Gasista</div>
@@ -879,6 +1038,7 @@
         <button class="btn btn-outline btn-sm" data-view="buscar">Ver perfil</button>
       </div>
       <div class="profile-card" style="font-size:15px;">
+        <span class="example-tag">Perfil de ejemplo</span>
         <div class="avatar">MS</div>
         <h3 style="font-size:18px;">Matías Servant</h3>
         <div class="role">Fontanero</div>
@@ -888,7 +1048,7 @@
       </div>
     </div>
 
-    <div class="section-label">Cómo funciona</div>
+    <div class="section-heading">Cómo funciona</div>
     <div class="how-grid">
       <div class="how-card">
         <h3>🔧 Para profesionales</h3>
@@ -911,6 +1071,10 @@
 
   <!-- PRO (registro / login / panel) -->
   <section class="view" id="view-pro"></section>
+  <section class="view" id="view-negocio"></section>
+
+  <!-- APP MÓVIL (OficiosCalc) -->
+  <section class="view" id="view-app"></section>
 
   <!-- CLIENTE (registro / login / panel) -->
   <section class="view" id="view-client"></section>
@@ -1007,6 +1171,88 @@ function sfDropdownGroupsHTML(){
       ${g.items.map(o => `<div class="sf-dropdown-item" data-oficio="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('')}
     </div>`).join('');
 }
+
+/* ======================= EPÍGRAFES IAE (Asesor fiscal) ======================= */
+// Catálogo de epígrafes de la Sección 1ª del IAE relevantes para los oficios de la web.
+// Verificado contra fuentes fiscales públicas (AEAT/tarifas IAE); no sustituye la confirmación de un gestor.
+const EPIGRAFES_CATALOG = [
+  {group:'Edificación y obra (501)', items:[
+    {code:'501.1', label:'Construcción completa, reparación y conservación'},
+    {code:'501.3', label:'Albañilería y pequeños trabajos de construcción'},
+  ]},
+  {group:'Estructuras y cubiertas (503)', items:[
+    {code:'503.1', label:'Montaje de estructuras y cubiertas en edificaciones'},
+    {code:'503.3', label:'Montaje e instalación de estructuras metálicas'},
+  ]},
+  {group:'Instalaciones y montajes (504)', items:[
+    {code:'504.1', label:'Instalaciones eléctricas en general'},
+    {code:'504.2', label:'Instalaciones de fontanería y gas'},
+    {code:'504.3', label:'Instalaciones de frío, calor y aire acondicionado'},
+  ]},
+  {group:'Acabados de obras (505)', items:[
+    {code:'505.1', label:'Revestimientos exteriores e interiores'},
+    {code:'505.2', label:'Solados y pavimentos'},
+    {code:'505.4', label:'Aislamientos térmicos, acústicos e impermeabilización'},
+    {code:'505.5', label:'Carpintería y cerrajería'},
+    {code:'505.6', label:'Pintura, revestimientos y decoración de edificios'},
+    {code:'505.7', label:'Trabajos en yeso y escayola'},
+  ]},
+  {group:'Otros servicios', items:[
+    {code:'911', label:'Servicios agrícolas y de jardinería'},
+    {code:'922.1', label:'Limpieza de edificios, locales y obras'},
+  ]},
+];
+const EPIGRAFES_INDEX = {};
+EPIGRAFES_CATALOG.forEach(g => g.items.forEach(i => EPIGRAFES_INDEX[i.code] = {label:i.label, group:g.group}));
+
+// Oficio de TodoOficios -> epígrafe sugerido. 'alta' = coincidencia directa, 'media' = orientativa
+// (conviene confirmarla), 'revisar' = el oficio admite más de una clasificación real y hace falta
+// una pregunta aclaratoria (ver 'clarify').
+const OFICIO_EPIGRAFE = {
+  'Fontanero':{code:'504.2', confidence:'alta'}, 'Electricista':{code:'504.1', confidence:'alta'},
+  'Gasista':{code:'504.2', confidence:'alta'}, 'Técnico en calefacción':{code:'504.3', confidence:'alta'},
+  'Instalador de aire acondicionado':{code:'504.3', confidence:'alta'}, 'Técnico en refrigeración':{code:'504.3', confidence:'alta'},
+  'Instalador de termos y calderas':{code:'504.3', confidence:'alta'},
+  'Albañil':{code:'501.3', confidence:'alta'}, 'Maestro de obra':{code:'501.1', confidence:'alta'},
+  'Oficial de construcción':{code:'501.3', confidence:'alta'}, 'Reformista':{code:'501.1', confidence:'media'},
+  'Pladurista (Pladur / Drywall)':{code:'505.7', confidence:'alta'}, 'Yesero':{code:'505.7', confidence:'alta'},
+  'Alicatador':{code:'505.1', confidence:'alta'}, 'Solador':{code:'505.2', confidence:'alta'},
+  'Colocador de cerámica':{code:'505.1', confidence:'media'}, 'Colocador de porcelanato':{code:'505.2', confidence:'media'},
+  'Carpintero':{code:'505.5', confidence:'alta'}, 'Carpintero de obra':{code:'505.5', confidence:'alta'},
+  'Carpintero de muebles':{code:'505.5', confidence:'media'}, 'Ebanista':{code:'505.5', confidence:'media'},
+  'Instalador de puertas':{code:'505.5', confidence:'alta'}, 'Instalador de ventanas':{code:'505.5', confidence:'alta'},
+  'Herrero':{code:'505.5', confidence:'alta'}, 'Soldador':{code:'503.3', confidence:'media'}, 'Metalista':{code:'503.3', confidence:'media'},
+  'Pintor':{code:'505.6', confidence:'alta'}, 'Pintor decorativo':{code:'505.6', confidence:'alta'},
+  'Aplicador de microcemento':{code:'505.1', confidence:'media'}, 'Impermeabilizador':{code:'505.4', confidence:'alta'},
+  'Restaurador de fachadas':{code:'505.1', confidence:'media'},
+  'Vidriero':{code:'505.6', confidence:'media'}, 'Instalador de mamparas':{code:'505.6', confidence:'media'},
+  'Instalador de aluminio':{code:'505.5', confidence:'alta'}, 'Instalador de PVC':{code:'505.5', confidence:'alta'},
+  'Instalador de cerramientos':{code:'505.5', confidence:'media'}, 'Colocador de vidrio templado':{code:'505.6', confidence:'media'},
+  'Techista':{code:'503.1', confidence:'alta'}, 'Reparador de tejados':{code:'503.1', confidence:'alta'},
+  'Instalador de canalones':{code:'503.1', confidence:'alta'}, 'Aislador térmico':{code:'505.4', confidence:'alta'},
+  'Aislador acústico':{code:'505.4', confidence:'alta'},
+  'Cerrajero':{code:'505.5', confidence:'alta'}, 'Instalador de alarmas':{code:'504.1', confidence:'alta'},
+  'Instalador de cámaras':{code:'504.1', confidence:'alta'}, 'Técnico en CCTV':{code:'504.1', confidence:'alta'},
+  'Instalador de porteros automáticos':{code:'504.1', confidence:'alta'}, 'Instalador de videoporteros':{code:'504.1', confidence:'alta'},
+  'Domótica / hogar inteligente':{code:'504.1', confidence:'alta'},
+  'Manitas / mantenimiento del hogar':{code:null, confidence:'revisar', clarify:{
+    question:'¿La mayoría de tus trabajos son de albañilería y reparaciones generales, o sobre todo instalaciones (luz, agua, montajes)?',
+    options:[
+      {label:'Albañilería y reparaciones', code:'501.3'},
+      {label:'Instalaciones (luz / agua)', code:'504.1'},
+    ]
+  }},
+  'Jardinero':{code:'911', confidence:'alta'},
+  'Instalador de riego':{code:'911', confidence:'media'},
+  'Limpieza post obra':{code:'922.1', confidence:'alta'},
+  'Retiro de escombros':{code:null, confidence:'revisar', clarify:{
+    question:'¿Retiras escombros como parte de tus propias obras, o es un servicio de limpieza/transporte independiente?',
+    options:[
+      {label:'Parte de mis obras (albañilería)', code:'501.3'},
+      {label:'Servicio de limpieza independiente', code:'922.1'},
+    ]
+  }},
+};
 
 /* ======================= STORAGE HELPERS ======================= */
 const CLOUD_NAMESPACE = 'todooficios:v1';
@@ -1518,6 +1764,8 @@ function ratingStats(email, allRatings){
 /* ======================= ESTADO GLOBAL ======================= */
 let session = null;       // {email} profesional
 let account = null;       // cuenta del profesional logueado
+let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
+let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
 let clientSession = null;  // {email} cliente
 let clientAccount = null;  // cuenta del cliente
 let myLoc = null;         // ubicación del visitante
@@ -1534,6 +1782,12 @@ const PROMO_FREE_PRO_LIMIT = 300;
 const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
 const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
+
+// Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
+// que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
+function isProPremium(acc){
+  return !!(acc && acc.featuredUntil && acc.featuredUntil > Date.now());
+}
 
 async function claimLaunchPromoSlot(){
   if(!PROMO_ACTIVE) return { granted:false, slot:null };
@@ -1583,6 +1837,112 @@ async function getMyClientName(){
 }
 async function setMyClientName(name){
   await safeSet('my-client-name', name, false);
+}
+
+/* ======================= PANEL DE NEGOCIO (gastos, clientes, presupuestos, agenda) ======================= */
+const CATEGORIAS_GASTO = ['Fontanería','Electricidad','Albañilería','Pintura y acabados','Climatización','Cerrajería','Herramientas y maquinaria','Alquiler de equipos','Transporte / desplazamientos','Otros'];
+const TIPOS_TRABAJO_AGENDA = ['Visita para presupuestar','Instalación','Reparación/avería','Revisión/mantenimiento','Entrega de obra'];
+const UNIDADES_PRESUPUESTO = ['ud','m²','ml','m³','h','pa'];
+
+// Límites del plan gratuito en el Panel de negocio. Premium (featuredUntil vigente) no tiene límite.
+// Mismo patrón que las fotos de perfil (3 gratis / 10 Premium): se puede usar la herramienta,
+// pero con tope; al llegar al tope se invita a Premium en vez de bloquear la herramienta entera.
+const FREE_LIMITS = {
+  clientes: 5,            // clientes guardados en total
+  gastosPorMes: 5,         // gastos registrados en el mes en curso
+  presupuestosPorMes: 3,   // presupuestos creados en el mes en curso
+  citasActivas: 5          // citas futuras en la agenda al mismo tiempo
+};
+
+function defaultNegocio(){
+  return {
+    datos: { nombreFiscal:'', nif:'', direccion:'', telefono:'', email:'', actividad:'', ivaHabitual:21, ultimoPresupuesto:0 },
+    clientes: [],
+    gastos: [],
+    presupuestos: [],
+    agenda: [],
+    asesor: { tipoAlta:'autonomo', epigrafeCode:null, epigrafeConfianza:'', epigrafeConfirmado:false, gestorEmail:'', diaEnvio:'lunes', ultimoEnvioSemana:'' }
+  };
+}
+async function getNegocio(email){
+  const raw = await safeGet('negocio:'+email, true);
+  if(!raw) return defaultNegocio();
+  try{
+    const data = JSON.parse(raw);
+    const base = defaultNegocio();
+    return Object.assign(base, data, {
+      datos: Object.assign(base.datos, data.datos || {}),
+      asesor: Object.assign(base.asesor, data.asesor || {})
+    });
+  }catch(e){ return defaultNegocio(); }
+}
+async function saveNegocio(email, data){
+  return await safeSet('negocio:'+email, JSON.stringify(data), true);
+}
+function formatEUR(n){
+  const num = Number(n) || 0;
+  return num.toLocaleString('es-ES', {style:'currency', currency:'EUR'});
+}
+function formatDateES(iso){
+  if(!iso) return '';
+  const d = new Date(iso+'T00:00:00');
+  if(isNaN(d)) return iso;
+  return d.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+/* ======================= CALENDARIO FISCAL (Asesor fiscal) ======================= */
+// Fechas límite habituales para un ejercicio fiscal estándar (año natural). Son orientativas:
+// la AEAT puede ajustar algún día concreto de un año a otro (fines de semana, festivos...).
+const FISCAL_MODELS = {
+  autonomo: [
+    {code:'130', label:'Modelo 130 — IRPF', desc:'Pago fraccionado del rendimiento de tu actividad', dates:['04-20','07-20','10-20','01-30']},
+    {code:'303', label:'Modelo 303 — IVA', desc:'Declaración trimestral de IVA repercutido y soportado', dates:['04-20','07-20','10-20','01-30']},
+    {code:'111', label:'Modelo 111 — Retenciones', desc:'Solo si emites facturas con retención o tienes empleados', dates:['04-20','07-20','10-20','01-20']},
+    {code:'390', label:'Modelo 390 — Resumen anual IVA', desc:'Resumen de todo el año', dates:['01-30']},
+    {code:'Renta', label:'Renta — Declaración anual IRPF', desc:'Incluye el rendimiento de tu actividad (campaña abril-junio)', dates:['06-30']},
+  ],
+  sl: [
+    {code:'202', label:'Modelo 202 — Pago fraccionado IS', desc:'Pago a cuenta del Impuesto de Sociedades', dates:['04-20','10-20','12-20']},
+    {code:'303', label:'Modelo 303 — IVA', desc:'Declaración trimestral de IVA repercutido y soportado', dates:['04-20','07-20','10-20','01-30']},
+    {code:'111', label:'Modelo 111 — Retenciones', desc:'Solo si tienes empleados o facturas con retención', dates:['04-20','07-20','10-20','01-20']},
+    {code:'390', label:'Modelo 390 — Resumen anual IVA', desc:'Resumen de todo el año', dates:['01-30']},
+    {code:'200', label:'Modelo 200 — Impuesto de Sociedades', desc:'Declaración anual del Impuesto de Sociedades', dates:['07-25']},
+  ]
+};
+function buildFiscalTimeline(tipoAlta, hoyISO){
+  const models = FISCAL_MODELS[tipoAlta] || FISCAL_MODELS.autonomo;
+  const hoy = new Date(hoyISO+'T00:00:00');
+  const year = hoy.getFullYear();
+  let items = [];
+  models.forEach(m=>{
+    m.dates.forEach(md=>{
+      [year, year+1].forEach(y=>{
+        const iso = `${y}-${md}`;
+        const d = new Date(iso+'T00:00:00');
+        if(d >= hoy) items.push({code:m.code, label:m.label, desc:m.desc, date:d, iso});
+      });
+    });
+  });
+  items.sort((a,b)=> a.date - b.date);
+  const seen = new Set();
+  items = items.filter(it=>{
+    if(seen.has(it.code)) return false;
+    seen.add(it.code);
+    return true;
+  });
+  return items;
+}
+function isoWeekRange(hoyISO){
+  const d = new Date(hoyISO+'T00:00:00');
+  const dow = (d.getDay()+6)%7; // 0=lunes
+  const lunes = new Date(d); lunes.setDate(d.getDate()-dow);
+  const domingo = new Date(lunes); domingo.setDate(lunes.getDate()+6);
+  const toISO = x => x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  return { inicio: toISO(lunes), fin: toISO(domingo), key: toISO(lunes) };
 }
 
 /* ======================= LOGIN CON GOOGLE ======================= */
@@ -1697,6 +2057,8 @@ async function showView(name){
   setActiveNav(name);
 
   if(name === 'pro'){ target.innerHTML = await renderPro(); bindPro(); }
+  if(name === 'negocio'){ target.innerHTML = await renderNegocio(); bindNegocio(); }
+  if(name === 'app'){ target.innerHTML = renderApp(); }
   if(name === 'course-providers'){ target.innerHTML = await renderCourseProviderSignup(); bindCourseProviderSignup(); }
   if(name === 'client'){ target.innerHTML = await renderClient(); bindClient(); }
   if(name === 'buscar'){ RATINGS = await getRatings(); target.innerHTML = await renderBuscar(); bindBuscar(); }
@@ -2145,8 +2507,18 @@ function renderDashboard(){
   const stats = ratingStats(account.email, RATINGS);
   return `
   <div class="dash-banner">
-    <span>Sesión activa como <strong>${escapeHtml(account.name)}</strong>. Tu ficha ya es visible para quien busque en TodoOficios.es.</span>
+    <span>✓ Sesión activa como <strong>${escapeHtml(account.name)}</strong>. Tu ficha ya es visible para quien busque en TodoOficios.es.</span>
     <button class="btn btn-outline btn-sm" id="logoutBtn" style="background:transparent; border-color:rgba(247,245,240,.4); color:#fff;">Cerrar sesión</button>
+  </div>
+  <div class="panel panel-wide biz-banner">
+    <div class="biz-banner-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.2"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.2"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.2"/></svg>
+    </div>
+    <div class="biz-banner-text">
+      <h3>Panel de negocio</h3>
+      <p>Gastos, clientes, presupuestos y agenda — todo en un vistazo, sin salir de tu cuenta.</p>
+    </div>
+    <button class="btn btn-amber" data-view="negocio">Abrir panel de negocio →</button>
   </div>
   <div class="dash-head">
     ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
@@ -2198,19 +2570,6 @@ function renderDashboard(){
       <button class="btn btn-primary" id="dash-save" style="flex:1;">Guardar cambios</button>
       <button class="btn btn-outline" id="dash-view" style="flex:1;">Ver mi ficha pública</button>
     </div>
-  </div>
-  <div class="panel">
-    <div class="section-label">Cursos de formación</div>
-    <div class="field"><label>Empresa</label><input type="text" id="dash-course-company" value="${escapeHtml(account.name)}"></div>
-    <div class="field-row">
-      <div class="field"><label>Curso</label><input type="text" id="dash-course-name" placeholder="Nombre de la formación"></div>
-      <div class="field"><label>Duración (horas)</label><input type="number" min="1" id="dash-course-duration" placeholder="Horas totales"></div>
-    </div>
-    <div class="field"><label>Enlace al proveedor</label><input type="url" id="dash-course-url" placeholder="https://ejemplo.com"></div>
-    <button class="btn btn-primary btn-block" id="dash-course-submit">Registrar Curso</button>
-    <div id="dash-course-msg" class="msg" style="display:none;"></div>
-    <div class="section-label" style="margin-top:20px;">Tus cursos</div>
-    <div id="dash-course-list">Cargando cursos...</div>
   </div>
   <div class="panel">
     <div class="section-label">Mensajes de clientes</div>
@@ -2306,54 +2665,6 @@ function bindPro(){
       showView('pro');
     };
 
-    document.getElementById('dash-course-submit').onclick = async ()=>{
-      const msgBox = document.getElementById('dash-course-msg');
-      msgBox.style.display = 'none';
-      msgBox.className = 'msg';
-      msgBox.textContent = '';
-      const company = document.getElementById('dash-course-company').value.trim();
-      const courseName = document.getElementById('dash-course-name').value.trim();
-      const duration = Number(document.getElementById('dash-course-duration').value);
-      const courseUrl = document.getElementById('dash-course-url').value.trim();
-      if(!company || !courseName){
-        msgBox.textContent = 'Completa el nombre de la empresa y el curso.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      if(!duration || duration < 1){
-        msgBox.textContent = 'La duración debe ser un número mayor que cero.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      try {
-        const url = new URL(courseUrl);
-        if(!['http:', 'https:'].includes(url.protocol)) throw new Error();
-      } catch(e) {
-        msgBox.textContent = 'Introduce una URL válida que comience con http:// o https://.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      account.courses = account.courses || [];
-      account.courses.push({ company, courseName, duration, courseUrl, createdAt: Date.now() });
-      const saved = await safeSet('account:'+account.email, JSON.stringify(account), true);
-      if(!saved){
-        msgBox.textContent = 'No se pudo guardar el curso. Revisa el espacio disponible e inténtalo otra vez.';
-        msgBox.classList.add('err');
-        msgBox.style.display = 'block';
-        return;
-      }
-      msgBox.textContent = 'Curso registrado correctamente.';
-      msgBox.classList.add('ok');
-      msgBox.style.display = 'block';
-      renderDashCourses();
-      document.getElementById('dash-course-name').value = '';
-      document.getElementById('dash-course-duration').value = '';
-      document.getElementById('dash-course-url').value = '';
-    };
-
     const dashFeaturedBtn = document.getElementById('dash-featured-btn');
     if(dashFeaturedBtn){
       dashFeaturedBtn.onclick = async ()=>{
@@ -2386,25 +2697,6 @@ function bindPro(){
         </div>`).join('');
     }
 
-    function renderDashCourses(){
-      const list = document.getElementById('dash-course-list');
-      const courses = account.courses || [];
-      if(!courses.length){
-        list.innerHTML = '<div class="empty-state">Aún no registraste cursos.</div>';
-        return;
-      }
-      list.innerHTML = courses.map(c => `
-        <div class="ticket" style="padding:14px; margin-bottom:12px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-            <strong style="font-size:1rem;">${escapeHtml(c.courseName)}</strong>
-            <span style="font-size:0.95rem; color:#5f5a53;">${escapeHtml(String(c.duration))} h</span>
-          </div>
-          <div style="margin-top:8px; color:#5f5a53;">${escapeHtml(c.company)}</div>
-          <a href="${escapeHtml(c.courseUrl)}" target="_blank" rel="noopener" style="display:inline-block; margin-top:10px; color:#141412; text-decoration:underline;">Ir al enlace</a>
-        </div>
-      `).join('');
-    }
-    renderDashCourses();
     renderProMessages();
 
     document.getElementById('dash-view').onclick = ()=>{
@@ -2596,6 +2888,1133 @@ function bindPro(){
   }
 }
 
+/* ======================= VISTA: PANEL DE NEGOCIO ======================= */
+function clienteRowHTML(c){
+  return `<div class="data-row">
+    <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}</span></div>
+  </div>`;
+}
+function gastoRowHTML(g){
+  return `<div class="data-row">
+    <div class="drow-main"><strong>${escapeHtml(g.concepto || g.categoria)}</strong><br><span class="drow-meta">${formatDateES(g.fecha)} · ${escapeHtml(g.proveedor||'Sin proveedor')} · ${escapeHtml(g.categoria||'')}</span></div>
+    <div class="drow-amount">${formatEUR(g.total)}</div>
+  </div>`;
+}
+function citaRowHTML(c){
+  return `<div class="data-row">
+    <div class="drow-main"><strong>${escapeHtml(c.tipoTrabajo||'Cita')}</strong> con ${escapeHtml(c.cliente||'cliente')}<br><span class="drow-meta">${formatDateES(c.fecha)}${c.horaInicio?' · '+c.horaInicio+(c.horaFin?'–'+c.horaFin:''):''}${c.direccion?' · '+escapeHtml(c.direccion):''}</span></div>
+  </div>`;
+}
+function presupuestoRowHTML(p){
+  const badgeClass = p.estado==='Aceptado' ? 'ok' : (p.estado==='Rechazado' ? 'bad' : 'warn');
+  const acciones = (p.estado==='Pendiente' || !p.estado)
+    ? `<button type="button" class="pp-mini-btn ok" data-estado-btn="Aceptado" data-pid="${p.id}">✓ Aceptado</button><button type="button" class="pp-mini-btn bad" data-estado-btn="Rechazado" data-pid="${p.id}">✕ Rechazado</button>`
+    : `<button type="button" class="pp-mini-btn" data-estado-btn="Pendiente" data-pid="${p.id}">↺ Reabrir</button>`;
+  return `<div class="data-row" style="align-items:flex-start;">
+    <div class="drow-main">
+      <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
+      <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button></div>
+    </div>
+    <div class="drow-amount">${formatEUR(p.total)}</div>
+  </div>`;
+}
+
+/* Genera el documento del presupuesto y abre el diálogo de impresión (el profesional elige "Guardar como PDF") */
+function abrirPresupuestoPDF(id){
+  const p = negocio.presupuestos.find(x=>x.id===id);
+  if(!p) return;
+  const d = negocio.datos || {};
+  const emisorNombre = d.nombreFiscal || account.name || '';
+  const emisorNif = d.nif || '';
+  const emisorDireccion = d.direccion || '';
+  const emisorTelefono = d.telefono || account.phone || '';
+  const emisorEmail = d.email || account.email || '';
+  const fechaEmision = formatDateES(p.fecha);
+  let fechaValidez = '';
+  try{
+    const dd = new Date(p.fecha+'T00:00:00');
+    dd.setDate(dd.getDate() + (p.validezDias||30));
+    fechaValidez = dd.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'});
+  }catch(e){}
+
+  const filasHTML = (p.partidas||[]).map(x=>`
+    <tr>
+      <td>${escapeHtml(x.descripcion)}</td>
+      <td style="text-align:center;">${escapeHtml(x.unidad)}</td>
+      <td style="text-align:right;">${x.cantidad}</td>
+      <td style="text-align:right;">${formatEUR(x.precio)}</td>
+      <td style="text-align:right;">${formatEUR(x.cantidad*x.precio)}</td>
+    </tr>`).join('');
+
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Presupuesto ${escapeHtml(p.numero)}</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
+  .doc-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
+  .doc-head h1{font-size:20px; margin:0 0 6px;}
+  .doc-head .num{font-size:15px; color:#4a4842;}
+  .box h3{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#4a4842; margin:0 0 6px;}
+  .two-col{display:flex; gap:40px; margin-bottom:24px;}
+  table{width:100%; border-collapse:collapse; margin-bottom:20px;}
+  th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:#4a4842; border-bottom:2px solid #141412; padding:8px 6px;}
+  td{padding:9px 6px; border-bottom:1px solid #ddd; font-size:12.5px;}
+  .totales{margin-left:auto; width:280px;}
+  .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px;}
+  .totales .total{font-weight:700; font-size:16px; border-top:2px solid #141412; margin-top:6px; padding-top:8px;}
+  .condiciones{margin-top:30px; font-size:12px; color:#4a4842; line-height:1.6;}
+  .firma{margin-top:50px; display:flex; justify-content:space-between;}
+  .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
+  @media print{ body{padding:14mm;} }
+</style></head><body>
+  <div class="doc-head">
+    <div>
+      <h1>${escapeHtml(emisorNombre)}</h1>
+      ${emisorNif?`<div>NIF: ${escapeHtml(emisorNif)}</div>`:''}
+      ${emisorDireccion?`<div>${escapeHtml(emisorDireccion)}</div>`:''}
+      <div>${[emisorTelefono, emisorEmail].filter(Boolean).map(escapeHtml).join(' · ')}</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="num">Presupuesto ${escapeHtml(p.numero)}</div>
+      <div>Fecha: ${fechaEmision}</div>
+      <div>Válido hasta: ${fechaValidez}</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="box">
+      <h3>Cliente</h3>
+      <div><strong>${escapeHtml(p.cliente)}</strong></div>
+      ${p.clienteNif?`<div>NIF/DNI: ${escapeHtml(p.clienteNif)}</div>`:''}
+      ${p.clienteDireccion?`<div>${escapeHtml(p.clienteDireccion)}</div>`:''}
+      ${p.clienteTelefono?`<div>${escapeHtml(p.clienteTelefono)}</div>`:''}
+    </div>
+    ${(p.direccionObra || p.concepto) ? `<div class="box">
+      <h3>Trabajo</h3>
+      ${p.concepto?`<div><strong>${escapeHtml(p.concepto)}</strong></div>`:''}
+      ${p.direccionObra?`<div>Dirección de la obra: ${escapeHtml(p.direccionObra)}</div>`:''}
+    </div>` : ''}
+  </div>
+
+  <table>
+    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">Importe</th></tr></thead>
+    <tbody>${filasHTML}</tbody>
+  </table>
+
+  <div class="totales">
+    <div><span>Subtotal</span><span>${formatEUR(p.base)}</span></div>
+    <div><span>IVA (${p.ivaPct}%)</span><span>${formatEUR(p.cuota)}</span></div>
+    ${p.irpfAplica ? `<div><span>Retención IRPF (${p.irpfPct}%)</span><span>−${formatEUR(p.irpfImporte)}</span></div>` : ''}
+    <div class="total"><span>TOTAL</span><span>${formatEUR(p.total)}</span></div>
+  </div>
+
+  <div class="condiciones">
+    <div><strong>Forma de pago:</strong> ${escapeHtml(p.formaPago||'Transferencia bancaria')}</div>
+    <div><strong>Validez del presupuesto:</strong> ${p.validezDias||30} días desde la fecha de emisión.</div>
+  </div>
+
+  <div class="firma">
+    <div>Firma del profesional</div>
+    <div>Firma y aceptación del cliente</div>
+  </div>
+
+  <sc` + `ript>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</sc` + `ript>
+</bod` + `y></html>`;
+
+  const win = window.open('', '_blank');
+  if(!win){ showToast('Tu navegador bloqueó la ventana. Permite ventanas emergentes para ver el PDF.'); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+function abrirResumenGastosPDF(gastos){
+  if(!gastos.length){ showToast('Marca al menos una factura para ver el resumen.'); return; }
+  const d = negocio.datos || {};
+  const emisorNombre = d.nombreFiscal || account.name || '';
+  const hoy = todayISO();
+  const semana = isoWeekRange(hoy);
+  const total = gastos.reduce((s,g)=> s+(Number(g.total)||0), 0);
+
+  const filasHTML = gastos.slice().sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||'')).map(g=>`
+    <tr>
+      <td>${formatDateES(g.fecha)}</td>
+      <td>${escapeHtml(g.proveedor||'')}</td>
+      <td>${escapeHtml(g.concepto||g.categoria||'')}</td>
+      <td style="text-align:right;">${formatEUR(g.total)}</td>
+    </tr>`).join('');
+
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Resumen de gastos — semana del ${formatDateES(semana.inicio)}</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
+  .doc-head{border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
+  .doc-head h1{font-size:20px; margin:0 0 6px;}
+  .doc-head .num{font-size:14px; color:#4a4842;}
+  table{width:100%; border-collapse:collapse; margin-bottom:20px;}
+  th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:#4a4842; border-bottom:2px solid #141412; padding:8px 6px;}
+  td{padding:9px 6px; border-bottom:1px solid #ddd; font-size:12.5px;}
+  .totales{margin-left:auto; width:260px; font-size:15px; font-weight:700; display:flex; justify-content:space-between; border-top:2px solid #141412; padding-top:10px;}
+  @media print{ body{padding:14mm;} }
+</style></head><body>
+  <div class="doc-head">
+    <h1>${escapeHtml(emisorNombre)}</h1>
+    <div class="num">Resumen de gastos — semana del ${formatDateES(semana.inicio)} al ${formatDateES(semana.fin)}</div>
+  </div>
+  <table>
+    <thead><tr><th>Fecha</th><th>Proveedor</th><th>Concepto</th><th style="text-align:right;">Importe</th></tr></thead>
+    <tbody>${filasHTML}</tbody>
+  </table>
+  <div class="totales"><span>TOTAL</span><span>${formatEUR(total)}</span></div>
+  <sc` + `ript>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</sc` + `ript>
+</body></html>`;
+
+  const win = window.open('', '_blank');
+  if(!win){ showToast('Tu navegador bloqueó la ventana. Permite ventanas emergentes para ver el PDF.'); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+function ppPartidaRowHTML(idx, p){
+  return `<div class="pp-partidas-row" data-pidx="${idx}">
+    <input type="text" class="pp-desc" value="${escapeHtml(p.descripcion)}" placeholder="Ej. Sustitución de grifería">
+    <select class="pp-unidad">${UNIDADES_PRESUPUESTO.map(u=>`<option value="${escapeHtml(u)}" ${p.unidad===u?'selected':''}>${escapeHtml(u)}</option>`).join('')}</select>
+    <input type="number" class="pp-cantidad" min="0" step="0.01" value="${p.cantidad}">
+    <input type="number" class="pp-precio" min="0" step="0.01" value="${p.precio}">
+    <input type="number" class="pp-coste pp-coste-cell" min="0" step="0.01" value="${p.coste||0}">
+    <span class="pp-importe-cell">${formatEUR((Number(p.cantidad)||0)*(Number(p.precio)||0))}</span>
+    <button type="button" class="pp-row-remove" data-remove-idx="${idx}" title="Quitar línea">×</button>
+  </div>`;
+}
+
+/* Iconos de línea propios del panel de negocio (sin depender de la fuente de emoji del sistema) */
+const NG_ICONS = {
+  pendientes: `<svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5h6v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-2z" fill="currentColor" stroke="none"/><path d="M8.5 11.5h7M8.5 15.5h4.5"/></svg>`,
+  clientes: `<svg viewBox="0 0 24 24"><circle cx="9.2" cy="8.3" r="3.1"/><path d="M3.8 19c0-3 2.4-5.2 5.4-5.2s5.4 2.2 5.4 5.2"/><circle cx="17" cy="9" r="2.3"/><path d="M15.5 13.3c2.1.3 3.7 2 3.7 4.2"/></svg>`,
+  gastos: `<svg viewBox="0 0 24 24"><path d="M6 3.2h12v17.6l-2.4-1.5L13 20.8l-2.4-1.5-2.2 1.5-2.4-1.5z"/><path d="M8.8 8.2h6.4M8.8 12h6.4M8.8 15.8h3.8"/></svg>`,
+  agenda: `<svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><circle cx="8.4" cy="13.6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13.6" r="1" fill="currentColor" stroke="none"/><circle cx="15.6" cy="13.6" r="1" fill="currentColor" stroke="none"/></svg>`,
+  presupuestos: `<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>`,
+  fiscal: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.8l3.2 1.8"/></svg>`,
+  envio: `<svg viewBox="0 0 24 24"><path d="M20.5 3.5 3 10.8l6.3 2.1L11.4 19z"/><path d="M9.3 12.9 20.5 3.5"/></svg>`,
+  agente: `<svg viewBox="0 0 24 24"><path d="M9 18.5h6M10 21h4"/><path d="M12 3.2a6.3 6.3 0 0 0-3.7 11.4c.5.4.8 1 .8 1.6v.3h5.8v-.3c0-.6.3-1.2.8-1.6A6.3 6.3 0 0 0 12 3.2z"/></svg>`
+};
+function ngIconHTML(key){
+  return `<span class="ng-icon c-${key}">${NG_ICONS[key]||''}</span>`;
+}
+
+/* ======================= Cuestionario de epígrafe (Asesor fiscal) ======================= */
+function epigrafeSearchBlockHTML(){
+  return `
+    <div style="padding:0 16px 14px;">
+      <button type="button" class="search-toggle" id="epi-search-toggle">¿No es tu epígrafe? Buscarlo manualmente</button>
+      <div class="search-box" id="epi-search-box" hidden>
+        <div class="field"><input type="text" id="epi-search-input" placeholder="Ej. pintura, fontanería, jardinería…"></div>
+        <div class="search-results" id="epi-search-results"></div>
+      </div>
+    </div>`;
+}
+function epigrafeResultCardHTML(code, confidence, why, confirmed){
+  const info = EPIGRAFES_INDEX[code] || {label:'', group:''};
+  return `
+    <div class="sc-head">
+      <div class="code">${escapeHtml(code)}</div>
+      <div class="txt"><div class="lbl">${escapeHtml(info.label)}</div><div class="grp">${escapeHtml(info.group)}</div></div>
+      <span class="badge ${confidence==='alta'?'ok':'warn'}">${confidence==='alta'?'Sugerido':'Revisar'}</span>
+    </div>
+    <div class="sc-why">${escapeHtml(why)} El epígrafe determina qué modelos y qué régimen de IVA te tocan, así que una elección incorrecta puede hacerte presentar declaraciones que no correspondan.</div>
+    ${epigrafeSearchBlockHTML()}
+    <div class="confirm-row">
+      <span class="txt" id="epi-confirm-txt">${confirmed ? 'Confirmado con tu gestor.' : 'Pendiente de confirmar con tu gestor antes del alta.'}</span>
+      <button type="button" class="pp-mini-btn ${confirmed?'ok':''}" id="epi-confirm-btn" data-confirmed="${confirmed}">${confirmed?'✓ Confirmado':'Marcar como confirmado'}</button>
+      <button type="button" class="pp-mini-btn" data-ng-tab="envio">Enviar a mi gestor</button>
+    </div>`;
+}
+function epigrafeClarifyCardHTML(entry){
+  return `
+    <div class="sc-head" style="background:#fff3d6;">
+      <div class="txt"><div class="lbl">Este oficio admite más de un epígrafe</div><div class="grp">Responde para afinar la sugerencia</div></div>
+    </div>
+    <div class="clarify">
+      <div class="q">${escapeHtml(entry.clarify.question)}</div>
+      <div class="opts">${entry.clarify.options.map(o=>`<button type="button" class="opt" data-code="${escapeHtml(o.code)}">${escapeHtml(o.label)}</button>`).join('')}</div>
+    </div>
+    ${epigrafeSearchBlockHTML()}`;
+}
+function epigrafeSuggestCardHTML(asesor, oficioEntry){
+  // Estado ya guardado (el profesional ya confirmó o eligió un epígrafe manualmente).
+  if(asesor.epigrafeCode){
+    const conf = asesor.epigrafeConfianza || 'alta';
+    return `<div class="suggest-card ${conf==='alta'?'ok':'warn'}">${epigrafeResultCardHTML(asesor.epigrafeCode, conf, conf==='alta' ? 'Coincidencia directa con tu oficio.' : 'Sugerencia orientativa para tu oficio.', asesor.epigrafeConfirmado)}</div>`;
+  }
+  if(!oficioEntry){
+    return `<div class="suggest-card warn">
+      <div class="sc-head" style="background:#fff3d6;">
+        <div class="txt"><div class="lbl">Añade tu oficio en tu ficha para obtener una sugerencia</div><div class="grp">O búscalo manualmente aquí abajo</div></div>
+      </div>
+      ${epigrafeSearchBlockHTML()}
+    </div>`;
+  }
+  if(oficioEntry.confidence === 'revisar' && !oficioEntry.code){
+    return `<div class="suggest-card warn">${epigrafeClarifyCardHTML(oficioEntry)}</div>`;
+  }
+  const why = oficioEntry.confidence === 'alta'
+    ? 'Coincidencia directa: es el epígrafe que Hacienda usa para esta actividad en la mayoría de los casos.'
+    : 'Sugerencia orientativa: hay más de una redacción posible para este oficio.';
+  return `<div class="suggest-card ${oficioEntry.confidence==='alta'?'ok':'warn'}">${epigrafeResultCardHTML(oficioEntry.code, oficioEntry.confidence, why, false)}</div>`;
+}
+
+async function renderNegocio(){
+  negocio = await getNegocio(account.email);
+  const hoy = todayISO();
+  const inicioMes = hoy.slice(0,7);
+
+  const gastosMes = negocio.gastos.filter(g => (g.fecha||'').startsWith(inicioMes));
+  const totalGastosMes = gastosMes.reduce((s,g)=> s + (Number(g.total)||0), 0);
+
+  const presupuestosPendientes = negocio.presupuestos.filter(p => p.estado === 'Pendiente' || !p.estado);
+  const totalPresupuestosPendientes = presupuestosPendientes.reduce((s,p)=> s + (Number(p.total)||0), 0);
+
+  const citasProximas = negocio.agenda
+    .filter(c => c.fecha >= hoy)
+    .sort((a,b)=> (a.fecha+(a.horaInicio||'')).localeCompare(b.fecha+(b.horaInicio||'')));
+  const proximaCita = citasProximas[0];
+
+  const presupuestosMes = negocio.presupuestos.filter(p => (p.fecha||'').startsWith(inicioMes));
+
+  // ---- Asesor financiero: fiscal / envío al gestor / agente ----
+  const asesor = negocio.asesor;
+  const tipoAlta = asesor.tipoAlta === 'sl' ? 'sl' : 'autonomo';
+  const fiscalTimeline = buildFiscalTimeline(tipoAlta, hoy);
+  const nextDeadline = fiscalTimeline[0] || null;
+  const daysToNext = nextDeadline ? Math.ceil((nextDeadline.date - new Date(hoy+'T00:00:00')) / 86400000) : null;
+
+  const mesActual = Number(hoy.slice(5,7));
+  const qIndex = Math.floor((mesActual-1)/3);
+  const inQuarter = (fecha, year, qi) => {
+    if(!fecha) return false;
+    return fecha.slice(0,4)===year && Math.floor((Number(fecha.slice(5,7))-1)/3)===qi;
+  };
+  const anioActual = hoy.slice(0,4);
+  const facturadoTrimestre = negocio.presupuestos.filter(p=> p.estado==='Aceptado' && inQuarter(p.fecha, anioActual, qIndex)).reduce((s,p)=> s+(Number(p.total)||0), 0);
+  const gastosTrimestre = negocio.gastos.filter(g=> inQuarter(g.fecha, anioActual, qIndex)).reduce((s,g)=> s+(Number(g.total)||0), 0);
+  const estimacionTrimestre = Math.max(0, (facturadoTrimestre - gastosTrimestre) * 0.20);
+  let prevQIndex = qIndex - 1, anioPrev = anioActual;
+  if(prevQIndex < 0){ prevQIndex = 3; anioPrev = String(Number(anioActual)-1); }
+  const facturadoTrimestreAnterior = negocio.presupuestos.filter(p=> p.estado==='Aceptado' && inQuarter(p.fecha, anioPrev, prevQIndex)).reduce((s,p)=> s+(Number(p.total)||0), 0);
+
+  const semana = isoWeekRange(hoy);
+  const gastosSemana = negocio.gastos.filter(g => g.fecha >= semana.inicio && g.fecha <= semana.fin);
+  const totalGastosSemana = gastosSemana.reduce((s,g)=> s+(Number(g.total)||0), 0);
+  const envioPendiente = asesor.ultimoEnvioSemana !== semana.key;
+
+  const oficioEntry = OFICIO_EPIGRAFE[account.oficio] || null;
+  const epigrafeActivo = asesor.epigrafeCode || (oficioEntry && oficioEntry.code) || null;
+
+  // Plan gratuito: se puede seguir usando cada herramienta, pero con tope mensual/total.
+  // Premium (featuredUntil vigente) no tiene límite en ninguna.
+  const premium = isProPremium(account);
+  const clientesLimitReached = !premium && negocio.clientes.length >= FREE_LIMITS.clientes;
+  const gastosLimitReached = !premium && gastosMes.length >= FREE_LIMITS.gastosPorMes;
+  const presupuestosLimitReached = !premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes;
+  const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
+
+  function premiumLockHTML(mensaje){
+    return `
+      <div class="ng-limit-note">
+        <p class="note">${mensaje}</p>
+        <a class="btn btn-amber btn-sm" href="javascript:void(0)" data-view="pro">Ver plan Premium →</a>
+      </div>`;
+  }
+
+  const pendientesList = [
+    ...presupuestosPendientes.map(p => ({ fecha: p.fecha || '', texto: `Presupuesto ${escapeHtml(p.numero||'')} — ${escapeHtml(p.cliente)} (${formatEUR(p.total)}) sin respuesta` })),
+    ...citasProximas.slice(0,5).map(c => ({ fecha: c.fecha, texto: `${formatDateES(c.fecha)}${c.horaInicio?', '+c.horaInicio:''} — ${escapeHtml(c.tipoTrabajo||'Cita')} con ${escapeHtml(c.cliente||'cliente')}` }))
+  ].sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
+
+  const negocioTabs = [
+    {key:'pendientes', label:'Pendientes'},
+    {key:'clientes', label:`Clientes (${negocio.clientes.length})`},
+    {key:'gastos', label:`Gastos (${negocio.gastos.length})`},
+    {key:'agenda', label:`Agenda (${citasProximas.length})`},
+    {key:'presupuestos', label:`Presupuestos (${negocio.presupuestos.length})`},
+    {key:'fiscal', label:'Asesor fiscal'},
+    {key:'envio', label:'Envío al gestor'},
+    {key:'agente', label:'Agente financiero'}
+  ];
+  if(!negocioTabs.some(t=>t.key===negocioTab)) negocioTab = 'pendientes';
+
+  return `
+  <a href="javascript:void(0)" class="back-link" data-view="pro">← Volver a mi ficha</a>
+  <div class="ng-intro">
+    <div class="section-label">${ngIconHTML('pendientes')} De un vistazo</div>
+    <h2>Panel de negocio</h2>
+    <p class="note">Gastos, clientes, presupuestos y agenda de ${escapeHtml(account.name)} — todo en un solo sitio.</p>
+  </div>
+
+  <div class="negocio-stats">
+    <div class="stat-card" data-ng-tab="gastos">
+      ${ngIconHTML('gastos')}
+      <span class="stat-label">Gastos este mes</span>
+      <span class="stat-value">${formatEUR(totalGastosMes)}</span>
+      <span class="stat-sub">${gastosMes.length} apunte${gastosMes.length===1?'':'s'}</span>
+    </div>
+    <div class="stat-card" data-ng-tab="presupuestos">
+      ${ngIconHTML('presupuestos')}
+      <span class="stat-label">Presupuestos pendientes</span>
+      <span class="stat-value">${presupuestosPendientes.length}</span>
+      <span class="stat-sub">${formatEUR(totalPresupuestosPendientes)}</span>
+    </div>
+    <div class="stat-card" data-ng-tab="agenda">
+      ${ngIconHTML('agenda')}
+      <span class="stat-label">Próxima cita</span>
+      <span class="stat-value" style="font-size:20px;">${proximaCita ? formatDateES(proximaCita.fecha) : 'Sin citas'}</span>
+      <span class="stat-sub">${proximaCita ? escapeHtml(proximaCita.tipoTrabajo||'') : 'Agenda vacía'}</span>
+    </div>
+    <div class="stat-card" data-ng-tab="clientes">
+      ${ngIconHTML('clientes')}
+      <span class="stat-label">Clientes</span>
+      <span class="stat-value">${negocio.clientes.length}</span>
+      <span class="stat-sub">${negocio.clientes.filter(c=>c.favorito).length} habitual${negocio.clientes.filter(c=>c.favorito).length===1?'':'es'}</span>
+    </div>
+  </div>
+
+  <div class="ng-tabs">
+    ${negocioTabs.map(t=>`<button class="ng-tab-btn ${negocioTab===t.key?'active':''}" data-ng-tab="${t.key}">${ngIconHTML(t.key)} ${t.label}</button>`).join('')}
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='pendientes'?'active':''}" data-tab="pendientes">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('pendientes')} Pendientes</div>
+      ${pendientesList.length ? `<div class="pend-list">${pendientesList.map(i=>`<div class="pend-item">${i.texto}</div>`).join('')}</div>` : '<div class="empty-state">Todo al día: sin presupuestos sin responder ni citas próximas.</div>'}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='clientes'?'active':''}" data-tab="clientes">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('clientes')} Clientes</div>
+      <div id="negocio-clientes-list">${negocio.clientes.length ? negocio.clientes.slice().reverse().map(clienteRowHTML).join('') : '<div class="empty-state">Todavía no tienes clientes registrados.</div>'}</div>
+      ${clientesLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.clientes} clientes guardados del plan gratuito. Hazte Premium para guardar clientes sin límite.`) : `
+      <details class="ng-add">
+        <summary>Añadir cliente</summary>
+        <div class="ng-add-body">
+          <div class="field-row">
+            <div class="field"><label>Nombre</label><input type="text" id="ng-cli-nombre" placeholder="Nombre y apellidos o empresa"></div>
+            <div class="field"><label>Tipo</label><select id="ng-cli-tipo"><option value="Particular">Particular</option><option value="Empresa">Empresa</option></select></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Teléfono</label><input type="tel" id="ng-cli-telefono" placeholder="600 123 456"></div>
+            <div class="field"><label>NIF/DNI <small>(opcional)</small></label><input type="text" id="ng-cli-nif" placeholder="Solo si lo tienes"></div>
+          </div>
+          <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="ng-cli-direccion" placeholder="Calle, número, ciudad"></div>
+          <button class="btn btn-outline btn-block" id="ng-cli-add">Añadir cliente</button>
+          <div id="ng-cli-msg"></div>
+        </div>
+      </details>`}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='gastos'?'active':''}" data-tab="gastos">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('gastos')} Gastos</div>
+      <div id="negocio-gastos-list">${negocio.gastos.length ? negocio.gastos.slice().reverse().slice(0,10).map(gastoRowHTML).join('') : '<div class="empty-state">Todavía no registraste ningún gasto.</div>'}</div>
+      ${gastosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.gastosPorMes} gastos este mes del plan gratuito. Hazte Premium para apuntar gastos sin límite.`) : `
+      <details class="ng-add">
+        <summary>Añadir gasto</summary>
+        <div class="ng-add-body">
+          <div class="field-row">
+            <div class="field"><label>Fecha</label><input type="date" id="ng-gas-fecha" value="${hoy}"></div>
+            <div class="field"><label>Proveedor</label><input type="text" id="ng-gas-proveedor" placeholder="Ej. Ferretería Sur"></div>
+          </div>
+          <div class="field"><label>Concepto</label><input type="text" id="ng-gas-concepto" placeholder="Ej. Tornillería y material"></div>
+          <div class="field-row">
+            <div class="field"><label>Categoría</label><select id="ng-gas-categoria">${CATEGORIAS_GASTO.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('')}</select></div>
+            <div class="field"><label>Total con IVA</label><input type="number" step="0.01" min="0" id="ng-gas-total" placeholder="Ej. 96,80"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>IVA aplicado</label><select id="ng-gas-iva"><option value="21">21%</option><option value="10">10%</option><option value="4">4%</option><option value="0">0% / exento</option></select></div>
+            <div class="field"><label>Cliente/obra <small>(opcional)</small></label><select id="ng-gas-cliente"><option value="">Sin asociar</option>${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)}</option>`).join('')}</select></div>
+          </div>
+          <button class="btn btn-outline btn-block" id="ng-gas-add">Añadir gasto</button>
+          <div id="ng-gas-msg"></div>
+        </div>
+      </details>`}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='agenda'?'active':''}" data-tab="agenda">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('agenda')} Agenda</div>
+      <div id="negocio-agenda-list">${citasProximas.length ? citasProximas.slice(0,8).map(citaRowHTML).join('') : '<div class="empty-state">Todavía no tienes citas próximas en la agenda.</div>'}</div>
+      ${citasLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.citasActivas} citas activas del plan gratuito. Hazte Premium para tener agenda sin límite.`) : `
+      <details class="ng-add">
+        <summary>Añadir cita</summary>
+        <div class="ng-add-body">
+          <div class="field-row">
+            <div class="field"><label>Fecha</label><input type="date" id="ng-cit-fecha" value="${hoy}"></div>
+            <div class="field"><label>Hora inicio</label><input type="time" id="ng-cit-inicio"></div>
+            <div class="field"><label>Hora fin</label><input type="time" id="ng-cit-fin"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Cliente</label><input type="text" id="ng-cit-cliente" placeholder="Nombre del cliente"></div>
+            <div class="field"><label>Tipo de trabajo</label><select id="ng-cit-tipo">${TIPOS_TRABAJO_AGENDA.map(t=>`<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('')}</select></div>
+          </div>
+          <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="ng-cit-direccion" placeholder="Dirección de la obra"></div>
+          <button class="btn btn-outline btn-block" id="ng-cit-add">Añadir cita</button>
+          <div id="ng-cit-msg"></div>
+        </div>
+      </details>`}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='presupuestos'?'active':''}" data-tab="presupuestos">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('presupuestos')} Presupuestos</div>
+      <div id="negocio-presupuestos-list">${negocio.presupuestos.length ? negocio.presupuestos.slice().reverse().map(presupuestoRowHTML).join('') : '<div class="empty-state">Todavía no registraste presupuestos.</div>'}</div>
+
+      <details class="ng-add">
+        <summary>Datos de tu negocio (para el membrete del PDF)</summary>
+        <div class="ng-add-body">
+          <div class="field-row">
+            <div class="field"><label>Nombre fiscal / Razón social</label><input type="text" id="ng-datos-nombre" value="${escapeHtml(negocio.datos.nombreFiscal||'')}" placeholder="${escapeHtml(account.name||'')}"></div>
+            <div class="field"><label>NIF</label><input type="text" id="ng-datos-nif" value="${escapeHtml(negocio.datos.nif||'')}" placeholder="Tu NIF"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Dirección fiscal</label><input type="text" id="ng-datos-direccion" value="${escapeHtml(negocio.datos.direccion||'')}" placeholder="Calle, número, ciudad"></div>
+            <div class="field"><label>Teléfono</label><input type="text" id="ng-datos-telefono" value="${escapeHtml(negocio.datos.telefono||account.phone||'')}"></div>
+          </div>
+          <div class="field"><label>Email de contacto</label><input type="email" id="ng-datos-email" value="${escapeHtml(negocio.datos.email||account.email||'')}"></div>
+          <button class="btn btn-outline btn-block" id="ng-datos-save">Guardar datos del negocio</button>
+          <div id="ng-datos-msg"></div>
+        </div>
+      </details>
+
+      ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
+      <details class="ng-add" open>
+        <summary>Crear presupuesto</summary>
+        <div class="ng-add-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Cliente</label>
+              <select id="ng-pre-cliente-select">
+                <option value="">— Cliente nuevo (escribe abajo) —</option>
+                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)}</option>`).join('')}
+              </select>
+            </div>
+            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño"></div>
+            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente"></div>
+          </div>
+
+          <label>Partidas</label>
+          <div id="pp-partidas-table">
+            <div class="pp-partidas-row pp-partidas-head">
+              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
+            </div>
+            <div id="pp-partidas-rows"></div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="pp-add-partida" style="margin-top:6px;">+ Añadir línea</button>
+
+          <div class="field" style="margin-top:16px;">
+            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle"> Calcular margen (añade una columna de coste por línea)</label>
+          </div>
+
+          <div class="field-row" style="margin-top:6px;">
+            <div class="field">
+              <label>IVA</label>
+              <select id="ng-pre-iva">
+                <option value="21">21% (general)</option>
+                <option value="10">10% (reforma vivienda particular, +2 años)</option>
+                <option value="4">4%</option>
+                <option value="0">0% / exento</option>
+              </select>
+            </div>
+            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="30"></div>
+          </div>
+
+          <div class="field" id="pp-irpf-field">
+            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle"> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
+            <div class="field-row" style="margin-top:8px;">
+              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15">15% (general)</option><option value="7">7% (nuevos autónomos, 1º-3º año)</option></select></div>
+            </div>
+          </div>
+
+          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="Transferencia bancaria"></div>
+
+          <div id="pp-totales" class="pp-totales"></div>
+
+          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">Crear presupuesto</button>
+          <div id="ng-pre-msg"></div>
+        </div>
+      </details>`}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='fiscal'?'active':''}" data-tab="fiscal">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('fiscal')} Asesor fiscal</div>
+      <p class="note">Configura tu alta una vez y el calendario se recalcula solo con tus Gastos y Presupuestos.</p>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Tipo de alta</label>
+          <select id="asesor-tipo-alta">
+            <option value="autonomo" ${tipoAlta==='autonomo'?'selected':''}>Autónomo</option>
+            <option value="sl" ${tipoAlta==='sl'?'selected':''}>Sociedad Limitada (SL)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tu oficio (desde tu ficha)</label>
+          <input type="text" value="${escapeHtml(account.oficio||'Sin oficio en tu ficha')}" readonly>
+        </div>
+      </div>
+
+      <div id="epigrafe-suggest-card">${epigrafeSuggestCardHTML(asesor, oficioEntry)}</div>
+
+      ${nextDeadline ? `
+      <div class="deadline-hero">
+        <div class="days">${daysToNext}<small>${daysToNext===1?'día':'días'}</small></div>
+        <div class="body">
+          <div class="label">${escapeHtml(nextDeadline.label)}</div>
+          <h3>Vence el ${formatDateES(nextDeadline.iso)}</h3>
+          <div class="when">${escapeHtml(nextDeadline.desc)}</div>
+        </div>
+      </div>` : ''}
+
+      <div class="fiscal-timeline">
+        ${fiscalTimeline.slice(1).map(it=>`
+          <div class="ft-item">
+            <div style="flex:1;">
+              <div class="model">${escapeHtml(it.label)}</div>
+              <div class="desc">${escapeHtml(it.desc)}</div>
+            </div>
+            <div class="when">${formatDateES(it.iso)}</div>
+          </div>`).join('')}
+      </div>
+
+      <p class="note">${tipoAlta==='autonomo'
+        ? 'Si en vez de autónomo estuvieras dado de alta como <strong>Sociedad Limitada</strong>, aquí verías el Modelo 202 (pago fraccionado del Impuesto de Sociedades) y el Modelo 200 (declaración anual, en julio) en lugar del 130 y la Renta.'
+        : 'Como Sociedad Limitada declaras el Impuesto de Sociedades (modelos 202 y 200) en vez del IRPF trimestral — el resto de modelos (IVA, retenciones) son los mismos que para un autónomo.'}</p>
+
+      <div class="stat-grid">
+        <div class="fin-stat"><div class="k">Presupuestos aceptados este trimestre</div><div class="v">${formatEUR(facturadoTrimestre)}</div></div>
+        <div class="fin-stat"><div class="k">Gastos deducibles</div><div class="v">${formatEUR(gastosTrimestre)}</div></div>
+        <div class="fin-stat"><div class="k">Estimación orientativa a pagar</div><div class="v est">≈ ${formatEUR(estimacionTrimestre)}</div></div>
+      </div>
+      <p class="note">Estimación aproximada (20% sobre presupuestos aceptados menos gastos), no un cálculo oficial. El importe exacto lo confirma tu gestor.</p>
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='envio'?'active':''}" data-tab="envio">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('envio')} Envío al gestor</div>
+      <p class="note">Recordatorio semanal para mandar tus facturas de gastos a tu gestor. Fase 1, sin servidor: preparamos el resumen y tú lo envías desde tu propio correo.</p>
+      <div class="field-row">
+        <div class="field"><label>Email de tu gestor/gestoría</label><input type="email" id="asesor-gestor-email" value="${escapeHtml(asesor.gestorEmail||'')}" placeholder="gestoria@ejemplo.com"></div>
+        <div class="field"><label>Día preferido de envío</label>
+          <select id="asesor-dia-envio">
+            <option value="lunes" ${asesor.diaEnvio==='lunes'?'selected':''}>Lunes</option>
+            <option value="viernes" ${asesor.diaEnvio==='viernes'?'selected':''}>Viernes</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-outline btn-sm" id="asesor-config-save" style="margin-top:10px;">Guardar configuración</button>
+      <div id="asesor-config-msg"></div>
+    </div>
+
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('gastos')} Gastos de esta semana <span class="badge">${formatDateES(semana.inicio)}–${formatDateES(semana.fin)}</span></div>
+      ${gastosSemana.length ? `
+      <div class="exp-list" id="asesor-exp-list">
+        ${gastosSemana.map(g=>`
+          <div class="exp-row">
+            <input type="checkbox" checked data-gid="${escapeHtml(g.id)}">
+            <span class="prov">${escapeHtml(g.proveedor || g.concepto || g.categoria)}</span>
+            <span class="edate">${formatDateES(g.fecha)}</span>
+            <span class="amt">${formatEUR(g.total)}</span>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-outline" id="asesor-ver-pdf">Ver / descargar PDF de la semana</button>
+        <button class="btn btn-amber" id="asesor-abrir-correo">Abrir correo con los datos ya rellenos</button>
+      </div>
+      <ol style="margin-top:14px; padding-left:20px; font-size:13px; color:var(--ink-soft); line-height:1.7;">
+        <li>Se abre una ventana con el resumen de las facturas marcadas — desde ahí la guardas como PDF (Imprimir → Guardar como PDF).</li>
+        <li>Se abre tu correo con el destinatario, el asunto y el mensaje ya escritos.</li>
+        <li>Adjuntas el PDF que acabas de guardar y le das a enviar.</li>
+      </ol>
+      ` : '<div class="empty-state">No tienes gastos registrados esta semana todavía.</div>'}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='agente'?'active':''}" data-tab="agente">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('agente')} Avisos de esta semana</div>
+      <p class="note">Nada que configurar aquí: se generan solos combinando el Asesor fiscal, el Envío al gestor y tus Gastos y Presupuestos.</p>
+      <div class="asesor-cardgrid">
+        ${nextDeadline ? `
+        <div class="asesor-card" data-ng-tab="fiscal">
+          ${ngIconHTML('fiscal')}
+          <div><h4>Vencimiento cercano</h4><p>${escapeHtml(nextDeadline.label)} vence en ${daysToNext} día${daysToNext===1?'':'s'}.</p></div>
+        </div>` : ''}
+        <div class="asesor-card" data-ng-tab="envio">
+          ${ngIconHTML('envio')}
+          <div><h4>${envioPendiente?'Envío pendiente':'Envío al día'}</h4><p>${envioPendiente ? `Aún no has mandado los gastos de esta semana a tu gestor (${gastosSemana.length} factura${gastosSemana.length===1?'':'s'}, ${formatEUR(totalGastosSemana)}).` : 'Ya preparaste el envío de esta semana a tu gestor.'}</p></div>
+        </div>
+        <div class="asesor-card" data-ng-tab="gastos">
+          ${ngIconHTML('gastos')}
+          <div><h4>Gastos deducibles</h4><p>Llevas ${formatEUR(gastosTrimestre)} registrados este trimestre. Si te falta alguna factura de material o combustible, súbela antes del cierre.</p></div>
+        </div>
+        <div class="asesor-card" data-ng-tab="presupuestos">
+          ${ngIconHTML('presupuestos')}
+          <div><h4>Comparativa</h4><p>${facturadoTrimestreAnterior>0
+            ? `Este trimestre llevas ${formatEUR(facturadoTrimestre)} en presupuestos aceptados, frente a ${formatEUR(facturadoTrimestreAnterior)} el trimestre anterior.`
+            : `Llevas ${formatEUR(facturadoTrimestre)} en presupuestos aceptados este trimestre.`}</p></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function bindNegocio(){
+  document.querySelectorAll('[data-ng-tab]').forEach(el=>{
+    el.onclick = ()=>{
+      negocioTab = el.dataset.ngTab;
+      document.querySelectorAll('.ng-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.ngTab===negocioTab));
+      document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
+    };
+  });
+
+  let citaOverlapAcknowledged = false;
+
+  const ngCliAddBtn = document.getElementById('ng-cli-add');
+  if(ngCliAddBtn) ngCliAddBtn.onclick = async ()=>{
+    const msgBox = document.getElementById('ng-cli-msg');
+    msgBox.innerHTML = '';
+    const nombre = document.getElementById('ng-cli-nombre').value.trim();
+    const tipo = document.getElementById('ng-cli-tipo').value;
+    const telefono = document.getElementById('ng-cli-telefono').value.trim();
+    const nif = document.getElementById('ng-cli-nif').value.trim();
+    const direccion = document.getElementById('ng-cli-direccion').value.trim();
+    if(!nombre){
+      msgBox.innerHTML = '<div class="msg err">Indica al menos el nombre del cliente.</div>';
+      return;
+    }
+    const dup = negocio.clientes.find(c => c.nombre.trim().toLowerCase()===nombre.toLowerCase() || (telefono && c.telefono===telefono));
+    if(dup){
+      msgBox.innerHTML = `<div class="msg err">Ya tienes un cliente registrado como ${escapeHtml(dup.nombre)}${dup.telefono?' ('+escapeHtml(dup.telefono)+')':''}.</div>`;
+      return;
+    }
+    negocio.clientes.push({ id:'cl'+Date.now(), nombre, tipo, telefono, nif, direccion, favorito:false, createdAt: Date.now() });
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el cliente. Inténtalo de nuevo.</div>'; return; }
+    showToast('Cliente añadido.');
+    showView('negocio');
+  };
+
+  const ngGasAddBtn = document.getElementById('ng-gas-add');
+  if(ngGasAddBtn) ngGasAddBtn.onclick = async ()=>{
+    const msgBox = document.getElementById('ng-gas-msg');
+    msgBox.innerHTML = '';
+    const fecha = document.getElementById('ng-gas-fecha').value || todayISO();
+    const proveedor = document.getElementById('ng-gas-proveedor').value.trim();
+    const concepto = document.getElementById('ng-gas-concepto').value.trim();
+    const categoria = document.getElementById('ng-gas-categoria').value;
+    const total = Number(document.getElementById('ng-gas-total').value);
+    const ivaPct = Number(document.getElementById('ng-gas-iva').value);
+    const clienteId = document.getElementById('ng-gas-cliente').value;
+    if(!concepto || !total || total<=0){
+      msgBox.innerHTML = '<div class="msg err">Indica al menos el concepto y un importe mayor que cero.</div>';
+      return;
+    }
+    const base = total / (1 + ivaPct/100);
+    const cuota = total - base;
+    negocio.gastos.push({ id:'g'+Date.now(), fecha, proveedor, concepto, categoria, ivaPct, base: Math.round(base*100)/100, cuota: Math.round(cuota*100)/100, total, clienteId: clienteId||null, createdAt: Date.now() });
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el gasto. Inténtalo de nuevo.</div>'; return; }
+    showToast('Gasto apuntado: '+formatEUR(total));
+    showView('negocio');
+  };
+
+  const ngCitAddBtn = document.getElementById('ng-cit-add');
+  if(ngCitAddBtn) ngCitAddBtn.onclick = async ()=>{
+    const msgBox = document.getElementById('ng-cit-msg');
+    msgBox.innerHTML = '';
+    const fecha = document.getElementById('ng-cit-fecha').value;
+    const horaInicio = document.getElementById('ng-cit-inicio').value;
+    const horaFin = document.getElementById('ng-cit-fin').value;
+    const cliente = document.getElementById('ng-cit-cliente').value.trim();
+    const tipoTrabajo = document.getElementById('ng-cit-tipo').value;
+    const direccion = document.getElementById('ng-cit-direccion').value.trim();
+    if(!fecha || !cliente){
+      msgBox.innerHTML = '<div class="msg err">Indica al menos la fecha y el cliente.</div>';
+      return;
+    }
+    if(!citaOverlapAcknowledged){
+      const overlap = negocio.agenda.find(c => c.fecha === fecha && horaInicio && horaFin && c.horaInicio && c.horaFin &&
+        (horaInicio < c.horaFin) && (c.horaInicio < horaFin));
+      if(overlap){
+        msgBox.innerHTML = `<div class="msg err">Ya tienes ${escapeHtml(overlap.tipoTrabajo||'una cita')} con ${escapeHtml(overlap.cliente||'')} ese día de ${overlap.horaInicio} a ${overlap.horaFin}. Pulsa otra vez "Añadir cita" si quieres añadirla igualmente.</div>`;
+        citaOverlapAcknowledged = true;
+        return;
+      }
+    }
+    negocio.agenda.push({ id:'c'+Date.now(), fecha, horaInicio, horaFin, cliente, tipoTrabajo, direccion, estado:'Confirmada', createdAt: Date.now() });
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar la cita. Inténtalo de nuevo.</div>'; return; }
+    showToast('Cita añadida a la agenda.');
+    showView('negocio');
+  };
+
+  document.getElementById('ng-datos-save').onclick = async ()=>{
+    const msgBox = document.getElementById('ng-datos-msg');
+    msgBox.innerHTML = '';
+    negocio.datos.nombreFiscal = document.getElementById('ng-datos-nombre').value.trim();
+    negocio.datos.nif = document.getElementById('ng-datos-nif').value.trim();
+    negocio.datos.direccion = document.getElementById('ng-datos-direccion').value.trim();
+    negocio.datos.telefono = document.getElementById('ng-datos-telefono').value.trim();
+    negocio.datos.email = document.getElementById('ng-datos-email').value.trim();
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar. Inténtalo de nuevo.</div>'; return; }
+    showToast('Datos del negocio guardados.');
+    showView('negocio');
+  };
+
+  document.getElementById('negocio-presupuestos-list').addEventListener('click', async (e)=>{
+    const pdfBtn = e.target.closest('[data-pdf-id]');
+    if(pdfBtn){ abrirPresupuestoPDF(pdfBtn.dataset.pdfId); return; }
+    const estadoBtn = e.target.closest('[data-estado-btn]');
+    if(estadoBtn){
+      const p = negocio.presupuestos.find(x=>x.id===estadoBtn.dataset.pid);
+      if(!p) return;
+      p.estado = estadoBtn.dataset.estadoBtn;
+      const saved = await saveNegocio(account.email, negocio);
+      if(saved){ showToast(`Presupuesto ${p.numero}: ${p.estado}.`); showView('negocio'); }
+      return;
+    }
+  });
+
+  bindAsesorFinanciero();
+  bindPresupuestoForm();
+}
+
+function wireEpigrafeCard(){
+  const card = document.getElementById('epigrafe-suggest-card');
+  if(!card) return;
+
+  card.querySelectorAll('[data-ng-tab]').forEach(el=>{
+    el.onclick = ()=>{
+      negocioTab = el.dataset.ngTab;
+      document.querySelectorAll('.ng-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.ngTab===negocioTab));
+      document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
+    };
+  });
+
+  async function persistEpigrafe(code, confidence){
+    negocio.asesor.epigrafeCode = code;
+    negocio.asesor.epigrafeConfianza = confidence;
+    negocio.asesor.epigrafeConfirmado = false;
+    return await saveNegocio(account.email, negocio);
+  }
+
+  card.querySelectorAll('.clarify .opt[data-code]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const code = btn.dataset.code;
+      await persistEpigrafe(code, 'media');
+      card.className = 'suggest-card warn';
+      card.innerHTML = epigrafeResultCardHTML(code, 'media', 'Elegido a partir de tu respuesta.', false);
+      wireEpigrafeCard();
+    };
+  });
+
+  const searchToggle = document.getElementById('epi-search-toggle');
+  if(searchToggle) searchToggle.onclick = ()=>{
+    const box = document.getElementById('epi-search-box');
+    box.hidden = !box.hidden;
+    if(!box.hidden) document.getElementById('epi-search-input').focus();
+  };
+  const searchInput = document.getElementById('epi-search-input');
+  if(searchInput) searchInput.oninput = ()=>{
+    const q = searchInput.value.trim().toLowerCase();
+    const results = document.getElementById('epi-search-results');
+    if(!q){ results.innerHTML = ''; return; }
+    const matches = [];
+    EPIGRAFES_CATALOG.forEach(g => g.items.forEach(i=>{
+      if(i.label.toLowerCase().includes(q) || i.code.includes(q)) matches.push(i);
+    }));
+    results.innerHTML = matches.slice(0,6).map(i=>
+      `<div class="result-item" data-code="${escapeHtml(i.code)}"><span>${escapeHtml(i.label)}</span><span class="rcode">${escapeHtml(i.code)}</span></div>`).join('')
+      || '<div class="result-item" style="cursor:default;">Sin resultados — descríbelo con otras palabras.</div>';
+    results.querySelectorAll('.result-item[data-code]').forEach(r=>{
+      r.onclick = async ()=>{
+        const code = r.dataset.code;
+        await persistEpigrafe(code, 'alta');
+        card.className = 'suggest-card ok';
+        card.innerHTML = epigrafeResultCardHTML(code, 'alta', 'Elegido manualmente en la búsqueda.', false);
+        wireEpigrafeCard();
+      };
+    });
+  };
+
+  const confirmBtn = document.getElementById('epi-confirm-btn');
+  if(confirmBtn) confirmBtn.onclick = async ()=>{
+    const confirmed = confirmBtn.dataset.confirmed === 'true';
+    negocio.asesor.epigrafeConfirmado = !confirmed;
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved) return;
+    confirmBtn.dataset.confirmed = (!confirmed).toString();
+    confirmBtn.textContent = !confirmed ? '✓ Confirmado' : 'Marcar como confirmado';
+    confirmBtn.classList.toggle('ok', !confirmed);
+    document.getElementById('epi-confirm-txt').textContent = !confirmed ? 'Confirmado con tu gestor.' : 'Pendiente de confirmar con tu gestor antes del alta.';
+  };
+}
+
+function bindAsesorFinanciero(){
+  const tipoAltaSel = document.getElementById('asesor-tipo-alta');
+  if(tipoAltaSel) tipoAltaSel.onchange = async ()=>{
+    negocio.asesor.tipoAlta = tipoAltaSel.value;
+    const saved = await saveNegocio(account.email, negocio);
+    if(saved) showView('negocio');
+  };
+
+  wireEpigrafeCard();
+
+  const configSaveBtn = document.getElementById('asesor-config-save');
+  if(configSaveBtn) configSaveBtn.onclick = async ()=>{
+    const msgBox = document.getElementById('asesor-config-msg');
+    msgBox.innerHTML = '';
+    negocio.asesor.gestorEmail = document.getElementById('asesor-gestor-email').value.trim();
+    negocio.asesor.diaEnvio = document.getElementById('asesor-dia-envio').value;
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar. Inténtalo de nuevo.</div>'; return; }
+    showToast('Configuración guardada.');
+    showView('negocio');
+  };
+
+  const verPdfBtn = document.getElementById('asesor-ver-pdf');
+  if(verPdfBtn) verPdfBtn.onclick = ()=>{
+    const ids = Array.from(document.querySelectorAll('#asesor-exp-list input[type=checkbox]:checked')).map(cb=>cb.dataset.gid);
+    abrirResumenGastosPDF(negocio.gastos.filter(g=>ids.includes(g.id)));
+  };
+
+  const abrirCorreoBtn = document.getElementById('asesor-abrir-correo');
+  if(abrirCorreoBtn) abrirCorreoBtn.onclick = async ()=>{
+    const ids = Array.from(document.querySelectorAll('#asesor-exp-list input[type=checkbox]:checked')).map(cb=>cb.dataset.gid);
+    const seleccion = negocio.gastos.filter(g=>ids.includes(g.id));
+    if(!seleccion.length){ showToast('Marca al menos una factura para enviar.'); return; }
+    if(!negocio.asesor.gestorEmail){ showToast('Indica primero el email de tu gestor arriba.'); return; }
+    const total = seleccion.reduce((s,g)=> s+(Number(g.total)||0), 0);
+    const semana = isoWeekRange(todayISO());
+    const asunto = `Facturas de gastos — semana del ${formatDateES(semana.inicio)} al ${formatDateES(semana.fin)} — ${account.name||''}`;
+    const cuerpo = `Hola,\n\nTe adjunto las facturas de gastos de esta semana (${seleccion.length} factura${seleccion.length===1?'':'s'}, ${formatEUR(total)} en total).\n\nUn saludo,\n${account.name||''}`;
+    window.location.href = `mailto:${negocio.asesor.gestorEmail}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+    negocio.asesor.ultimoEnvioSemana = semana.key;
+    await saveNegocio(account.email, negocio);
+    showToast('Correo abierto — no olvides adjuntar el PDF.');
+  };
+}
+
+function bindPresupuestoForm(){
+  // El formulario "Crear presupuesto" no se renderiza si el plan gratuito llegó
+  // a su límite mensual (ver premiumLockHTML en renderNegocio) — sin form, nada que enlazar.
+  if(!document.getElementById('ng-pre-add')) return;
+
+  let ppPartidas = [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
+
+  function renderRows(){
+    const rowsEl = document.getElementById('pp-partidas-rows');
+    if(!rowsEl) return;
+    rowsEl.innerHTML = ppPartidas.map((p,idx)=>ppPartidaRowHTML(idx,p)).join('');
+    recalcTotales();
+  }
+
+  function recalcTotales(){
+    const subtotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.precio)||0), 0);
+    const costeTotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.coste)||0), 0);
+    const ivaPct = Number(document.getElementById('ng-pre-iva')?.value || 21);
+    const irpfToggle = document.getElementById('pp-irpf-toggle');
+    const irpfAplica = irpfToggle ? irpfToggle.checked : false;
+    const irpfPct = Number(document.getElementById('ng-pre-irpf-pct')?.value || 15);
+    const cuota = subtotal * ivaPct/100;
+    const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
+    const total = subtotal + cuota - irpfImporte;
+    const margen = subtotal - costeTotal;
+    const margenPct = subtotal>0 ? (margen/subtotal*100) : 0;
+    const hasCoste = document.getElementById('pp-margen-toggle')?.checked;
+
+    document.querySelectorAll('#pp-partidas-rows .pp-partidas-row').forEach(row=>{
+      const idx = +row.dataset.pidx;
+      const p = ppPartidas[idx];
+      if(!p) return;
+      const importe = (Number(p.cantidad)||0)*(Number(p.precio)||0);
+      const cell = row.querySelector('.pp-importe-cell');
+      if(cell) cell.textContent = formatEUR(importe);
+    });
+
+    const totalesEl = document.getElementById('pp-totales');
+    if(totalesEl){
+      totalesEl.innerHTML = `
+        <div class="pp-totales-row"><span>Subtotal</span><span>${formatEUR(subtotal)}</span></div>
+        <div class="pp-totales-row"><span>IVA (${ivaPct}%)</span><span>${formatEUR(cuota)}</span></div>
+        ${irpfAplica ? `<div class="pp-totales-row"><span>Retención IRPF (${irpfPct}%)</span><span>−${formatEUR(irpfImporte)}</span></div>` : ''}
+        <div class="pp-totales-row total"><span>TOTAL</span><span>${formatEUR(total)}</span></div>
+        ${hasCoste ? `<div class="pp-totales-row" style="margin-top:8px; opacity:0.75;"><span>Margen estimado</span><span>${formatEUR(margen)} (${margenPct.toFixed(1)}%)</span></div>` : ''}
+      `;
+    }
+  }
+
+  document.getElementById('pp-add-partida').onclick = ()=>{
+    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0});
+    renderRows();
+  };
+
+  document.getElementById('pp-partidas-rows').addEventListener('input', (e)=>{
+    const row = e.target.closest('.pp-partidas-row');
+    if(!row) return;
+    const idx = +row.dataset.pidx;
+    const p = ppPartidas[idx];
+    if(!p) return;
+    if(e.target.classList.contains('pp-desc')) p.descripcion = e.target.value;
+    else if(e.target.classList.contains('pp-unidad')) p.unidad = e.target.value;
+    else if(e.target.classList.contains('pp-cantidad')) p.cantidad = e.target.value;
+    else if(e.target.classList.contains('pp-precio')) p.precio = e.target.value;
+    else if(e.target.classList.contains('pp-coste')) p.coste = e.target.value;
+    recalcTotales();
+  });
+
+  document.getElementById('pp-partidas-rows').addEventListener('click', (e)=>{
+    const btn = e.target.closest('.pp-row-remove');
+    if(!btn) return;
+    const idx = +btn.dataset.removeIdx;
+    if(ppPartidas.length <= 1) return;
+    ppPartidas.splice(idx,1);
+    renderRows();
+  });
+
+  document.getElementById('pp-margen-toggle').onchange = (e)=>{
+    document.getElementById('pp-partidas-table').classList.toggle('has-coste', e.target.checked);
+    recalcTotales();
+  };
+
+  const clienteSelect = document.getElementById('ng-pre-cliente-select');
+  const clienteNuevoField = document.getElementById('ng-pre-cliente-nuevo');
+  const irpfField = document.getElementById('pp-irpf-field');
+  function syncClienteState(){
+    const selId = clienteSelect.value;
+    clienteNuevoField.style.display = selId ? 'none' : '';
+    const cliente = negocio.clientes.find(c=>c.id===selId);
+    if(cliente && cliente.tipo === 'Empresa'){
+      document.getElementById('pp-irpf-toggle').checked = true;
+    }
+  }
+  clienteSelect.onchange = ()=>{ syncClienteState(); recalcTotales(); };
+  document.getElementById('pp-irpf-toggle').onchange = recalcTotales;
+  document.getElementById('ng-pre-irpf-pct').onchange = recalcTotales;
+  document.getElementById('ng-pre-iva').onchange = recalcTotales;
+
+  syncClienteState();
+  renderRows();
+
+  document.getElementById('ng-pre-add').onclick = async ()=>{
+    const msgBox = document.getElementById('ng-pre-msg');
+    msgBox.innerHTML = '';
+    const clienteId = clienteSelect.value;
+    const clienteObj = negocio.clientes.find(c=>c.id===clienteId);
+    const clienteNombreNuevo = clienteNuevoField.value.trim();
+    if(!clienteObj && !clienteNombreNuevo){
+      msgBox.innerHTML = '<div class="msg err">Indica un cliente: elige uno de la lista o escribe uno nuevo.</div>';
+      return;
+    }
+    const partidasValidas = ppPartidas
+      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0}))
+      .filter(p=>p.descripcion && p.cantidad>0 && p.precio>=0);
+    if(!partidasValidas.length){
+      msgBox.innerHTML = '<div class="msg err">Añade al menos una línea con descripción, cantidad y precio.</div>';
+      return;
+    }
+    const concepto = document.getElementById('ng-pre-concepto').value.trim();
+    const direccionObra = document.getElementById('ng-pre-direccion-obra').value.trim();
+    const ivaPct = Number(document.getElementById('ng-pre-iva').value);
+    const validezDias = Number(document.getElementById('ng-pre-validez').value) || 30;
+    const formaPago = document.getElementById('ng-pre-pago').value.trim() || 'Transferencia bancaria';
+    const irpfAplica = document.getElementById('pp-irpf-toggle').checked;
+    const irpfPct = Number(document.getElementById('ng-pre-irpf-pct').value);
+
+    const subtotal = partidasValidas.reduce((s,p)=> s + p.cantidad*p.precio, 0);
+    const cuota = subtotal * ivaPct/100;
+    const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
+    const total = subtotal + cuota - irpfImporte;
+
+    negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+    const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+
+    negocio.presupuestos.push({
+      id:'p'+Date.now(), numero, fecha: todayISO(),
+      clienteId: clienteObj ? clienteObj.id : null,
+      cliente: clienteObj ? clienteObj.nombre : clienteNombreNuevo,
+      clienteTipo: clienteObj ? (clienteObj.tipo||'Particular') : 'Particular',
+      clienteNif: clienteObj ? (clienteObj.nif||'') : '',
+      clienteDireccion: clienteObj ? (clienteObj.direccion||'') : '',
+      clienteTelefono: clienteObj ? (clienteObj.telefono||'') : '',
+      concepto, direccionObra, partidas: partidasValidas,
+      base: Math.round(subtotal*100)/100, ivaPct, cuota: Math.round(cuota*100)/100,
+      irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
+      total: Math.round(total*100)/100, validezDias, formaPago,
+      estado:'Pendiente', createdAt: Date.now()
+    });
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el presupuesto. Inténtalo de nuevo.</div>'; return; }
+    showToast(`Presupuesto ${numero} creado — ${formatEUR(total)}.`);
+    showView('negocio');
+  };
+}
+
+/* ======================= VISTA: APP MÓVIL (OficiosCalc) ======================= */
+function renderApp(){
+  return `
+  <div class="hero">
+    <span class="eyebrow">OficiosCalc · la app de bolsillo de TodoOficios.es</span>
+    <h1>Calculadoras de obra y presupuestos, en tu móvil.</h1>
+    <p class="lead">Calcula materiales al momento, guarda tus proyectos y comparte un presupuesto en PDF desde la propia obra — y todo lo que crees en la app aparece también en tu Panel de negocio de esta web.</p>
+    <div class="hero-actions">
+      <button class="btn btn-amber" data-coming-soon="app-oficioscalc">📲 Descargar OficiosCalc</button>
+      <button class="btn btn-outline" data-view="negocio">Ver mi Panel de negocio</button>
+    </div>
+    <p style="margin-top:10px; font-size:13.5px; opacity:0.7;">App para Android · gratuita · muy pronto en Google Play.</p>
+  </div>
+
+  <div class="section-heading">Qué puedes hacer con la app</div>
+  <div class="how-grid">
+    <div class="how-card">
+      <h3>🧮 Más de 30 calculadoras</h3>
+      <p>Pintura, pladur, azulejos, hormigón, electricidad (ley de Ohm, sección de cable...), fontanería y geometría — sin necesidad de conexión.</p>
+    </div>
+    <div class="how-card">
+      <h3>📁 Mis proyectos</h3>
+      <p>Añade partidas de distintas calculadoras a un mismo proyecto y súmalas en un presupuesto, con IVA y descuento incluidos.</p>
+    </div>
+    <div class="how-card">
+      <h3>📄 Presupuesto en PDF</h3>
+      <p>Genera el PDF con tus datos fiscales y compártelo directamente por WhatsApp o correo desde la obra, sin volver a la oficina.</p>
+    </div>
+    <div class="how-card">
+      <h3>🔄 Sincronizada con tu panel web</h3>
+      <p>Conecta el mismo email que usas aquí y los presupuestos y clientes que crees en el móvil aparecen en tu Panel de negocio — y al revés.</p>
+    </div>
+  </div>
+
+  <div class="panel panel-wide" style="margin: 28px auto 0 auto; text-align:center;">
+    <div class="section-label" style="justify-content:center;">📲 Cómo conectar la app con tu panel web</div>
+    <p style="max-width:560px; margin:0 auto 18px auto; color:var(--ink-soft); font-size:15px; line-height:1.55;">
+      En la app, abre <strong>Ajustes → Mi Panel de negocio (web)</strong> e introduce el mismo email de tu cuenta de profesional aquí. No hace falta la contraseña: en cuanto lo guardes, tus presupuestos y clientes se sincronizan solos entre el móvil y esta web.
+    </p>
+    <button class="btn btn-outline" data-view="negocio">Ir a mi Panel de negocio</button>
+  </div>
+  `;
+}
+
 /* ======================= VISTA: BUSCAR ======================= */
 function sortPros(pros){
   const now = Date.now();
@@ -2679,11 +4098,14 @@ async function renderBuscar(){
   </div>
 
   <div class="filter-bar">
-    <div class="field">
+    <div class="field search-field-highlight">
       <label for="sf-text">Buscar por nombre, oficio o zona</label>
       <div class="search-combo" id="searchCombo">
         <div style="display:flex; gap:6px;">
-          <input type="text" id="sf-text" placeholder="Ej. electricista Chamberí" autocomplete="off" style="flex:1;">
+          <div class="search-input-wrap">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input type="text" id="sf-text" placeholder="Ej. electricista Chamberí" autocomplete="off" style="width:100%;">
+          </div>
           <button type="button" class="btn btn-outline btn-sm" id="voiceSearchBtn" title="Buscar por voz" style="display:none; flex:0 0 auto; width:auto; padding:10px 14px;">${MIC_ICON}</button>
         </div>
         <div class="sf-dropdown" id="sfDropdown">${sfDropdownGroupsHTML()}</div>
