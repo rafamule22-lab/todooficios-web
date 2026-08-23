@@ -1809,6 +1809,105 @@
     } catch(e){ return false; }
   }
 
+  /* ============================================================
+     MATERIALES FAVORITOS: conexión mínima con Supabase (misma tabla
+     kv_store y namespace que index.html) para que la lista de precios
+     guardados sea la misma en las calculadoras y en el Panel de negocio.
+     ============================================================ */
+  var CLOUD_NAMESPACE = 'todooficios:v1';
+  var cloudClient = null;
+  var cloudEnabled = false;
+  var cloudInitPromise = null;
+  var materialesCache = [];
+  var calcActualId = null;
+
+  function proEmailActual(){
+    try { return localStorage.getItem('session-email') || ''; } catch(e){ return ''; }
+  }
+
+  function hasCloudConfig(){
+    var cfg = window.TODOOFICIOS_LEGAL || {};
+    if(!window.supabase || !window.supabase.createClient) return false;
+    if(!cfg.supabaseUrl || cfg.supabaseUrl.indexOf('PENDIENTE_') === 0) return false;
+    if(!cfg.supabaseAnonKey || cfg.supabaseAnonKey.indexOf('PENDIENTE_') === 0) return false;
+    return true;
+  }
+
+  function initCloudClient(){
+    if(cloudInitPromise) return cloudInitPromise;
+    cloudInitPromise = (function(){
+      if(!hasCloudConfig()) return Promise.resolve(null);
+      var cfg = window.TODOOFICIOS_LEGAL;
+      try {
+        var client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+        return client.from('kv_store').select('key').limit(1).then(function(res){
+          if(res.error) return null;
+          cloudClient = client;
+          cloudEnabled = true;
+          return client;
+        }).catch(function(){ return null; });
+      } catch(e){ return Promise.resolve(null); }
+    })();
+    return cloudInitPromise;
+  }
+
+  function cloudGet(key){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return null;
+      return client.from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', key).maybeSingle()
+        .then(function(res){ return (res.error || !res.data) ? null : res.data.value; })
+        .catch(function(){ return null; });
+    });
+  }
+
+  function cloudSet(key, value){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      var payload = {namespace: CLOUD_NAMESPACE, key: key, value: value, updated_at: new Date().toISOString()};
+      return client.from('kv_store').upsert(payload, {onConflict: 'namespace,key'})
+        .then(function(res){ return !res.error; })
+        .catch(function(){ return false; });
+    });
+  }
+
+  function cargarMaterialesFavoritos(){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve([]);
+    return cloudGet('materiales:'+email).then(function(raw){
+      if(!raw) return [];
+      try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
+    });
+  }
+
+  function guardarMaterialFavorito(nombre, unidad, precio){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(false);
+    materialesCache = materialesCache.concat([{id:'m'+Date.now(), nombre:nombre, unidad:unidad||'ud', precio:precio||0}]);
+    return cloudSet('materiales:'+email, JSON.stringify(materialesCache));
+  }
+
+  function chipsHTML(fieldKey){
+    if(!materialesCache.length) return '';
+    return '<span class="mat-chips">' + materialesCache.map(function(m){
+      return '<span class="mat-chip" data-fill-key="' + fieldKey + '" data-fill-val="' + m.precio + '">' + m.nombre + ' · ' + fmt(m.precio,2) + ' €</span>';
+    }).join('') + '</span>';
+  }
+
+  function refrescarChipsFavoritos(){
+    if(!calcActualId || !elCalc) return;
+    var calc = CALCULADORAS.filter(function(c){ return c.id === calcActualId; })[0];
+    if(!calc) return;
+    calc.fields.forEach(function(f){
+      if(!(f.unit && f.unit.indexOf('€') !== -1)) return;
+      var saveBtn = elCalc.querySelector('[data-save-fav-key="' + f.key + '"]');
+      if(!saveBtn) return;
+      var previo = saveBtn.previousElementSibling;
+      if(previo && previo.classList.contains('mat-chips')) return;
+      if(!materialesCache.length) return;
+      saveBtn.insertAdjacentHTML('beforebegin', chipsHTML(f.key));
+    });
+  }
+
   function leerBorradorPresupuesto(){
     try {
       var proEmail = localStorage.getItem('session-email');
@@ -1894,8 +1993,13 @@
     if(f.type === 'text'){
       return '<label class="cec-field"><span>' + f.label + '</span><input type="text" id="' + id + '" data-key="' + f.key + '" value="' + (f.def !== undefined ? f.def : '') + '"></label>';
     }
+    var esPrecio = f.unit && f.unit.indexOf('€') !== -1;
+    var extra = '';
+    if(esPrecio && isProfessionalLoggedIn()){
+      extra = chipsHTML(f.key) + '<button type="button" class="calc-save-fav-link" data-save-fav-key="' + f.key + '">+ Guardar este precio como material favorito</button>';
+    }
     return '<label class="cec-field"><span>' + f.label + (f.unit ? ' (' + f.unit + ')' : '') + '</span>' +
-      '<input type="number" step="any" id="' + id + '" data-key="' + f.key + '" value="' + (f.def !== undefined ? f.def : '') + '"></label>';
+      '<input type="number" step="any" id="' + id + '" data-key="' + f.key + '" value="' + (f.def !== undefined ? f.def : '') + '">' + extra + '</label>';
   }
 
   function goToCategory(catId){
@@ -1911,11 +2015,35 @@
     if(!isRegistered()){ showRegisterGate(); return; }
     var calc = CALCULADORAS.filter(function(c){ return c.id === calcId; })[0];
     if(!calc) return;
+    calcActualId = calc.id;
     var html = '<h2 class="cec-section-title">' + calc.icono + ' ' + calc.titulo + '</h2>' +
       (calc.info ? '<p class="cec-info">' + calc.info + '</p>' : '') +
       '<div class="cec-form">' + calc.fields.map(fieldHTML).join('') + '</div>' +
       '<div class="cec-result" id="cecResult"></div>';
     elCalc.innerHTML = html;
+    elCalc.onclick = function(e){
+      var chip = e.target.closest('.mat-chip');
+      if(chip){
+        var key = chip.getAttribute('data-fill-key');
+        var input = document.getElementById('f_' + key);
+        if(input){ input.value = chip.getAttribute('data-fill-val'); input.dispatchEvent(new Event('input', {bubbles:true})); }
+        return;
+      }
+      var saveBtn = e.target.closest('.calc-save-fav-link');
+      if(saveBtn){
+        var fkey = saveBtn.getAttribute('data-save-fav-key');
+        var fInput = document.getElementById('f_' + fkey);
+        var precio = fInput ? parseFloat(fInput.value) : NaN;
+        if(!fInput || !Number.isFinite(precio) || precio < 0){ window.alert('Escribe primero un precio válido en el campo.'); return; }
+        var nombre = window.prompt('¿Cómo quieres llamar a este material?', calc.titulo);
+        if(!nombre || !nombre.trim()) return;
+        var fieldDef = calc.fields.filter(function(x){ return x.key === fkey; })[0];
+        var unidad = (fieldDef && fieldDef.unit) ? fieldDef.unit.replace('€','').replace('/','').trim() : '';
+        guardarMaterialFavorito(nombre.trim(), unidad || 'ud', precio).then(function(ok){
+          if(ok) refrescarChipsFavoritos();
+        });
+      }
+    };
     var inputs = elCalc.querySelectorAll('[data-key]');
     var ultimoResultado = [];
     function recalcular(){
@@ -2007,6 +2135,13 @@
     var hash = location.hash.replace('#','');
     if(hash.indexOf('calc-') === 0) goToCalculadora(hash.slice(5));
     else if(hash) { var c = CATEGORIAS.filter(function(x){return x.id===hash;})[0]; if(c) goToCategory(hash); }
+
+    if(isProfessionalLoggedIn()){
+      cargarMaterialesFavoritos().then(function(lista){
+        materialesCache = lista;
+        refrescarChipsFavoritos();
+      });
+    }
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

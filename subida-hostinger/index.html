@@ -123,6 +123,7 @@
     --c-fiscal:#1C7A8C;
     --c-envio:#B4407A;
     --c-agente:#C77C1E;
+    --c-materiales:#6B6355;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -492,6 +493,7 @@
   .ng-icon.c-fiscal{background:rgba(28,122,140,0.14); color:var(--c-fiscal);}
   .ng-icon.c-envio{background:rgba(180,64,122,0.14); color:var(--c-envio);}
   .ng-icon.c-agente{background:rgba(199,124,30,0.14); color:var(--c-agente);}
+  .ng-icon.c-materiales{background:rgba(107,99,85,0.14); color:var(--c-materiales);}
 
   .negocio-stats{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:18px; max-width:900px;}
   .stat-card{background:var(--paper-light); color:var(--ink); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:3px; cursor:pointer; transition:.15s; border:1.5px solid var(--line); border-left:3px solid var(--tab-accent, var(--amber-deep));}
@@ -526,6 +528,7 @@
   .ng-tab-panel[data-tab="gastos"] .panel-wide{--tab-accent:var(--c-gastos);}
   .ng-tab-panel[data-tab="agenda"] .panel-wide{--tab-accent:var(--c-agenda);}
   .ng-tab-panel[data-tab="presupuestos"] .panel-wide{--tab-accent:var(--c-presupuestos);}
+  .ng-tab-panel[data-tab="materiales"] .panel-wide{--tab-accent:var(--c-materiales);}
   .ng-tab-panel[data-tab="fiscal"] .panel-wide{--tab-accent:var(--c-fiscal);}
   .ng-tab-panel[data-tab="envio"] .panel-wide{--tab-accent:var(--c-envio);}
   .ng-tab-panel[data-tab="agente"] .panel-wide{--tab-accent:var(--c-agente);}
@@ -601,6 +604,29 @@
   .pp-draft-banner button.btn:hover{opacity:0.9;}
   .pp-draft-dismiss{flex-shrink:0; background:transparent; border:none; color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px;}
   .pp-draft-dismiss:hover{color:var(--ink);}
+
+  .mat-row{display:flex; align-items:center; gap:14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:9px;}
+  .mat-row .mat-ic{width:34px; height:34px; border-radius:9px; background:rgba(107,99,85,0.14); color:var(--c-materiales); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .mat-row .mat-info{flex:1; min-width:0;}
+  .mat-row .mat-info strong{font-family:'Space Grotesk'; font-size:14.5px; display:block;}
+  .mat-row .mat-info span{color:var(--ink-soft); font-size:12.5px; font-family:'IBM Plex Mono';}
+  .mat-row .mat-price{font-family:'IBM Plex Mono'; font-weight:700; font-size:15px; white-space:nowrap;}
+  .mat-add-form{display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-top:16px; align-items:end;}
+  .mat-add-form label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:0.03em;}
+  @media (max-width:640px){.mat-add-form{grid-template-columns:1fr 1fr;}}
+
+  .pp-add-row{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; position:relative;}
+  .fav-dropdown{position:relative;}
+  .fav-dropdown-btn{border-color:rgba(107,99,85,0.4); color:var(--c-materiales); background:rgba(107,99,85,0.07);}
+  .fav-dropdown-menu{position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.12); min-width:240px; max-height:260px; overflow-y:auto; padding:6px; z-index:5;}
+  .fav-dropdown-item{padding:9px 10px; border-radius:6px; font-size:13px; display:flex; justify-content:space-between; gap:10px; cursor:pointer;}
+  .fav-dropdown-item:hover{background:var(--paper-light);}
+  .fav-dropdown-item .fav-price{font-family:'IBM Plex Mono'; font-weight:600; color:var(--c-materiales);}
+
+  .mat-chips{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 4px;}
+  .mat-chip{font-family:'IBM Plex Mono'; font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:999px; background:rgba(107,99,85,0.12); color:var(--c-materiales); border:1px solid rgba(107,99,85,0.3); cursor:pointer;}
+  .mat-chip.selected{background:var(--c-materiales); color:#fff;}
+  .calc-save-fav-link{font-size:12px; color:var(--ink-soft); text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; margin-top:4px; display:inline-block;}
   .consent-row{display:flex; gap:8px; align-items:flex-start; margin:10px 0 14px;}
   .consent-row input{margin-top:3px;}
   .consent-row label{margin:0; text-transform:none; letter-spacing:0; font-size:12.5px; line-height:1.45; opacity:0.95;}
@@ -1867,6 +1893,7 @@ function ratingStats(email, allRatings){
 let session = null;       // {email} profesional
 let account = null;       // cuenta del profesional logueado
 let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
+let materialesFavoritos = null; // lista de materiales guardados del profesional (clave propia: se comparte también con calculadoras.html)
 let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
 let clientSession = null;  // {email} cliente
 let clientAccount = null;  // cuenta del cliente
@@ -1944,7 +1971,8 @@ async function setMyClientName(name){
 /* ======================= PANEL DE NEGOCIO (gastos, clientes, presupuestos, agenda) ======================= */
 const CATEGORIAS_GASTO = ['Fontanería','Electricidad','Albañilería','Pintura y acabados','Climatización','Cerrajería','Herramientas y maquinaria','Alquiler de equipos','Transporte / desplazamientos','Otros'];
 const TIPOS_TRABAJO_AGENDA = ['Visita para presupuestar','Instalación','Reparación/avería','Revisión/mantenimiento','Entrega de obra'];
-const UNIDADES_PRESUPUESTO = ['ud','m²','ml','m³','h','pa'];
+const UNIDADES_PRESUPUESTO = ['ud','m','m²','m³','ml','kg','L','h','pa'];
+const UNIDADES_MATERIAL = ['ud','m','m²','m³','kg','L'];
 
 // Límites del plan gratuito en el Panel de negocio. Premium (featuredUntil vigente) no tiene límite.
 // Mismo patrón que las fotos de perfil (3 gratis / 10 Premium): se puede usar la herramienta,
@@ -1980,6 +2008,16 @@ async function getNegocio(email){
 }
 async function saveNegocio(email, data){
   return await safeSet('negocio:'+email, JSON.stringify(data), true);
+}
+/* Materiales favoritos: clave propia (no dentro de negocio:<email>) para que calculadoras.html
+   pueda leerla/escribirla sin tocar el resto de los datos de negocio del profesional. */
+async function getMateriales(email){
+  const raw = await safeGet('materiales:'+email, true);
+  if(!raw) return [];
+  try { const list = JSON.parse(raw); return Array.isArray(list) ? list : []; } catch(e){ return []; }
+}
+async function saveMateriales(email, list){
+  return await safeSet('materiales:'+email, JSON.stringify(list), true);
 }
 function formatEUR(n){
   const num = Number(n) || 0;
@@ -3120,6 +3158,14 @@ function presupuestoRowHTML(p){
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
 }
+function materialRowHTML(m){
+  return `<div class="mat-row" data-mid="${m.id}">
+    <div class="mat-ic">${NG_ICONS.materiales}</div>
+    <div class="mat-info"><strong>${escapeHtml(m.nombre)}</strong><span>${escapeHtml(m.unidad)}</span></div>
+    <div class="mat-price">${formatEUR(m.precio)}</div>
+    <button type="button" class="pp-mini-btn bad" data-del-material="${m.id}">🗑 Eliminar</button>
+  </div>`;
+}
 
 /* Genera el documento del presupuesto y abre el diálogo de impresión (el profesional elige "Guardar como PDF") */
 function abrirPresupuestoPDF(id){
@@ -3298,7 +3344,8 @@ const NG_ICONS = {
   presupuestos: `<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>`,
   fiscal: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4.8l3.2 1.8"/></svg>`,
   envio: `<svg viewBox="0 0 24 24"><path d="M20.5 3.5 3 10.8l6.3 2.1L11.4 19z"/><path d="M9.3 12.9 20.5 3.5"/></svg>`,
-  agente: `<svg viewBox="0 0 24 24"><path d="M9 18.5h6M10 21h4"/><path d="M12 3.2a6.3 6.3 0 0 0-3.7 11.4c.5.4.8 1 .8 1.6v.3h5.8v-.3c0-.6.3-1.2.8-1.6A6.3 6.3 0 0 0 12 3.2z"/></svg>`
+  agente: `<svg viewBox="0 0 24 24"><path d="M9 18.5h6M10 21h4"/><path d="M12 3.2a6.3 6.3 0 0 0-3.7 11.4c.5.4.8 1 .8 1.6v.3h5.8v-.3c0-.6.3-1.2.8-1.6A6.3 6.3 0 0 0 12 3.2z"/></svg>`,
+  materiales: `<svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="7" height="5" rx="0.8"/><rect x="13.5" y="4" width="7" height="5" rx="0.8"/><rect x="3.5" y="11.5" width="7" height="5" rx="0.8"/><rect x="13.5" y="11.5" width="7" height="5" rx="0.8"/><path d="M3.5 19h17"/></svg>`
 };
 function ngIconHTML(key){
   return `<span class="ng-icon c-${key}">${NG_ICONS[key]||''}</span>`;
@@ -3375,6 +3422,7 @@ function clearPresupuestoDraft(email){
 
 async function renderNegocio(){
   negocio = await getNegocio(account.email);
+  materialesFavoritos = await getMateriales(account.email);
   const hoy = todayISO();
   const inicioMes = hoy.slice(0,7);
 
@@ -3448,6 +3496,7 @@ async function renderNegocio(){
     {key:'gastos', label:`Gastos (${negocio.gastos.length})`},
     {key:'agenda', label:`Agenda (${citasProximas.length})`},
     {key:'presupuestos', label:`Presupuestos (${negocio.presupuestos.length})`},
+    {key:'materiales', label:`Materiales (${materialesFavoritos.length})`},
     {key:'fiscal', label:'Asesor fiscal'},
     {key:'envio', label:'Envío al gestor'},
     {key:'agente', label:'Agente financiero'}
@@ -3635,7 +3684,16 @@ async function renderNegocio(){
             </div>
             <div id="pp-partidas-rows"></div>
           </div>
-          <button type="button" class="btn btn-outline btn-sm" id="pp-add-partida" style="margin-top:6px;">+ Añadir línea</button>
+          <div class="pp-add-row">
+            <button type="button" class="btn btn-outline btn-sm" id="pp-add-partida">+ Añadir línea</button>
+            ${materialesFavoritos.length ? `
+            <div class="fav-dropdown">
+              <button type="button" class="btn btn-outline btn-sm fav-dropdown-btn" id="pp-fav-toggle">🧱 Añadir material favorito</button>
+              <div class="fav-dropdown-menu" id="pp-fav-menu" style="display:none;">
+                ${materialesFavoritos.map(m=>`<div class="fav-dropdown-item" data-fav-id="${m.id}"><span>${escapeHtml(m.nombre)}</span><span class="fav-price">${formatEUR(m.precio)}</span></div>`).join('')}
+              </div>
+            </div>` : ''}
+          </div>
 
           <div class="field" style="margin-top:16px;">
             <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle"> Calcular margen (añade una columna de coste por línea)</label>
@@ -3669,6 +3727,22 @@ async function renderNegocio(){
           <div id="ng-pre-msg"></div>
         </div>
       </details>`}
+    </div>
+  </div>
+
+  <div class="ng-tab-panel ${negocioTab==='materiales'?'active':''}" data-tab="materiales">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('materiales')} Materiales favoritos</div>
+      <p class="note">Guarda aquí tus precios habituales de materiales. Están disponibles también desde las calculadoras, en cualquier dispositivo donde inicies sesión.</p>
+      <div id="negocio-materiales-list">${materialesFavoritos.length ? materialesFavoritos.slice().reverse().map(materialRowHTML).join('') : '<div class="empty-state">Todavía no guardaste ningún material favorito.</div>'}</div>
+
+      <div class="mat-add-form">
+        <div><label>Material</label><input type="text" id="mat-nombre" placeholder="Ej. Saco de cemento 25kg"></div>
+        <div><label>Unidad</label><select id="mat-unidad">${UNIDADES_MATERIAL.map(u=>`<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('')}</select></div>
+        <div><label>Precio</label><input type="number" min="0" step="0.01" id="mat-precio" placeholder="0,00"></div>
+        <button type="button" class="btn btn-primary" id="mat-add">+ Guardar</button>
+      </div>
+      <div id="mat-msg"></div>
     </div>
   </div>
 
@@ -3958,6 +4032,39 @@ function bindNegocio(){
     if(saved){ showToast('Cita eliminada.'); showView('negocio'); }
   });
 
+  const matList = document.getElementById('negocio-materiales-list');
+  if(matList){
+    matList.addEventListener('click', async (e)=>{
+      const delBtn = e.target.closest('[data-del-material]');
+      if(!delBtn) return;
+      const m = materialesFavoritos.find(x=>x.id===delBtn.dataset.delMaterial);
+      if(!m) return;
+      if(!confirm(`¿Eliminar "${m.nombre}" de tus materiales favoritos?`)) return;
+      materialesFavoritos = materialesFavoritos.filter(x=>x.id!==m.id);
+      const saved = await saveMateriales(account.email, materialesFavoritos);
+      if(saved){ showToast('Material eliminado.'); showView('negocio'); }
+    });
+  }
+  const matAddBtn = document.getElementById('mat-add');
+  if(matAddBtn){
+    matAddBtn.onclick = async ()=>{
+      const msgBox = document.getElementById('mat-msg');
+      msgBox.innerHTML = '';
+      const nombre = document.getElementById('mat-nombre').value.trim();
+      const unidad = document.getElementById('mat-unidad').value;
+      const precio = Number(document.getElementById('mat-precio').value);
+      if(!nombre || !(precio >= 0)){
+        msgBox.innerHTML = '<div class="msg err">Indica un nombre y un precio válido.</div>';
+        return;
+      }
+      materialesFavoritos.push({id:'m'+Date.now(), nombre, unidad, precio});
+      const saved = await saveMateriales(account.email, materialesFavoritos);
+      if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el material.</div>'; return; }
+      showToast('Material guardado.');
+      showView('negocio');
+    };
+  }
+
   bindAsesorFinanciero();
   bindPresupuestoForm();
 }
@@ -4131,6 +4238,26 @@ function bindPresupuestoForm(){
     ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0});
     renderRows();
   };
+
+  const favToggle = document.getElementById('pp-fav-toggle');
+  const favMenu = document.getElementById('pp-fav-menu');
+  if(favToggle && favMenu){
+    favToggle.onclick = (e)=>{
+      e.stopPropagation();
+      favMenu.style.display = favMenu.style.display === 'none' ? '' : 'none';
+    };
+    favMenu.addEventListener('click', (e)=>{
+      const item = e.target.closest('[data-fav-id]');
+      if(!item) return;
+      const m = materialesFavoritos.find(x=>x.id===item.dataset.favId);
+      if(!m) return;
+      const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
+      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0};
+      if(soloVacia) ppPartidas = [nueva]; else ppPartidas.push(nueva);
+      favMenu.style.display = 'none';
+      renderRows();
+    });
+  }
 
   document.getElementById('pp-partidas-rows').addEventListener('input', (e)=>{
     const row = e.target.closest('.pp-partidas-row');
