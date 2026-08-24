@@ -2082,7 +2082,8 @@ const FREE_LIMITS = {
   clientes: 5,            // clientes guardados en total
   gastosPorMes: 5,         // gastos registrados en el mes en curso
   presupuestosPorMes: 3,   // presupuestos creados en el mes en curso
-  citasActivas: 5          // citas futuras en la agenda al mismo tiempo
+  citasActivas: 5,         // citas futuras en la agenda al mismo tiempo
+  materiales: 5            // materiales favoritos guardados en total
 };
 
 function defaultNegocio(){
@@ -3689,12 +3690,14 @@ async function renderNegocio(){
   const gastosLimitReached = !premium && gastosMes.length >= FREE_LIMITS.gastosPorMes;
   const presupuestosLimitReached = !premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes;
   const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
+  const materialesLimitReached = !premium && materialesFavoritos.length >= FREE_LIMITS.materiales;
   const presupuestoDraft = getPresupuestoDraft(account.email);
 
-  function premiumLockHTML(mensaje){
+  function premiumLockHTML(mensaje, bullets){
     return `
       <div class="ng-limit-note">
         <p class="note">${mensaje}</p>
+        ${bullets && bullets.length ? `<ul style="margin:0; padding-left:20px; font-size:14px; color:var(--ink-soft); line-height:1.6;">${bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join('')}</ul>` : ''}
         <a class="btn btn-amber btn-sm" href="javascript:void(0)" data-view="pro">Ver plan Premium →</a>
       </div>`;
   }
@@ -3959,13 +3962,14 @@ async function renderNegocio(){
       <p class="note">Guarda aquí tus precios habituales de materiales. Están disponibles también desde las calculadoras, en cualquier dispositivo donde inicies sesión.</p>
       <div id="negocio-materiales-list">${materialesFavoritos.length ? materialesFavoritos.slice().reverse().map(materialRowHTML).join('') : '<div class="empty-state">Todavía no guardaste ningún material favorito.</div>'}</div>
 
+      ${materialesLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.materiales} materiales favoritos del plan gratuito. Hazte Premium para guardar materiales sin límite.`) : `
       <div class="mat-add-form">
         <div><label>Material</label><input type="text" id="mat-nombre" placeholder="Ej. Saco de cemento 25kg"></div>
         <div><label>Unidad</label><select id="mat-unidad">${UNIDADES_MATERIAL.map(u=>`<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('')}</select></div>
         <div><label>Precio</label><input type="number" min="0" step="0.01" id="mat-precio" placeholder="0,00"></div>
         <button type="button" class="btn btn-primary" id="mat-add">+ Guardar</button>
       </div>
-      <div id="mat-msg"></div>
+      <div id="mat-msg"></div>`}
     </div>
   </div>
 
@@ -4000,6 +4004,7 @@ async function renderNegocio(){
         </div>
       </div>` : ''}
 
+      ${premium ? `
       <div class="fiscal-timeline">
         ${fiscalTimeline.slice(1).map(it=>`
           <div class="ft-item">
@@ -4021,6 +4026,11 @@ async function renderNegocio(){
         <div class="fin-stat"><div class="k">Estimación orientativa a pagar</div><div class="v est">≈ ${formatEUR(estimacionTrimestre)}</div></div>
       </div>
       <p class="note">Estimación aproximada (20% sobre presupuestos aceptados menos gastos), no un cálculo oficial. El importe exacto lo confirma tu gestor.</p>
+      ` : premiumLockHTML('Aquí ves solo el próximo vencimiento. Hazte Premium para ver el calendario fiscal completo y la estimación trimestral a pagar.', [
+        'Calendario completo con todos los modelos (IVA, IRPF o Sociedades, resumen anual…)',
+        'Estimación orientativa de lo que te tocaría pagar cada trimestre',
+        'Gastos deducibles acumulados del trimestre'
+      ])}
     </div>
   </div>
 
@@ -4053,6 +4063,7 @@ async function renderNegocio(){
             <span class="amt">${formatEUR(g.total)}</span>
           </div>`).join('')}
       </div>
+      ${premium ? `
       <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
         <button class="btn btn-outline" id="asesor-ver-pdf">Ver / descargar PDF de la semana</button>
         <button class="btn btn-amber" id="asesor-abrir-correo">Abrir correo con los datos ya rellenos</button>
@@ -4062,13 +4073,15 @@ async function renderNegocio(){
         <li>Se abre tu correo con el destinatario, el asunto y el mensaje ya escritos.</li>
         <li>Adjuntas el PDF que acabas de guardar y le das a enviar.</li>
       </ol>
+      ` : premiumLockHTML(`Tienes ${gastosSemana.length} factura${gastosSemana.length===1?'':'s'} (${formatEUR(totalGastosSemana)}) pendientes de enviar esta semana. Hazte Premium para generar el PDF y el correo ya rellenos con un clic.`)}
       ` : '<div class="empty-state">No tienes gastos registrados esta semana todavía.</div>'}
     </div>
   </div>
 
   <div class="ng-tab-panel ${negocioTab==='agente'?'active':''}" data-tab="agente">
     <div class="panel panel-wide">
-      <div class="section-label">${ngIconHTML('agente')} Avisos de esta semana</div>
+      <div class="section-label">${ngIconHTML('agente')} Agente financiero</div>
+      ${premium ? `
       <p class="note">Nada que configurar aquí: se generan solos combinando el Asesor fiscal, el Envío al gestor y tus Gastos y Presupuestos.</p>
       <div class="asesor-cardgrid">
         ${nextDeadline ? `
@@ -4091,6 +4104,15 @@ async function renderNegocio(){
             : `Llevas ${formatEUR(facturadoTrimestre)} en presupuestos aceptados este trimestre.`}</p></div>
         </div>
       </div>
+      ` : `
+      <p class="note">Combina tu Asesor fiscal, el Envío al gestor y tus Gastos y Presupuestos en avisos automáticos cada semana, para que no se te pase ningún plazo ni ningún envío.</p>
+      ${premiumLockHTML('El Agente financiero es exclusivo del plan Premium.', [
+        'Aviso cuando se acerca un vencimiento fiscal',
+        'Aviso si aún no has enviado los gastos de la semana a tu gestor',
+        'Resumen de gastos deducibles del trimestre',
+        'Comparativa de facturación trimestre a trimestre'
+      ])}
+      `}
     </div>
   </div>`;
 }

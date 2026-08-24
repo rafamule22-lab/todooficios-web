@@ -12,9 +12,16 @@ probarla.
   desde el mes 13. Da mejor posicionamiento en búsquedas y hasta 10 fotos de
   trabajos (gratis: 3 fotos).
 - Límites del plan gratuito en el Panel de negocio (`FREE_LIMITS`): 5 clientes,
-  5 gastos/mes, 3 presupuestos/mes, 5 citas activas simultáneas. Premium sin
-  límite en ninguna herramienta (gastos, clientes, presupuestos, agenda,
-  materiales favoritos, calculadoras conectadas a presupuestos).
+  5 gastos/mes, 3 presupuestos/mes, 5 citas activas simultáneas, 5 materiales
+  favoritos. Premium sin límite en ninguna herramienta.
+- Diferenciación por módulo (added 2026-08-24, ver bloque 4): el **Agente
+  financiero** (avisos automáticos) es 100% exclusivo de Premium; el
+  **Asesor fiscal** en gratis solo muestra el próximo vencimiento (el
+  calendario completo y la estimación trimestral son Premium); el
+  **Envío al gestor** en gratis mantiene el recordatorio manual pero la
+  generación automática de PDF/correo es Premium. Calculadoras conectadas a
+  presupuestos siguen libres para todos (embudo hacia el tope de
+  presupuestos/mes).
 - Pagos reales (PayPal) desactivados en producción (`PAYMENTS_ENABLED = false`)
   hasta configurar la pasarela.
 
@@ -133,6 +140,39 @@ para que, además de los meses gratis iniciales, mantengan el precio de
 4,99 €/mes durante 24 meses (en vez de 12) antes de entrar en el
 escalonado normal — historia de marketing tipo "precio de fundador".
 
+## 4. Diferenciación real Gratis vs. Premium por módulo (implementado 2026-08-24)
+
+**Motivo:** más allá de los topes numéricos (clientes, gastos, presupuestos,
+citas), varios módulos grandes del Panel de negocio —Materiales favoritos,
+Asesor fiscal, Envío al gestor, Agente financiero— estaban completamente
+abiertos en el plan gratuito, sin ninguna diferencia con Premium. Se
+implementó en `index.html`, sobre el mismo patrón ya existente
+(`premiumLockHTML`, ahora con soporte opcional de una lista de bullets):
+
+- **Materiales favoritos**: tope de 5 en gratis (`FREE_LIMITS.materiales`),
+  ilimitado en Premium — mismo patrón soft-cap que clientes/gastos/citas.
+- **Asesor fiscal**: en gratis solo se ve el próximo vencimiento (la tarjeta
+  `deadline-hero`); el calendario fiscal completo (`fiscal-timeline`, todos
+  los modelos, histórico) y la estimación trimestral (`stat-grid`) pasan a
+  ser exclusivos de Premium.
+- **Envío al gestor**: en gratis se mantiene el recordatorio semanal y la
+  lista de gastos de la semana, pero la generación automática del PDF y el
+  correo prerrellenado (botones `asesor-ver-pdf` / `asesor-abrir-correo`)
+  son exclusivos de Premium.
+- **Agente financiero**: pestaña 100% exclusiva de Premium — en gratis se ve
+  un teaser con lo que ofrece (avisos de vencimientos, envíos pendientes,
+  gastos deducibles, comparativa trimestral) y el botón a Premium, sin el
+  contenido real.
+- Se dejaron **libres para todos** las calculadoras conectadas a
+  presupuestos: son la puerta de entrada para que el plan gratuito vea
+  valor antes de toparse con el límite de presupuestos/mes; restringirlas
+  ahí habría cortado el embudo de conversión.
+
+Verificado sin arrancar servidor de datos real: se simuló una cuenta
+gratuita y una Premium (`account.featuredUntil` en el futuro) en un
+navegador headless y se comprobó que cada pestaña renderiza el contenido
+correcto según el plan.
+
 ## Pendiente de retomar
 
 - Decidir duración final del trial (14 vs 30 días) y si se pide tarjeta.
@@ -144,3 +184,7 @@ escalonado normal — historia de marketing tipo "precio de fundador".
 - Elegir la ciudad/comarca faro para concentrar el arranque de la
   campaña (bloque 3) y activar el programa de referidos entre
   profesionales.
+- Si conviene, actualizar los banners de campaña (bloque 3) para reflejar
+  la nueva diferenciación por módulo del bloque 4, ya que hoy solo hablan
+  de los topes numéricos y no mencionan Agente financiero / Asesor fiscal
+  / Envío al gestor como exclusivos de Premium.
