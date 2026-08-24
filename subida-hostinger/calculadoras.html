@@ -26,7 +26,9 @@
   .cec-top{background:var(--ink);color:var(--paper-light);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .cec-top a.cec-home{text-decoration:none;border:1px solid rgba(247,245,240,0.25);border-radius:7px;padding:8px 12px;font-size:13px;white-space:nowrap;}
   .cec-top a.cec-home:hover{background:rgba(247,245,240,0.1);}
-  .cec-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;}
+  .cec-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;display:inline-flex;align-items:center;gap:9px;}
+  .cec-brand .mic{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;width:26px;height:26px;background:var(--amber);flex-shrink:0;}
+  .cec-brand .mic svg{width:14px;height:14px;stroke:var(--ink);color:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
   .cec-wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;}
   .cec-hero{text-align:center;padding:20px 8px 26px;}
   .cec-hero h1{font-size:1.6rem;margin-bottom:8px;}
@@ -94,7 +96,7 @@
 </head>
 <body>
   <div class="cec-top">
-    <span class="cec-brand">🧮 Calculadoras TodoOficios</span>
+    <span class="cec-brand"><span class="mic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></span>Calculadoras TodoOficios</span>
     <a class="cec-home" href="index.html">← Volver a TodoOficios.es</a>
   </div>
   <main class="cec-wrap">

@@ -24,7 +24,9 @@
   .blog-top{background:var(--ink);color:var(--paper-light);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
   .blog-top a.blog-home{text-decoration:none;border:1px solid rgba(247,245,240,0.25);border-radius:7px;padding:8px 12px;font-size:13px;white-space:nowrap;}
   .blog-top a.blog-home:hover{background:rgba(247,245,240,0.1);}
-  .blog-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;}
+  .blog-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;display:inline-flex;align-items:center;gap:9px;}
+  .blog-brand .mic{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;width:26px;height:26px;background:var(--amber);flex-shrink:0;}
+  .blog-brand .mic svg{width:14px;height:14px;stroke:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
   .blog-wrap{max-width:760px;margin:0 auto;padding:24px 16px 60px;}
   .blog-hero{text-align:center;padding:16px 8px 28px;}
   .blog-hero h1{font-size:1.7rem;margin-bottom:8px;}
@@ -52,7 +54,7 @@
 </head>
 <body>
   <div class="blog-top">
-    <span class="blog-brand">📰 Blog TodoOficios.es</span>
+    <span class="blog-brand"><span class="mic"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="1.5"/><path d="M7 9h6M7 12.5h6M7 16h4"/><path d="M16.5 9h1M16.5 12.5h1"/></svg></span>Blog TodoOficios.es</span>
     <a class="blog-home" href="index.html">← Volver a TodoOficios.es</a>
   </div>
   <main class="blog-wrap">
