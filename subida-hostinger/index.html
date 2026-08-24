@@ -3292,9 +3292,41 @@ function gastoRowHTML(g){
     <button type="button" class="pp-mini-btn bad" data-del-gasto="${g.id}" title="Eliminar gasto">🗑</button>
   </div>`;
 }
+function googleCalendarUrl(c){
+  const pad = n => String(n).padStart(2,'0');
+  const [y,m,d] = c.fecha.split('-');
+  let datesParam;
+  if(c.horaInicio){
+    const [hi,mi] = c.horaInicio.split(':');
+    const startStr = `${y}${m}${d}T${hi}${mi}00`;
+    let endStr;
+    if(c.horaFin){
+      const [hf,mf] = c.horaFin.split(':');
+      endStr = `${y}${m}${d}T${hf}${mf}00`;
+    } else {
+      endStr = `${y}${m}${d}T${pad((parseInt(hi,10)+1)%24)}${mi}00`;
+    }
+    datesParam = `${startStr}/${endStr}`;
+  } else {
+    const start = new Date(`${c.fecha}T00:00:00`);
+    const end = new Date(start.getTime()+86400000);
+    const fmt = dt => `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}`;
+    datesParam = `${fmt(start)}/${fmt(end)}`;
+  }
+  const params = new URLSearchParams({
+    action:'TEMPLATE',
+    text: `${c.tipoTrabajo||'Cita'} — ${c.cliente||'Cliente'}`,
+    dates: datesParam,
+    details: `Cita de trabajo con ${c.cliente||'cliente'} agendada desde TodoOficios.`,
+    ctz:'Europe/Madrid'
+  });
+  if(c.direccion) params.set('location', c.direccion);
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
 function citaRowHTML(c){
   return `<div class="data-row">
-    <div class="drow-main"><strong>${escapeHtml(c.tipoTrabajo||'Cita')}</strong> con ${escapeHtml(c.cliente||'cliente')}<br><span class="drow-meta">${formatDateES(c.fecha)}${c.horaInicio?' · '+c.horaInicio+(c.horaFin?'–'+c.horaFin:''):''}${c.direccion?' · '+escapeHtml(c.direccion):''}</span></div>
+    <div class="drow-main"><strong>${escapeHtml(c.tipoTrabajo||'Cita')}</strong> con ${escapeHtml(c.cliente||'cliente')}<br><span class="drow-meta">${formatDateES(c.fecha)}${c.horaInicio?' · '+c.horaInicio+(c.horaFin?'–'+c.horaFin:''):''}${c.direccion?' · '+escapeHtml(c.direccion):''}</span>
+    <div class="drow-row-actions"><a class="pp-mini-btn" href="${escapeHtml(googleCalendarUrl(c))}" target="_blank" rel="noopener noreferrer">📅 Añadir a Google Calendar</a></div></div>
     <button type="button" class="pp-mini-btn bad" data-del-cita="${c.id}" title="Eliminar cita">🗑</button>
   </div>`;
 }
