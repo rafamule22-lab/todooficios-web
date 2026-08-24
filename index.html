@@ -2505,21 +2505,23 @@ function renderClient(){
     <div class="role-opt ${clientAuthMode==='registro'?'active':''}" data-client-mode="registro">Crear cuenta</div>
     <div class="role-opt ${clientAuthMode==='login'?'active':''}" data-client-mode="login">Ya soy cliente</div>
   </div>
-  <div class="panel">
+  <div class="panel ${clientAuthMode === 'registro' ? 'panel-wide' : ''}">
     <div id="clientMsg"></div>
     ${googleButtonHTML('client-google-btn')}
     <div class="auth-divider">o con email</div>
     ${clientAuthMode === 'registro' ? `
-      <div class="field"><label>Nombre</label><input type="text" id="cl-name" placeholder="Tu nombre completo"></div>
       <div class="field-row">
+        <div class="field"><label>Nombre</label><input type="text" id="cl-name" placeholder="Tu nombre completo"></div>
         <div class="field"><label>Email</label><input type="email" id="cl-email" placeholder="tu@email.com"></div>
-        <div class="field"><label>Repite el email</label><input type="email" id="cl-email-confirm" placeholder="Repite tu email"></div>
       </div>
       <div class="field-row">
+        <div class="field"><label>Repite el email</label><input type="email" id="cl-email-confirm" placeholder="Repite tu email"></div>
         <div class="field"><label>Teléfono</label><input type="tel" id="cl-phone" placeholder="Ej. 600 123 456"></div>
-        <div class="field"><label>Repite el teléfono</label><input type="tel" id="cl-phone-confirm" placeholder="Repite el teléfono"></div>
       </div>
-      <div class="field"><label>Contraseña</label><input type="password" id="cl-password" placeholder="Mínimo 8 caracteres" minlength="8"></div>
+      <div class="field-row">
+        <div class="field"><label>Repite el teléfono</label><input type="tel" id="cl-phone-confirm" placeholder="Repite el teléfono"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="cl-password" placeholder="Mínimo 8 caracteres" minlength="8"></div>
+      </div>
       <div class="consent-row">
         <input type="checkbox" id="cl-legal-check">
         <label for="cl-legal-check">${legalConsentCopy()}. <button type="button" class="inline-link" data-legal-doc="aviso">Aviso Legal</button>, <button type="button" class="inline-link" data-legal-doc="privacidad">Privacidad</button> y <button type="button" class="inline-link" data-legal-doc="cookies">Cookies</button>.</label>
