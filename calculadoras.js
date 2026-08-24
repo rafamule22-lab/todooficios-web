@@ -60,26 +60,55 @@
   ];
 
   /* ---------- Categorías ---------- */
+  var ICONS = {
+    rayo: '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>',
+    bricks: '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/>',
+    wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/>',
+    house: '<path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/>',
+    ruler: '<path d="M3 21 21 3"/><path d="M7 17l2 2M11 13l2 2M15 9l2 2"/>',
+    gauge: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5 9 10M8.3 13.5H7M17 13.5h-1.3M9.6 7.6l.6 1M14.4 7.6l-.6 1"/>',
+    plug: '<path d="M8 3v4M16 3v4"/><rect x="6" y="7" width="12" height="6.5" rx="2"/><path d="M12 13.5v3a3 3 0 0 1-3 3H7.5"/>',
+    chip: '<rect x="4" y="9" width="16" height="6" rx="1.3"/><path d="M4 12H1.3M22.7 12H20M7.3 9v6M10.6 9v6M13.4 9v6M16.7 9v6"/>',
+    coil: '<path d="M2.5 12c1.4 0 1.4-4.2 2.8-4.2S6.7 12 8.1 12s1.4-4.2 2.8-4.2S12.3 12 13.7 12s1.4-4.2 2.8-4.2S17.9 12 19.3 12s1.4-4.2 2.2-4.2"/>',
+    battery: '<rect x="3" y="8" width="15" height="8" rx="1.4"/><path d="M18 10.3h2.7v3.4H18"/><path d="M7 12h6"/>',
+    tiles: '<path d="M3 8h18M3 16h18M8 3v18M16 3v18"/>',
+    brush: '<path d="M20 4c-4 0-9 1-12.5 4.5S3 16 3 20c4 0 9-1 12.5-4.5S20 8 20 4Z"/><circle cx="8.5" cy="15.5" r="1.4"/>'
+  };
   var GRUPOS = [
-    {id:'electricidad', nombre:'⚡ Electricidad'},
-    {id:'construccion', nombre:'🧱 Materiales y construcción'},
-    {id:'instalaciones', nombre:'🚿 Instalaciones'},
-    {id:'reformas', nombre:'🏠 Reformas'},
-    {id:'geometria', nombre:'📐 Geometría y conversores'}
+    {id:'electricidad', nombre:'Electricidad', icon:'rayo', color:'#C77C1E'},
+    {id:'construccion', nombre:'Materiales y construcción', icon:'bricks', color:'#7458C2'},
+    {id:'instalaciones', nombre:'Instalaciones', icon:'wrench', color:'#C05A3A'},
+    {id:'reformas', nombre:'Reformas', icon:'house', color:'#2E8F6E'},
+    {id:'geometria', nombre:'Geometría y conversores', icon:'ruler', color:'#3E5FBF'}
   ];
   var CATEGORIAS = [
-    {id:'fundamentales', grupo:'electricidad', nombre:'Fundamentales', icono:'Ω', desc:'Ley de Ohm, potencias, resistencia e impedancia'},
-    {id:'instalacion', grupo:'electricidad', nombre:'Instalación y conductores', icono:'⏚', desc:'Dimensionamiento, caídas de tensión, cortocircuitos y protecciones'},
-    {id:'componentes', grupo:'electricidad', nombre:'Componentes electrónicos', icono:'▭', desc:'Códigos de colores, SMD, condensadores, fusibles y más'},
-    {id:'transformadores', grupo:'electricidad', nombre:'Transformadores y potencia', icono:'◈', desc:'Relación de transformación y corrección del factor de potencia'},
-    {id:'utilidades', grupo:'electricidad', nombre:'Utilidades', icono:'✦', desc:'Baterías, antenas, CCTV, sensores y efecto Joule'},
-    {id:'materiales', grupo:'construccion', nombre:'Materiales de obra', icono:'🧱', desc:'Ladrillos, mortero, cemento, hormigón, yeso, pladur y aislamiento'},
-    {id:'suelos', grupo:'construccion', nombre:'Suelos y revestimientos', icono:'▦', desc:'Baldosas, tarima, rodapié, mortero cola y juntas'},
-    {id:'pintura', grupo:'construccion', nombre:'Pintura', icono:'🎨', desc:'Superficie a pintar, litros necesarios y coste orientativo'},
-    {id:'fontaneria', grupo:'instalaciones', nombre:'Fontanería', icono:'🚿', desc:'Tuberías, puntos de agua, pendientes y depósitos'},
-    {id:'reformas', grupo:'reformas', nombre:'Reformas', icono:'🏠', desc:'Estimación de materiales completa para una estancia'},
-    {id:'geometria', grupo:'geometria', nombre:'Geometría y conversores', icono:'📐', desc:'Áreas, volúmenes, escaleras, pendientes y conversión de unidades'}
+    {id:'fundamentales', grupo:'electricidad', nombre:'Fundamentales', icon:'gauge', desc:'Ley de Ohm, potencias, resistencia e impedancia'},
+    {id:'instalacion', grupo:'electricidad', nombre:'Instalación y conductores', icon:'plug', desc:'Dimensionamiento, caídas de tensión, cortocircuitos y protecciones'},
+    {id:'componentes', grupo:'electricidad', nombre:'Componentes electrónicos', icon:'chip', desc:'Códigos de colores, SMD, condensadores, fusibles y más'},
+    {id:'transformadores', grupo:'electricidad', nombre:'Transformadores y potencia', icon:'coil', desc:'Relación de transformación y corrección del factor de potencia'},
+    {id:'utilidades', grupo:'electricidad', nombre:'Utilidades', icon:'battery', desc:'Baterías, antenas, CCTV, sensores y efecto Joule'},
+    {id:'materiales', grupo:'construccion', nombre:'Materiales de obra', icon:'bricks', desc:'Ladrillos, mortero, cemento, hormigón, yeso, pladur y aislamiento'},
+    {id:'suelos', grupo:'construccion', nombre:'Suelos y revestimientos', icon:'tiles', desc:'Baldosas, tarima, rodapié, mortero cola y juntas'},
+    {id:'pintura', grupo:'construccion', nombre:'Pintura', icon:'brush', desc:'Superficie a pintar, litros necesarios y coste orientativo'},
+    {id:'fontaneria', grupo:'instalaciones', nombre:'Fontanería', icon:'wrench', desc:'Tuberías, puntos de agua, pendientes y depósitos'},
+    {id:'reformas', grupo:'reformas', nombre:'Reformas', icon:'house', desc:'Estimación de materiales completa para una estancia'},
+    {id:'geometria', grupo:'geometria', nombre:'Geometría y conversores', icon:'ruler', desc:'Áreas, volúmenes, escaleras, pendientes y conversión de unidades'}
   ];
+  function grupoDe(cat){ return GRUPOS.filter(function(g){ return g.id === cat.grupo; })[0]; }
+  function catIconHTML(cat, size){
+    var g = grupoDe(cat);
+    var s = size || 32;
+    return '<span class="cec-mic" style="background:' + g.color + '; width:' + s + 'px; height:' + s + 'px;"><svg viewBox="0 0 24 24">' + ICONS[cat.icon] + '</svg></span>';
+  }
+  function grupoIconHTML(g, size){
+    var s = size || 26;
+    return '<span class="cec-mic" style="background:' + g.color + '; width:' + s + 'px; height:' + s + 'px;"><svg viewBox="0 0 24 24">' + ICONS[g.icon] + '</svg></span>';
+  }
+  function calcIconHTML(c, size){
+    if(c.icono) return '<span class="cec-mic-formula">' + c.icono + '</span>';
+    var cat = CATEGORIAS.filter(function(x){ return x.id === c.cat; })[0];
+    return catIconHTML(cat, size);
+  }
 
   /* ============================================================
      CATEGORÍA: FUNDAMENTALES
@@ -669,7 +698,7 @@
       }
     },
     {
-      id:'riesgo_sobretension', cat:'instalacion', icono:'⚡', titulo:'Evaluación del riesgo de sobretensiones de origen atmosférico',
+      id:'riesgo_sobretension', cat:'instalacion', titulo:'Evaluación del riesgo de sobretensiones de origen atmosférico',
       info:'Estimación simplificada del riesgo relativo según densidad de rayos de la zona y nivel de protección; solo orientativa — el cálculo completo de riesgo conforme a IEC 62305-2 requiere un estudio detallado por un técnico.',
       fields:[
         {key:'Ng', label:'Densidad de rayos de la zona', unit:'rayos/km²/año', type:'number', def:2.5},
@@ -1081,7 +1110,7 @@
      ============================================================ */
   var UTILIDADES = [
     {
-      id:'duracion_bateria', cat:'utilidades', icono:'🔋', titulo:'Duración de la batería',
+      id:'duracion_bateria', cat:'utilidades', titulo:'Duración de la batería',
       info:'t = (Capacidad · Vbat · eficiencia) / Pconsumo',
       fields:[
         {key:'capacidad', label:'Capacidad de la batería', unit:'Ah', type:'number'},
@@ -1097,7 +1126,7 @@
       }
     },
     {
-      id:'longitud_antena', cat:'utilidades', icono:'📡', titulo:'Longitud de la antena',
+      id:'longitud_antena', cat:'utilidades', titulo:'Longitud de la antena',
       info:'Antena de cuarto de onda: L = c/(4·f). Antena de media onda: L = c/(2·f). c = 3×10⁸ m/s',
       fields:[
         {key:'f', label:'Frecuencia', unit:'MHz', type:'number'},
@@ -1114,7 +1143,7 @@
       }
     },
     {
-      id:'cctv_disco_duro', cat:'utilidades', icono:'💾', titulo:'CCTV: dimensionamiento de disco duro',
+      id:'cctv_disco_duro', cat:'utilidades', titulo:'CCTV: dimensionamiento de disco duro',
       info:'Almacenamiento(GB) = bitrate(Mbps) × canales × horas/día × días de grabación / 8',
       fields:[
         {key:'bitrate', label:'Bitrate por cámara', unit:'Mbps', type:'number', def:4},
@@ -1148,7 +1177,7 @@
       }
     },
     {
-      id:'sensores_temperatura', cat:'utilidades', icono:'🌡', titulo:'Sensores de temperatura (PT100/PT1000/Ni/Cu, NTC)',
+      id:'sensores_temperatura', cat:'utilidades', titulo:'Sensores de temperatura (PT100/PT1000/Ni/Cu, NTC)',
       info:'Aproximación lineal R = R0·(1 + α·ΔT), válida en un rango moderado alrededor de 0°C',
       fields:[
         {key:'tipo', label:'Tipo de sensor', type:'select', options:[
@@ -1194,7 +1223,7 @@
      ============================================================ */
   var MATERIALES = [
     {
-      id:'ladrillos_bloques', cat:'materiales', icono:'🧱', titulo:'Ladrillos / bloques necesarios',
+      id:'ladrillos_bloques', cat:'materiales', titulo:'Ladrillos / bloques necesarios',
       info:'Unidades = superficie de pared × piezas por m² × (1 + merma). Piezas/m² orientativas según tipo de fábrica.',
       fields:[
         {key:'area', label:'Superficie de pared', unit:'m²', type:'number'},
@@ -1213,7 +1242,7 @@
       }
     },
     {
-      id:'mortero_albanileria', cat:'materiales', icono:'🧱', titulo:'Mortero de albañilería',
+      id:'mortero_albanileria', cat:'materiales', titulo:'Mortero de albañilería',
       info:'kg = superficie × espesor(cm) × consumo por cm de espesor (orientativo ≈17 kg/m²/cm)',
       fields:[
         {key:'area', label:'Superficie a asentar/enlucir', unit:'m²', type:'number'},
@@ -1228,7 +1257,7 @@
       }
     },
     {
-      id:'cemento_arena', cat:'materiales', icono:'🧱', titulo:'Cemento y arena (dosificación)',
+      id:'cemento_arena', cat:'materiales', titulo:'Cemento y arena (dosificación)',
       info:'A partir del volumen total de mezcla y la proporción cemento:arena en volumen (densidades orientativas: cemento 1400 kg/m³, arena 1500 kg/m³)',
       fields:[
         {key:'volumen', label:'Volumen total de mezcla', unit:'m³', type:'number'},
@@ -1249,7 +1278,7 @@
       }
     },
     {
-      id:'hormigon', cat:'materiales', icono:'🧱', titulo:'Hormigón necesario',
+      id:'hormigon', cat:'materiales', titulo:'Hormigón necesario',
       info:'Volumen = largo × ancho × profundidad. Cemento orientativo ≈300 kg/m³ para hormigón en masa tipo HM-20',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
@@ -1266,7 +1295,7 @@
       }
     },
     {
-      id:'grava_arido', cat:'materiales', icono:'🪨', titulo:'Grava / árido necesario',
+      id:'grava_arido', cat:'materiales', titulo:'Grava / árido necesario',
       info:'Volumen = largo × ancho × profundidad. Densidad orientativa del árido ≈1.5 t/m³',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
@@ -1283,7 +1312,7 @@
       }
     },
     {
-      id:'yeso_enlucido', cat:'materiales', icono:'🧱', titulo:'Yeso / enlucido',
+      id:'yeso_enlucido', cat:'materiales', titulo:'Yeso / enlucido',
       info:'kg ≈ superficie × espesor(mm) × 1 kg/m²/mm (regla orientativa habitual)',
       fields:[
         {key:'area', label:'Superficie a enlucir', unit:'m²', type:'number'},
@@ -1297,7 +1326,7 @@
       }
     },
     {
-      id:'pladur', cat:'materiales', icono:'🧱', titulo:'Pladur / placas de yeso laminado',
+      id:'pladur', cat:'materiales', titulo:'Pladur / placas de yeso laminado',
       info:'Placa estándar 1.2×2.4 m ≈2.88 m², con 10% de merma para cortes',
       fields:[
         {key:'area', label:'Superficie a cubrir (ambas caras si aplica)', unit:'m²', type:'number'}
@@ -1313,7 +1342,7 @@
       }
     },
     {
-      id:'aislamiento', cat:'materiales', icono:'🧱', titulo:'Aislamiento (paneles / rollos)',
+      id:'aislamiento', cat:'materiales', titulo:'Aislamiento (paneles / rollos)',
       info:'Nº de paquetes = superficie × 1.05 (merma) / superficie que cubre cada paquete',
       fields:[
         {key:'area', label:'Superficie a aislar', unit:'m²', type:'number'},
@@ -1332,7 +1361,7 @@
      ============================================================ */
   var PINTURA = [
     {
-      id:'superficie_pintura', cat:'pintura', icono:'🎨', titulo:'Superficie a pintar',
+      id:'superficie_pintura', cat:'pintura', titulo:'Superficie a pintar',
       info:'Área de paredes = perímetro × altura − huecos de puertas/ventanas. Techo opcional aparte.',
       fields:[
         {key:'largo', label:'Largo de la habitación', unit:'m', type:'number'},
@@ -1352,7 +1381,7 @@
       }
     },
     {
-      id:'litros_pintura', cat:'pintura', icono:'🎨', titulo:'Litros de pintura necesarios',
+      id:'litros_pintura', cat:'pintura', titulo:'Litros de pintura necesarios',
       info:'Litros = superficie × nº de manos / rendimiento del producto',
       fields:[
         {key:'area', label:'Superficie a pintar', unit:'m²', type:'number'},
@@ -1370,7 +1399,7 @@
       }
     },
     {
-      id:'coste_pintura', cat:'pintura', icono:'🎨', titulo:'Coste estimado de pintura',
+      id:'coste_pintura', cat:'pintura', titulo:'Coste estimado de pintura',
       info:'Coste = litros necesarios × precio por litro',
       fields:[
         {key:'litros', label:'Litros necesarios', unit:'L', type:'number'},
@@ -1388,7 +1417,7 @@
      ============================================================ */
   var SUELOS = [
     {
-      id:'baldosas_azulejos', cat:'suelos', icono:'▦', titulo:'Baldosas / azulejos necesarios',
+      id:'baldosas_azulejos', cat:'suelos', titulo:'Baldosas / azulejos necesarios',
       info:'Piezas = superficie × (1 + merma) / superficie de cada pieza',
       fields:[
         {key:'area', label:'Superficie a alicatar/pavimentar', unit:'m²', type:'number'},
@@ -1408,7 +1437,7 @@
       }
     },
     {
-      id:'tarima_parquet', cat:'suelos', icono:'▦', titulo:'Tarima / parquet necesario',
+      id:'tarima_parquet', cat:'suelos', titulo:'Tarima / parquet necesario',
       info:'Superficie a comprar = superficie real × (1 + % de desperdicio)',
       fields:[
         {key:'area', label:'Superficie del suelo', unit:'m²', type:'number'},
@@ -1420,7 +1449,7 @@
       }
     },
     {
-      id:'rodapie', cat:'suelos', icono:'▦', titulo:'Rodapié necesario',
+      id:'rodapie', cat:'suelos', titulo:'Rodapié necesario',
       info:'Metros = perímetro de la habitación − huecos de puertas, con margen de desperdicio',
       fields:[
         {key:'largo', label:'Largo de la habitación', unit:'m', type:'number'},
@@ -1435,7 +1464,7 @@
       }
     },
     {
-      id:'mortero_cola', cat:'suelos', icono:'▦', titulo:'Mortero cola necesario',
+      id:'mortero_cola', cat:'suelos', titulo:'Mortero cola necesario',
       info:'kg = superficie × consumo por m² (según llana/tamaño de pieza)',
       fields:[
         {key:'area', label:'Superficie a alicatar/pavimentar', unit:'m²', type:'number'},
@@ -1449,7 +1478,7 @@
       }
     },
     {
-      id:'juntas_alicatado', cat:'suelos', icono:'▦', titulo:'Material de juntas necesario',
+      id:'juntas_alicatado', cat:'suelos', titulo:'Material de juntas necesario',
       info:'kg/m² ≈ ((L+A)/(L·A)) × espesor de pieza × ancho de junta × densidad del material',
       fields:[
         {key:'area', label:'Superficie alicatada', unit:'m²', type:'number'},
@@ -1477,7 +1506,7 @@
      ============================================================ */
   var FONTANERIA = [
     {
-      id:'metros_tuberia', cat:'fontaneria', icono:'🚿', titulo:'Metros de tubería a comprar',
+      id:'metros_tuberia', cat:'fontaneria', titulo:'Metros de tubería a comprar',
       info:'Total = longitud del recorrido × (1 + % de merma por conexiones y cortes)',
       fields:[
         {key:'longitud', label:'Longitud estimada del recorrido', unit:'m', type:'number'},
@@ -1489,7 +1518,7 @@
       }
     },
     {
-      id:'puntos_agua', cat:'fontaneria', icono:'🚿', titulo:'Puntos de agua recomendados',
+      id:'puntos_agua', cat:'fontaneria', titulo:'Puntos de agua recomendados',
       info:'Referencia orientativa de puntos de agua y desagüe habituales según tipo de estancia',
       fields:[
         {key:'estancia', label:'Tipo de estancia', type:'select', options:[
@@ -1512,7 +1541,7 @@
       }
     },
     {
-      id:'diametro_tuberia', cat:'fontaneria', icono:'🚿', titulo:'Diámetro de tubería según caudal',
+      id:'diametro_tuberia', cat:'fontaneria', titulo:'Diámetro de tubería según caudal',
       info:'A partir del caudal y la velocidad recomendada del agua: d = √(4·Q / (π·v))',
       fields:[
         {key:'caudal', label:'Caudal', unit:'L/min', type:'number'},
@@ -1526,7 +1555,7 @@
       }
     },
     {
-      id:'pendiente_desague', cat:'fontaneria', icono:'🚿', titulo:'Pendiente de desagües',
+      id:'pendiente_desague', cat:'fontaneria', titulo:'Pendiente de desagües',
       info:'Desnivel = longitud del tramo × pendiente (%). Pendiente recomendada habitual: 1-4%',
       fields:[
         {key:'longitud', label:'Longitud del tramo', unit:'m', type:'number'},
@@ -1538,7 +1567,7 @@
       }
     },
     {
-      id:'volumen_deposito', cat:'fontaneria', icono:'🚿', titulo:'Volumen de depósito de agua',
+      id:'volumen_deposito', cat:'fontaneria', titulo:'Volumen de depósito de agua',
       info:'Volumen = consumo por persona y día × nº de personas × días de autonomía deseados',
       fields:[
         {key:'consumo', label:'Consumo por persona y día', unit:'L', type:'number', def:150},
@@ -1553,7 +1582,7 @@
       }
     },
     {
-      id:'consumo_agua', cat:'fontaneria', icono:'🚿', titulo:'Consumo aproximado de agua',
+      id:'consumo_agua', cat:'fontaneria', titulo:'Consumo aproximado de agua',
       info:'Consumo diario = nº de personas × consumo medio por persona',
       fields:[
         {key:'personas', label:'Número de personas', unit:'', type:'number'},
@@ -1576,7 +1605,7 @@
      ============================================================ */
   var REFORMAS = [
     {
-      id:'estimacion_reforma', cat:'reformas', icono:'🏠', titulo:'Calcula cuánto material necesitas para tu reforma',
+      id:'estimacion_reforma', cat:'reformas', titulo:'Calcula cuánto material necesitas para tu reforma',
       info:'Estimación orientativa de materiales para una estancia completa: suelo, paredes, adhesivo, juntas, pintura y rodapié, con un 10% de desperdicio.',
       fields:[
         {key:'estancia', label:'Tipo de estancia', type:'select', options:[
@@ -1638,19 +1667,19 @@
 
   var GEOMETRIA = [
     {
-      id:'area_habitacion', cat:'geometria', icono:'📐', titulo:'m² de una habitación',
+      id:'area_habitacion', cat:'geometria', titulo:'m² de una habitación',
       info:'Área = largo × ancho',
       fields:[{key:'largo', label:'Largo', unit:'m', type:'number'}, {key:'ancho', label:'Ancho', unit:'m', type:'number'}],
       compute:function(v){ return [{label:'Área', value: fmt(gn(v,'largo')*gn(v,'ancho'),2), unit:'m²'}]; }
     },
     {
-      id:'area_pared', cat:'geometria', icono:'📐', titulo:'m² de una pared',
+      id:'area_pared', cat:'geometria', titulo:'m² de una pared',
       info:'Área = largo × altura',
       fields:[{key:'largo', label:'Largo de la pared', unit:'m', type:'number'}, {key:'alto', label:'Altura', unit:'m', type:'number'}],
       compute:function(v){ return [{label:'Área', value: fmt(gn(v,'largo')*gn(v,'alto'),2), unit:'m²'}]; }
     },
     {
-      id:'volumen_habitacion', cat:'geometria', icono:'📐', titulo:'m³ de una habitación',
+      id:'volumen_habitacion', cat:'geometria', titulo:'m³ de una habitación',
       info:'Volumen = largo × ancho × alto',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'}, {key:'ancho', label:'Ancho', unit:'m', type:'number'}, {key:'alto', label:'Alto', unit:'m', type:'number'}
@@ -1658,7 +1687,7 @@
       compute:function(v){ return [{label:'Volumen', value: fmt(gn(v,'largo')*gn(v,'ancho')*gn(v,'alto'),3), unit:'m³'}]; }
     },
     {
-      id:'volumen_piscina', cat:'geometria', icono:'📐', titulo:'Volumen de una piscina',
+      id:'volumen_piscina', cat:'geometria', titulo:'Volumen de una piscina',
       info:'Rectangular: largo×ancho×profundidad media. Redonda: π×radio²×profundidad media',
       fields:[
         {key:'forma', label:'Forma', type:'select', options:[{value:'rectangular',label:'Rectangular'},{value:'redonda',label:'Redonda'}], def:'rectangular'},
@@ -1676,19 +1705,19 @@
       }
     },
     {
-      id:'area_circulo', cat:'geometria', icono:'📐', titulo:'Área de un círculo',
+      id:'area_circulo', cat:'geometria', titulo:'Área de un círculo',
       info:'Área = π × radio²',
       fields:[{key:'radio', label:'Radio', unit:'m', type:'number'}],
       compute:function(v){ var r = gn(v,'radio'); return [{label:'Área', value: fmt(Math.PI*r*r,3), unit:'m²'}]; }
     },
     {
-      id:'area_triangulo', cat:'geometria', icono:'📐', titulo:'Área de un triángulo',
+      id:'area_triangulo', cat:'geometria', titulo:'Área de un triángulo',
       info:'Área = (base × altura) / 2',
       fields:[{key:'base', label:'Base', unit:'m', type:'number'}, {key:'altura', label:'Altura', unit:'m', type:'number'}],
       compute:function(v){ return [{label:'Área', value: fmt((gn(v,'base')*gn(v,'altura'))/2,3), unit:'m²'}]; }
     },
     {
-      id:'escaleras', cat:'geometria', icono:'📐', titulo:'Cálculo de escaleras',
+      id:'escaleras', cat:'geometria', titulo:'Cálculo de escaleras',
       info:'Nº de peldaños = altura total / contrahuella. Confort (regla de Blondel): 2×contrahuella + huella entre 57 y 64 cm',
       fields:[
         {key:'altura_total', label:'Altura total a subir', unit:'m', type:'number'},
@@ -1709,7 +1738,7 @@
       }
     },
     {
-      id:'pendientes', cat:'geometria', icono:'📐', titulo:'Cálculo de pendientes',
+      id:'pendientes', cat:'geometria', titulo:'Cálculo de pendientes',
       info:'Pendiente(%) = desnivel / longitud horizontal × 100',
       fields:[
         {key:'desnivel', label:'Desnivel', unit:'m', type:'number'},
@@ -1725,7 +1754,7 @@
       }
     },
     {
-      id:'diagonales', cat:'geometria', icono:'📐', titulo:'Longitud de diagonales',
+      id:'diagonales', cat:'geometria', titulo:'Longitud de diagonales',
       info:'2D: √(largo² + ancho²). 3D (opcional, con altura): √(largo² + ancho² + alto²)',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
@@ -1950,11 +1979,11 @@
     GRUPOS.forEach(function(g){
       var cats = CATEGORIAS.filter(function(c){ return c.grupo === g.id; });
       if(cats.length === 0) return;
-      html += '<div class="cec-group"><h2 class="cec-group-title">' + g.nombre + '</h2><div class="cec-grid">';
+      html += '<div class="cec-group"><h2 class="cec-group-title">' + grupoIconHTML(g) + g.nombre + '</h2><div class="cec-grid">';
       cats.forEach(function(c){
         var n = CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length;
         html += '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
-          '<div class="cec-card-icon">' + c.icono + '</div>' +
+          '<div class="cec-card-icon">' + catIconHTML(c, 40) + '</div>' +
           '<div class="cec-card-title">' + c.nombre + '</div>' +
           '<div class="cec-card-sub">' + c.desc + ' · ' + n + ' calculadoras</div></div>';
       });
@@ -1970,9 +1999,9 @@
   function renderCategoria(catId){
     var cat = CATEGORIAS.filter(function(c){ return c.id === catId; })[0];
     var lista = CALCULADORAS.filter(function(c){ return c.cat === catId; });
-    var html = '<h2 class="cec-section-title">' + cat.icono + ' ' + cat.nombre + '</h2><div class="cec-grid">';
+    var html = '<h2 class="cec-section-title">' + catIconHTML(cat, 28) + cat.nombre + '</h2><div class="cec-grid">';
     lista.forEach(function(c){ html += '<div class="cec-card" data-calc="' + c.id + '" tabindex="0" role="button">' +
-      '<div class="cec-card-icon">' + c.icono + '</div><div class="cec-card-title">' + c.titulo + '</div></div>'; });
+      '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>'; });
     html += '</div>';
     elCat.innerHTML = html;
     Array.prototype.forEach.call(elCat.querySelectorAll('[data-calc]'), function(node){
@@ -2016,7 +2045,7 @@
     var calc = CALCULADORAS.filter(function(c){ return c.id === calcId; })[0];
     if(!calc) return;
     calcActualId = calc.id;
-    var html = '<h2 class="cec-section-title">' + calc.icono + ' ' + calc.titulo + '</h2>' +
+    var html = '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + '</h2>' +
       (calc.info ? '<p class="cec-info">' + calc.info + '</p>' : '') +
       '<div class="cec-form">' + calc.fields.map(fieldHTML).join('') + '</div>' +
       '<div class="cec-result" id="cecResult"></div>';
@@ -2105,7 +2134,7 @@
     if(res.length === 0){ elSearchResults.style.display=''; elSearchResults.innerHTML = '<div class="cec-no-results">Sin resultados</div>'; return; }
     elSearchResults.style.display = '';
     elSearchResults.innerHTML = res.map(function(c){
-      return '<div class="cec-search-item" data-calc="' + c.id + '">' + c.icono + ' ' + c.titulo + '</div>';
+      return '<div class="cec-search-item" data-calc="' + c.id + '">' + calcIconHTML(c, 20) + c.titulo + '</div>';
     }).join('');
     Array.prototype.forEach.call(elSearchResults.querySelectorAll('[data-calc]'), function(node){
       node.addEventListener('click', function(){
