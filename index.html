@@ -434,7 +434,7 @@
   @media (max-width:640px){.how-grid-ic{grid-template-columns:1fr;}}
   .how-card-ic{background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:22px; display:flex; flex-direction:column; gap:12px; align-items:flex-start;}
   .how-card-ic .ic-circle{width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .how-card-ic .ic-circle svg{width:24px; height:24px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .how-card-ic .ic-circle svg{width:24px; height:24px; stroke:#fff; color:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
   .how-card-ic h3{font-size:16px; margin:0;}
   .how-card-ic p{font-size:13.5px; opacity:0.8; line-height:1.5; margin:0; color:var(--ink-soft);}
 
@@ -637,7 +637,8 @@
   .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
 
   .pp-draft-banner{display:flex; align-items:center; gap:12px; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
-  .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;}
+  .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .pp-draft-banner .pp-draft-ic svg{width:17px; height:17px; stroke:var(--c-presupuestos); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
   .pp-draft-banner .pp-draft-txt{flex:1; min-width:0; font-size:13px;}
   .pp-draft-banner .pp-draft-txt strong{font-family:'Space Grotesk'; display:block; font-size:14px; margin-bottom:2px;}
   .pp-draft-banner .pp-draft-txt span{color:var(--ink-soft); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -896,7 +897,9 @@
   }
   .sf-dropdown{display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; max-height:300px; overflow-y:auto; background:#fff; border:1.5px solid var(--line); border-radius:10px; box-shadow:0 10px 28px rgba(20,20,18,0.14); z-index:40; padding:6px 0;}
   .sf-dropdown.open{display:block;}
-  .sf-dropdown-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; opacity:0.5; padding:9px 14px 4px;}
+  .sf-dropdown-label{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; opacity:0.7; padding:9px 14px 4px; display:flex; align-items:center; gap:6px;}
+  .sf-dropdown-label .mic{width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .sf-dropdown-label .mic svg{width:10px; height:10px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
   .sf-dropdown-item{padding:8px 14px; font-size:14px; cursor:pointer;}
   .sf-dropdown-item:hover, .sf-dropdown-item.sf-active{background:var(--paper-light);}
   .sf-dropdown-item.sf-hide{display:none;}
@@ -1343,14 +1346,14 @@ window.TODOOFICIOS_LEGAL = Object.assign({
 
 /* ======================= TAXONOMÍA DE OFICIOS ======================= */
 const OFICIOS_GROUPS = [
-  { group:'Instalaciones y reparaciones', ic:'🔧', items:['Fontanero','Electricista','Gasista','Técnico en calefacción','Instalador de aire acondicionado','Técnico en refrigeración','Instalador de termos y calderas'] },
-  { group:'Obra y reformas', ic:'🧱', items:['Albañil','Maestro de obra','Oficial de construcción','Reformista','Pladurista (Pladur / Drywall)','Yesero','Alicatador','Solador','Colocador de cerámica','Colocador de porcelanato'] },
-  { group:'Carpintería y metal', ic:'🪚', items:['Carpintero','Carpintero de obra','Carpintero de muebles','Ebanista','Instalador de puertas','Instalador de ventanas','Herrero','Soldador','Metalista'] },
-  { group:'Acabados', ic:'🎨', items:['Pintor','Pintor decorativo','Aplicador de microcemento','Impermeabilizador','Restaurador de fachadas'] },
-  { group:'Cerramientos y vidrio', ic:'🪟', items:['Vidriero','Instalador de mamparas','Instalador de aluminio','Instalador de PVC','Instalador de cerramientos','Colocador de vidrio templado'] },
-  { group:'Techos y exteriores', ic:'🏠', items:['Techista','Reparador de tejados','Instalador de canalones','Aislador térmico','Aislador acústico'] },
-  { group:'Seguridad y automatización', ic:'🔐', items:['Cerrajero','Instalador de alarmas','Instalador de cámaras','Técnico en CCTV','Instalador de porteros automáticos','Instalador de videoporteros','Domótica / hogar inteligente'] },
-  { group:'Mantenimiento general', ic:'🧹', items:['Manitas / mantenimiento del hogar','Jardinero','Instalador de riego','Limpieza post obra','Retiro de escombros'] },
+  { group:'Instalaciones y reparaciones', items:['Fontanero','Electricista','Gasista','Técnico en calefacción','Instalador de aire acondicionado','Técnico en refrigeración','Instalador de termos y calderas'] },
+  { group:'Obra y reformas', items:['Albañil','Maestro de obra','Oficial de construcción','Reformista','Pladurista (Pladur / Drywall)','Yesero','Alicatador','Solador','Colocador de cerámica','Colocador de porcelanato'] },
+  { group:'Carpintería y metal', items:['Carpintero','Carpintero de obra','Carpintero de muebles','Ebanista','Instalador de puertas','Instalador de ventanas','Herrero','Soldador','Metalista'] },
+  { group:'Acabados', items:['Pintor','Pintor decorativo','Aplicador de microcemento','Impermeabilizador','Restaurador de fachadas'] },
+  { group:'Cerramientos y vidrio', items:['Vidriero','Instalador de mamparas','Instalador de aluminio','Instalador de PVC','Instalador de cerramientos','Colocador de vidrio templado'] },
+  { group:'Techos y exteriores', items:['Techista','Reparador de tejados','Instalador de canalones','Aislador térmico','Aislador acústico'] },
+  { group:'Seguridad y automatización', items:['Cerrajero','Instalador de alarmas','Instalador de cámaras','Técnico en CCTV','Instalador de porteros automáticos','Instalador de videoporteros','Domótica / hogar inteligente'] },
+  { group:'Mantenimiento general', items:['Manitas / mantenimiento del hogar','Jardinero','Instalador de riego','Limpieza post obra','Retiro de escombros'] },
 ];
 function oficioOptionsHTML(selected){
   return OFICIOS_GROUPS.map(g => `
@@ -1377,11 +1380,14 @@ function groupBadgeHTML(groupName, active){
   </div>`;
 }
 function sfDropdownGroupsHTML(){
-  return OFICIOS_GROUPS.map(g => `
+  return OFICIOS_GROUPS.map(g => {
+    const v = GROUP_VISUALS[g.group] || { color:'#141412', icon:'' };
+    return `
     <div class="sf-dropdown-group">
-      <div class="sf-dropdown-label">${g.ic} ${escapeHtml(g.group)}</div>
+      <div class="sf-dropdown-label"><span class="mic" style="background:${v.color};"><svg viewBox="0 0 24 24">${v.icon}</svg></span>${escapeHtml(g.group)}</div>
       ${g.items.map(o => `<div class="sf-dropdown-item" data-oficio="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('')}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 /* ======================= EPÍGRAFES IAE (Asesor fiscal) ======================= */
@@ -3850,7 +3856,7 @@ async function renderNegocio(){
       ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
       ${presupuestoDraft.length ? `
       <div class="pp-draft-banner">
-        <div class="pp-draft-ic">🧮</div>
+        <div class="pp-draft-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
         <div class="pp-draft-txt">
           <strong>${presupuestoDraft.length} partida${presupuestoDraft.length>1?'s':''} guardada${presupuestoDraft.length>1?'s':''} desde las calculadoras</strong>
           <span>${presupuestoDraft.map(d=>escapeHtml(d.concepto)).join(' · ')}</span>
@@ -3887,7 +3893,7 @@ async function renderNegocio(){
             <button type="button" class="btn btn-outline btn-sm" id="pp-add-partida">+ Añadir línea</button>
             ${materialesFavoritos.length ? `
             <div class="fav-dropdown">
-              <button type="button" class="btn btn-outline btn-sm fav-dropdown-btn" id="pp-fav-toggle">🧱 Añadir material favorito</button>
+              <button type="button" class="btn btn-outline btn-sm fav-dropdown-btn" id="pp-fav-toggle">+ Añadir material favorito</button>
               <div class="fav-dropdown-menu" id="pp-fav-menu" style="display:none;">
                 ${materialesFavoritos.map(m=>`<div class="fav-dropdown-item" data-fav-id="${m.id}"><span>${escapeHtml(m.nombre)}</span><span class="fav-price">${formatEUR(m.precio)}</span></div>`).join('')}
               </div>
@@ -4510,7 +4516,7 @@ function bindPresupuestoForm(){
     draftUseBtn.onclick = ()=>{
       const draft = getPresupuestoDraft(account.email);
       if(!draft.length) return;
-      const nuevas = draft.map(d=>({descripcion:'🧮 '+(d.concepto||''), unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0}));
+      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0}));
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
       ppPartidas = soloVacia ? nuevas : ppPartidas.concat(nuevas);
       clearPresupuestoDraft(account.email);
@@ -4589,28 +4595,32 @@ function renderApp(){
     <h1>La app de calculadoras de obra está en camino.</h1>
     <p class="lead">OficiosCalc se está preparando como una app independiente para Android. Mientras llega, ya puedes usar las mismas calculadoras y crear tus presupuestos aquí, en la web — sin esperar a nada.</p>
     <div class="hero-actions">
-      <a class="btn btn-amber" href="calculadoras.html">🧮 Ver calculadoras</a>
+      <a class="btn btn-amber" href="calculadoras.html">Ver calculadoras</a>
       <button class="btn btn-outline" data-view="negocio">Ir a mi Panel de negocio</button>
     </div>
     <p style="margin-top:10px; font-size:13.5px; opacity:0.7;">App para Android · gratuita · fecha de publicación por confirmar.</p>
   </div>
 
   <div class="section-heading">Qué encontrarás cuando llegue</div>
-  <div class="how-grid">
-    <div class="how-card">
-      <h3>🧮 Más de 90 calculadoras</h3>
+  <div class="how-grid-ic">
+    <div class="how-card-ic">
+      <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
+      <h3>Más de 90 calculadoras</h3>
       <p>Pintura, pladur, azulejos, hormigón, electricidad (ley de Ohm, sección de cable...), fontanería y geometría — ya disponibles hoy en la web, sin necesidad de cuenta de la app.</p>
     </div>
-    <div class="how-card">
-      <h3>📁 Mis proyectos</h3>
+    <div class="how-card-ic">
+      <div class="ic-circle" style="background:#3E5FBF;"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17.5v-10z"/></svg></div>
+      <h3>Mis proyectos</h3>
       <p>Agrupa varios cálculos en un mismo proyecto de obra antes de convertirlo en presupuesto.</p>
     </div>
-    <div class="how-card">
-      <h3>📄 Presupuesto en PDF</h3>
+    <div class="how-card-ic">
+      <div class="ic-circle" style="background:#7458C2;"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <h3>Presupuesto en PDF</h3>
       <p>Ya puedes generarlo desde tu Panel de negocio: con tus datos fiscales, IVA y listo para compartir por WhatsApp o correo.</p>
     </div>
-    <div class="how-card">
-      <h3>🧮 → 📄 De la calculadora al presupuesto</h3>
+    <div class="how-card-ic">
+      <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4 12h13M12 6l7 6-7 6"/></svg></div>
+      <h3>De la calculadora al presupuesto</h3>
       <p>Desde cualquier calculadora, pulsa "Añadir a un presupuesto" y esa partida te espera lista para usar en tu Panel de negocio. Pruébalo ya en las calculadoras de la web.</p>
     </div>
   </div>
