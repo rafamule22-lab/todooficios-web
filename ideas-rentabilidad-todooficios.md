@@ -88,9 +88,59 @@ No aplica directo al modelo actual (ya se eligió suscripción, no pago por
 lead), pero queda anotado como idea futura si algún día se quiere
 complementar Premium con un sistema de créditos por contacto.
 
+## 3. Campaña de publicidad de arranque + escalonado del Plan Premium (2026-08-24)
+
+**Contexto:** se preparó un documento completo en Google Drive —
+["Campaña de publicidad para arrancar"](https://docs.google.com/document/d/1PuDTJ_4haWO9djoqLhD92GZDoEgqFHby8pzpRPkWUvY/edit) —
+con investigación de tácticas de captación (no solo monetización) y dos
+banners de campaña publicados como
+[artifact](https://claude.ai/code/artifact/0aa3913f-1e9e-4b81-92e6-b829d32f9aa5)
+(ventajas de Premium / comparativa Premium vs. Gratis). Resumen de lo
+acordado, para no repetir la investigación si se retoma el tema:
+
+**Tácticas de captación validadas por la investigación** (no solo
+modelos de precio, sino qué mueve tráfico y registros):
+1. Concentrar el arranque en una única ciudad/comarca "faro" en vez de
+   cubrir España entera desde el día uno (patrón Airbnb/Uber/Habitissimo).
+2. Programa de referidos entre profesionales (1 mes de Premium gratis
+   por invitación) — en marketplaces así, ~1/3 del crecimiento inicial
+   de oferta viene de referidos, y es el tráfico de mejor calidad.
+   Cronoshare ya lo hace con créditos ("cronos").
+3. Landings oficio+ciudad pensadas para que SEO local y Google Ads
+   apunten a la misma palabra clave (se complementan, no compiten).
+4. El precio/promo de bienvenida como titular del propio anuncio, no
+   como letra pequeña (patrón repetido en Habitissimo, Angi, Houzz Pro).
+
+**Cambio de precio Premium propuesto — escalonado a 4 tramos** (en vez
+de los 2 actuales: 4,99&nbsp;€ el año 1 y salto directo a 9,99&nbsp;€ desde
+el mes 13):
+- Año 1 (meses 1–12): 4,99 €/mes — ya implementado.
+- Año 2 (meses 13–24): 6,99 €/mes — nuevo tramo intermedio.
+- Año 3 (meses 25–36): 8,99 €/mes — nuevo tramo intermedio.
+- Año 4 en adelante: 9,99 €/mes — techo, ya implementado
+  (`PREMIUM_PRICE_RENEWAL`), no cambia.
+
+Motivo: pasar de 4,99 € a 9,99 € de golpe es un +100&nbsp;%; repartido en
+tres subidas (+40&nbsp;%/+29&nbsp;%/+11&nbsp;%) se percibe como progresión de
+fidelización, no como subida agresiva (principio de "grandfathering"
+gradual usado en SaaS). Cambio de código acotado: añadir 2 constantes
+más y comparar por tramos de 12 meses en `premiumPrice()`
+(`index.html`), sin tocar la pasarela de pago (sigue desactivada).
+
+**Variante para la propia campaña de lanzamiento:** extender la promo
+ya existente para los primeros profesionales (`PROMO_FREE_PRO_LIMIT`)
+para que, además de los meses gratis iniciales, mantengan el precio de
+4,99 €/mes durante 24 meses (en vez de 12) antes de entrar en el
+escalonado normal — historia de marketing tipo "precio de fundador".
+
 ## Pendiente de retomar
 
 - Decidir duración final del trial (14 vs 30 días) y si se pide tarjeta.
 - Diseñar la restricción de marca de agua en el PDF antes de tocar código.
 - Explorar si tiene sentido, más adelante, un sistema de créditos por
   contacto en paralelo a Premium (ver bloque 2).
+- Decidir si se implementa el escalonado a 4 tramos del Plan Premium
+  (bloque 3) y, si se aprueba, tocar `premiumPrice()` en `index.html`.
+- Elegir la ciudad/comarca faro para concentrar el arranque de la
+  campaña (bloque 3) y activar el programa de referidos entre
+  profesionales.
