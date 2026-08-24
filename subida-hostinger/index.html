@@ -3391,36 +3391,52 @@ function abrirPresupuestoPDF(id){
 
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>Presupuesto ${escapeHtml(p.numero)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  body{font-family:Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
+  body{font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
   .doc-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
-  .doc-head h1{font-size:20px; margin:0 0 6px;}
-  .doc-head .num{font-size:15px; color:#4a4842;}
-  .box h3{font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color:#4a4842; margin:0 0 6px;}
-  .two-col{display:flex; gap:40px; margin-bottom:24px;}
+  .doc-brand{display:flex; align-items:center; gap:12px;}
+  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .doc-brand .ic svg{width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .doc-head h1{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 3px;}
+  .doc-head .meta{font-size:12px; color:#666; line-height:1.55;}
+  .doc-num{text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .doc-num .n{font-size:14px; font-weight:700; color:#141412;}
+  .doc-num .d{font-size:11.5px; color:#666; margin-top:2px;}
+  .box h3{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#7458C2; margin:0 0 6px; font-weight:700;}
+  .box div{font-size:12.5px; line-height:1.55;}
+  .two-col{display:flex; gap:32px; margin-bottom:24px;}
   table{width:100%; border-collapse:collapse; margin-bottom:20px;}
-  th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:#4a4842; border-bottom:2px solid #141412; padding:8px 6px;}
-  td{padding:9px 6px; border-bottom:1px solid #ddd; font-size:12.5px;}
+  th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:#7458C2; border-bottom:2px solid #141412; padding:8px 6px; font-weight:700;}
+  td{padding:9px 6px; border-bottom:1px solid #eee; font-size:12.5px;}
+  tbody tr:nth-child(even) td{background:#faf9f7;}
   .totales{margin-left:auto; width:280px;}
-  .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px;}
-  .totales .total{font-weight:700; font-size:16px; border-top:2px solid #141412; margin-top:6px; padding-top:8px;}
-  .condiciones{margin-top:30px; font-size:12px; color:#4a4842; line-height:1.6;}
+  .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px; font-family:'IBM Plex Mono',monospace; color:#555;}
+  .totales .total{font-weight:700; font-size:16px; color:#141412; border-top:2px solid #141412; margin-top:6px; padding:9px 10px 7px; background:#fff8e1; margin-left:-10px; margin-right:-10px;}
+  .condiciones{margin-top:26px; font-size:12px; color:#666; line-height:1.6; border-left:3px solid #7458C2; padding-left:12px;}
   .firma{margin-top:50px; display:flex; justify-content:space-between;}
   .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
-  .watermark{margin-top:40px; text-align:center; font-size:10.5px; color:#9a958c; letter-spacing:0.03em;}
+  .watermark{margin-top:36px; text-align:center;}
+  .watermark span{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#9a958c; letter-spacing:0.02em; background:#f3f3f1; padding:5px 14px; border-radius:999px;}
   @media print{ body{padding:14mm;} }
 </style></head><body>
   <div class="doc-head">
-    <div>
-      <h1>${escapeHtml(emisorNombre)}</h1>
-      ${emisorNif?`<div>NIF: ${escapeHtml(emisorNif)}</div>`:''}
-      ${emisorDireccion?`<div>${escapeHtml(emisorDireccion)}</div>`:''}
-      <div>${[emisorTelefono, emisorEmail].filter(Boolean).map(escapeHtml).join(' · ')}</div>
+    <div class="doc-brand">
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <div>
+        <h1>${escapeHtml(emisorNombre)}</h1>
+        <div class="meta">
+          ${emisorNif?`NIF: ${escapeHtml(emisorNif)}<br>`:''}
+          ${emisorDireccion?`${escapeHtml(emisorDireccion)}<br>`:''}
+          ${[emisorTelefono, emisorEmail].filter(Boolean).map(escapeHtml).join(' · ')}
+        </div>
+      </div>
     </div>
-    <div style="text-align:right;">
-      <div class="num">Presupuesto ${escapeHtml(p.numero)}</div>
-      <div>Fecha: ${fechaEmision}</div>
-      <div>Válido hasta: ${fechaValidez}</div>
+    <div class="doc-num">
+      <div class="n">Presupuesto ${escapeHtml(p.numero)}</div>
+      <div class="d">Fecha: ${fechaEmision}</div>
+      <div class="d">Válido hasta: ${fechaValidez}</div>
     </div>
   </div>
 
@@ -3461,7 +3477,7 @@ function abrirPresupuestoPDF(id){
     <div>Firma y aceptación del cliente</div>
   </div>
 
-  ${isPremiumActive ? '' : '<div class="watermark">Presupuesto generado con TodoOficios.es — todooficios.es</div>'}
+  ${isPremiumActive ? '' : '<div class="watermark"><span>Presupuesto generado con TodoOficios.es</span></div>'}
 
   <sc` + `ript>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</sc` + `ript>
 </bod` + `y></html>`;

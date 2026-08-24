@@ -34,6 +34,11 @@
     return (raw === undefined || raw === null || raw === '') ? def : raw;
   }
   function must(cond, msg){ if(!cond) throw new Error(msg); }
+  function escapeHtml(str){
+    var d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
   function faseMul(tipo){ return tipo === 'trifasico' ? Math.sqrt(3) : (tipo === 'trifasico_ln' ? 1 : 2); }
 
   var RHO = { cobre: 0.017241, aluminio: 0.028264 }; // Ω·mm²/m a 20°C
@@ -1961,7 +1966,80 @@
     var relevantes = res.filter(function(r){ return !r.link; });
     if(!relevantes.length) return '';
     return '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">➕ Añadir a un presupuesto</button>' +
-      '<div class="cec-add-toast" id="cecAddToast" style="display:none;"></div>';
+      '<div class="cec-add-toast" id="cecAddToast" style="display:none;"></div>' +
+      '<div class="cec-add-picker" id="cecAddPicker" style="display:none;">' +
+        '<button type="button" class="cec-add-draft-btn" id="cecAddDraftBtn">Guardar para mi próximo presupuesto</button>' +
+        '<div class="cec-add-picker-sep">o añade directamente a uno ya creado</div>' +
+        '<div id="cecAddPickerList" class="cec-add-picker-list"><div class="cec-add-picker-loading">Cargando tus presupuestos…</div></div>' +
+      '</div>';
+  }
+
+  function resumenPartida(calc, res){
+    var relevantes = res.filter(function(r){ return !r.link; });
+    var resumen = relevantes.map(function(r){ return r.label + ': ' + r.value + (r.unit ? ' ' + r.unit : ''); }).join(', ');
+    var euroRow = relevantes.filter(function(r){ return r.unit === '€'; })[0];
+    return {
+      concepto: calc.titulo + ' — ' + resumen,
+      importe: euroRow ? parseFloat(String(euroRow.value).replace(',', '.')) || 0 : 0
+    };
+  }
+
+  function cargarNegocioCompleto(){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(null);
+    return cloudGet('negocio:'+email).then(function(raw){
+      if(!raw) return null;
+      try { return JSON.parse(raw); } catch(e){ return null; }
+    });
+  }
+
+  function guardarNegocioCompleto(negocio){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(false);
+    return cloudSet('negocio:'+email, JSON.stringify(negocio));
+  }
+
+  function cargarPresupuestosPendientes(){
+    return cargarNegocioCompleto().then(function(negocio){
+      if(!negocio || !Array.isArray(negocio.presupuestos)) return [];
+      return negocio.presupuestos
+        .filter(function(p){ return !p.estado || p.estado === 'Pendiente'; })
+        .slice().reverse();
+    });
+  }
+
+  function anadirPartidaAPresupuestoExistente(presupuestoId, concepto, importe){
+    return cargarNegocioCompleto().then(function(negocio){
+      if(!negocio || !Array.isArray(negocio.presupuestos)) return null;
+      var p = negocio.presupuestos.filter(function(x){ return x.id === presupuestoId; })[0];
+      if(!p) return null;
+      if(!Array.isArray(p.partidas)) p.partidas = [];
+      p.partidas.push({descripcion: concepto, unidad:'ud', cantidad:1, precio: importe||0, coste:0});
+      var subtotal = p.partidas.reduce(function(s,x){ return s + (Number(x.cantidad)||0)*(Number(x.precio)||0); }, 0);
+      var ivaPct = Number(p.ivaPct)||0;
+      var cuota = subtotal * ivaPct/100;
+      var irpfPct = Number(p.irpfPct)||0;
+      var irpfImporte = p.irpfAplica ? subtotal * irpfPct/100 : 0;
+      var total = subtotal + cuota - irpfImporte;
+      p.base = Math.round(subtotal*100)/100;
+      p.cuota = Math.round(cuota*100)/100;
+      p.irpfImporte = Math.round(irpfImporte*100)/100;
+      p.total = Math.round(total*100)/100;
+      return guardarNegocioCompleto(negocio).then(function(ok){ return ok ? p : null; });
+    });
+  }
+
+  function fmtEUR(n){
+    return (Number(n)||0).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  }
+
+  function pickerListHTML(presupuestos){
+    if(!presupuestos.length) return '<div class="cec-add-picker-empty">Todavía no tienes presupuestos pendientes creados.</div>';
+    return presupuestos.map(function(p){
+      return '<button type="button" class="cec-pp-opt" data-pid="' + escapeHtml(p.id) + '">' +
+        '<span><span class="cec-pp-num">' + escapeHtml(p.numero) + '</span><span class="cec-pp-cli">' + escapeHtml(p.cliente) + '</span></span>' +
+        '<span class="cec-pp-amt">' + fmtEUR(p.total) + '</span></button>';
+    }).join('');
   }
 
   function normaliza(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
@@ -2088,19 +2166,54 @@
         }).join('') + botonAnadirPresupuestoHTML(res);
         out.classList.remove('cec-error');
         var addBtn = document.getElementById('cecAddBudget');
-        if(addBtn){
+        var picker = document.getElementById('cecAddPicker');
+        var pickerListEl = document.getElementById('cecAddPickerList');
+        var pickerLoaded = false;
+        if(addBtn && picker){
           addBtn.addEventListener('click', function(){
-            var relevantes = ultimoResultado.filter(function(r){ return !r.link; });
-            var resumen = relevantes.map(function(r){ return r.label + ': ' + r.value + (r.unit ? ' ' + r.unit : ''); }).join(', ');
-            var concepto = calc.titulo + ' — ' + resumen;
-            var euroRow = relevantes.filter(function(r){ return r.unit === '€'; })[0];
-            var importe = euroRow ? parseFloat(String(euroRow.value).replace(',', '.')) || 0 : 0;
-            var n = guardarEnBorradorPresupuesto(concepto, importe);
+            var open = picker.style.display !== 'none';
+            picker.style.display = open ? 'none' : '';
+            if(!open && !pickerLoaded){
+              pickerLoaded = true;
+              cargarPresupuestosPendientes().then(function(lista){
+                if(pickerListEl) pickerListEl.innerHTML = pickerListHTML(lista);
+              });
+            }
+          });
+        }
+        var draftBtn = document.getElementById('cecAddDraftBtn');
+        if(draftBtn){
+          draftBtn.addEventListener('click', function(){
+            var partida = resumenPartida(calc, ultimoResultado);
+            var n = guardarEnBorradorPresupuesto(partida.concepto, partida.importe);
             var toast = document.getElementById('cecAddToast');
             if(toast && n > 0){
               toast.style.display = '';
               toast.textContent = 'Añadido — llevas ' + n + (n === 1 ? ' partida guardada' : ' partidas guardadas') + ' para tu próximo presupuesto';
             }
+            if(picker) picker.style.display = 'none';
+          });
+        }
+        if(pickerListEl){
+          pickerListEl.addEventListener('click', function(e){
+            var opt = e.target.closest('.cec-pp-opt');
+            if(!opt) return;
+            var pid = opt.getAttribute('data-pid');
+            opt.disabled = true;
+            var partida = resumenPartida(calc, ultimoResultado);
+            anadirPartidaAPresupuestoExistente(pid, partida.concepto, partida.importe).then(function(p){
+              var toast = document.getElementById('cecAddToast');
+              if(!toast) return;
+              if(p){
+                toast.style.display = '';
+                toast.textContent = 'Añadida al presupuesto ' + p.numero + ' — ' + p.cliente + '. Nuevo total: ' + fmtEUR(p.total);
+                if(picker) picker.style.display = 'none';
+              } else {
+                toast.style.display = '';
+                toast.textContent = 'No se pudo añadir al presupuesto. Inténtalo de nuevo.';
+                opt.disabled = false;
+              }
+            });
           });
         }
       } catch(e){
