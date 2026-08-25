@@ -2190,6 +2190,7 @@ const PREMIUM_DURATION_MS = 30*24*60*60*1000; // cada pago cubre 1 mes
 const PREMIUM_TRIAL_DAYS = 14; // prueba gratis de Premium para profesionales recién inscritos que no entran en la promo de lanzamiento
 const PREMIUM_TRIAL_MS = PREMIUM_TRIAL_DAYS*24*60*60*1000;
 function premiumPrice(acc){ return (acc.premiumMonthsPaid||0) < 12 ? PREMIUM_PRICE_FIRST_YEAR : PREMIUM_PRICE_RENEWAL; }
+const PREMIUM_IVA_PCT = 21; // IVA general — venta B2B nacional a un profesional español (revisar si el receptor está en otro país)
 
 // Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
 // que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
@@ -2960,6 +2961,11 @@ function bindCourseProviderSignup(){
 function renderPremiumPanelBody(account){
   const isPremiumActive = account.featuredUntil && account.featuredUntil > Date.now();
   const price = formatEUR(premiumPrice(account));
+  const facturasHTML = (account.premiumMonthsPaid||0) > 0 ? `
+    <div style="margin-top:16px;">
+      <div class="section-label">Mis facturas</div>
+      <div id="mis-facturas-list">Cargando facturas...</div>
+    </div>` : '';
   if(isPremiumActive){
     const untilDate = new Date(account.featuredUntil).toLocaleDateString('es-ES');
     let statusNote = '';
@@ -2974,7 +2980,8 @@ function renderPremiumPanelBody(account){
       <span class="premium-banner-txt"><strong>Premium activo</strong> hasta ${untilDate}${statusNote}. Mejor posicionamiento y hasta 10 fotos.</span>
       ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">${account.premiumTrial ? 'Activar Premium ya' : 'Renovar'} — ${price}/mes</button>` : ''}
     </div>
-    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (${price}/mes) estará disponible próximamente.</p>`}`;
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">Cuando finalice, tu ficha seguirá activa gratis para siempre. La renovación de pago (${price}/mes) estará disponible próximamente.</p>`}
+    ${facturasHTML}`;
   }
   return `
     <div class="premium-banner">
@@ -2982,7 +2989,8 @@ function renderPremiumPanelBody(account){
       <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price}/mes durante el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes) da más visibilidad, hasta 10 fotos y presupuestos en PDF sin marca de agua.</span>
       ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}/mes</button>` : ''}
     </div>
-    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">${account.premiumTrial ? 'Tu prueba gratis de bienvenida ya terminó — ' : ''}Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos.</p>`}`;
+    ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">${account.premiumTrial ? 'Tu prueba gratis de bienvenida ya terminó — ' : ''}Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos.</p>`}
+    ${facturasHTML}`;
 }
 
 function renderDashboard(){
@@ -3160,6 +3168,7 @@ function bindPro(){
           </div>`).join('');
       }
       renderProMessages();
+      if((account.premiumMonthsPaid||0) > 0) renderMisFacturas(account.email);
       return;
     }
 
@@ -3665,6 +3674,168 @@ function abrirPresupuestoPDF(id){
   win.document.open();
   win.document.write(html);
   win.document.close();
+}
+
+/* ======================= FACTURA DE LA SUSCRIPCIÓN PREMIUM ======================= */
+const MESES_ES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+// Se llama justo tras un cobro de PayPal confirmado (ver onApprove en renderFeaturedPaypalButtons).
+// Requiere backend compartido: la numeración correlativa (columna "numero" en la tabla
+// invoices) la asigna Postgres de forma atómica al insertar, y eso solo existe con Supabase
+// configurado — en modo local no se genera ninguna factura (no hay forma segura de numerar
+// sin huecos en el propio navegador).
+async function generarFacturaPremium(acc, price, paypalOrderId){
+  if(!isSharedStorageAvailable() || !supabaseClient){
+    console.warn('No se generó factura: sin backend compartido no se puede numerar de forma segura.');
+    return null;
+  }
+  // No se consume ningún número de la serie con un emisor incompleto: una vez asignado, un
+  // número de factura no se puede simplemente borrar (haría falta una rectificativa). Mejor
+  // bloquear la emisión hasta que legal-config.js tenga los datos fiscales reales.
+  if(hasPendingLegalData(getLegalProfile())){
+    console.warn('No se generó factura: faltan los datos fiscales del emisor en legal-config.js.');
+    showToast('Pago registrado, pero la factura no se pudo emitir todavía: faltan los datos fiscales de TodoOficios.es.');
+    return null;
+  }
+  const negocio = await getNegocio(acc.email);
+  const base = Math.round((price / (1 + PREMIUM_IVA_PCT/100)) * 100) / 100;
+  const cuota = Math.round((price - base) * 100) / 100;
+  const hoy = new Date();
+  const periodo = `${MESES_ES[hoy.getMonth()]} de ${hoy.getFullYear()}`;
+  const row = {
+    profesional_email: acc.email,
+    profesional_nombre: negocio.datos.nombreFiscal || acc.name || acc.email,
+    profesional_nif: negocio.datos.nif || null,
+    concepto: 'Suscripción Premium TodoOficios.es',
+    periodo,
+    base, iva_pct: PREMIUM_IVA_PCT, cuota,
+    total: Math.round((base+cuota)*100)/100,
+    metodo_pago: 'PayPal',
+    paypal_order_id: paypalOrderId || null,
+  };
+  try{
+    const { data, error } = await supabaseClient.from('invoices').insert(row).select().single();
+    if(error){ console.error('No se pudo crear la factura:', error.message||error); return null; }
+    return data;
+  }catch(err){
+    console.error('No se pudo crear la factura:', err);
+    return null;
+  }
+}
+
+function abrirFacturaPremiumPDF(inv){
+  const legal = getLegalProfile();
+  const fechaEmision = new Date(inv.fecha+'T00:00:00').toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'});
+
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
+<title>Factura ${escapeHtml(inv.numero)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body{font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
+  .doc-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
+  .doc-brand{display:flex; align-items:center; gap:12px;}
+  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#141412; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .doc-brand .ic svg{width:20px; height:20px; stroke:#F2B705; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .doc-head h1{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 3px;}
+  .doc-head .meta{font-size:12px; color:#666; line-height:1.55;}
+  .doc-num{text-align:right; font-family:'IBM Plex Mono',monospace;}
+  .doc-num .n{font-size:14px; font-weight:700; color:#141412;}
+  .doc-num .d{font-size:11.5px; color:#666; margin-top:2px;}
+  .box h3{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#8A5A00; margin:0 0 6px; font-weight:700;}
+  .box div{font-size:12.5px; line-height:1.55;}
+  .two-col{display:flex; gap:32px; margin-bottom:24px;}
+  table{width:100%; border-collapse:collapse; margin-bottom:20px;}
+  th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:#8A5A00; border-bottom:2px solid #141412; padding:8px 6px; font-weight:700;}
+  td{padding:9px 6px; border-bottom:1px solid #eee; font-size:12.5px;}
+  .totales{margin-left:auto; width:280px;}
+  .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px; font-family:'IBM Plex Mono',monospace; color:#555;}
+  .totales .total{font-weight:700; font-size:16px; color:#141412; border-top:2px solid #141412; margin-top:6px; padding:9px 10px 7px; background:#fff8e1; margin-left:-10px; margin-right:-10px;}
+  .condiciones{margin-top:26px; font-size:12px; color:#666; line-height:1.6; border-left:3px solid #F2B705; padding-left:12px;}
+  @media print{ body{padding:14mm;} }
+</style></head><body>
+  <div class="doc-head">
+    <div class="doc-brand">
+      <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <div>
+        <h1>${escapeHtml(legal.razonSocial)}</h1>
+        <div class="meta">
+          NIF: ${escapeHtml(legal.nifCif)}<br>
+          ${legal.domicilio?`${escapeHtml(legal.domicilio)}<br>`:''}
+          ${escapeHtml(legal.emailContacto)}
+        </div>
+      </div>
+    </div>
+    <div class="doc-num">
+      <div class="n">Factura ${escapeHtml(inv.numero)}</div>
+      <div class="d">Fecha: ${fechaEmision}</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="box">
+      <h3>Cliente</h3>
+      <div><strong>${escapeHtml(inv.profesional_nombre)}</strong></div>
+      ${inv.profesional_nif?`<div>NIF: ${escapeHtml(inv.profesional_nif)}</div>`:''}
+      <div>${escapeHtml(inv.profesional_email)}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Descripción</th><th style="text-align:right;">Importe</th></tr></thead>
+    <tbody><tr><td>${escapeHtml(inv.concepto)} — ${escapeHtml(inv.periodo)}</td><td style="text-align:right;">${formatEUR(inv.base)}</td></tr></tbody>
+  </table>
+
+  <div class="totales">
+    <div><span>Base imponible</span><span>${formatEUR(inv.base)}</span></div>
+    <div><span>IVA (${inv.iva_pct}%)</span><span>${formatEUR(inv.cuota)}</span></div>
+    <div class="total"><span>TOTAL</span><span>${formatEUR(inv.total)}</span></div>
+  </div>
+
+  <div class="condiciones">
+    <div><strong>Forma de pago:</strong> ${escapeHtml(inv.metodo_pago)}${inv.paypal_order_id?` (referencia ${escapeHtml(inv.paypal_order_id)})`:''}</div>
+    <div><strong>Operación no sujeta a retención de IRPF.</strong></div>
+  </div>
+
+  <sc` + `ript>window.onload = function(){ setTimeout(function(){ window.print(); }, 300); };</sc` + `ript>
+</bod` + `y></html>`;
+
+  const win = window.open('', '_blank');
+  if(!win){ showToast('Tu navegador bloqueó la ventana. Permite ventanas emergentes para ver el PDF.'); return; }
+  win.document.open();
+  win.document.write(html);
+  win.document.close();
+}
+
+async function renderMisFacturas(email){
+  const list = document.getElementById('mis-facturas-list');
+  if(!list) return;
+  if(!isSharedStorageAvailable() || !supabaseClient){
+    list.innerHTML = '<div class="empty-state">Sin backend compartido no se pueden generar ni consultar facturas.</div>';
+    return;
+  }
+  try{
+    const { data, error } = await supabaseClient.from('invoices').select('*').eq('profesional_email', email).order('id', {ascending:false});
+    if(error) throw error;
+    if(!data || !data.length){ list.innerHTML = '<div class="empty-state">Aún no tienes facturas — se genera una automáticamente en cada pago de Premium.</div>'; return; }
+    list.innerHTML = data.map(inv => `
+      <div class="ticket" style="padding:12px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div>
+          <strong>${escapeHtml(inv.numero)}</strong> — ${escapeHtml(inv.periodo)}
+          <div style="font-size:12.5px; color:#5f5a53;">${new Date(inv.fecha+'T00:00:00').toLocaleDateString('es-ES')} · ${formatEUR(inv.total)}</div>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" data-factura-id="${inv.id}">Ver PDF</button>
+      </div>`).join('');
+    list.querySelectorAll('[data-factura-id]').forEach(btn=>{
+      btn.onclick = ()=>{
+        const inv = data.find(x=>String(x.id)===btn.dataset.facturaId);
+        if(inv) abrirFacturaPremiumPDF(inv);
+      };
+    });
+  }catch(err){
+    console.error('No se pudieron cargar las facturas:', err);
+    list.innerHTML = '<div class="empty-state">No se pudieron cargar tus facturas ahora mismo.</div>';
+  }
 }
 
 function abrirResumenGastosPDF(gastos){
@@ -5407,9 +5578,14 @@ function renderFeaturedPaypalButtons(){
     onApprove: function(data, actions) {
       status.textContent = 'Procesando pago...';
       return actions.order.capture().then(async function(details) {
+        const pendingRaw = window.__pendingFeaturedAccount;
+        const price = pendingRaw ? premiumPrice(pendingRaw) : PREMIUM_PRICE_FIRST_YEAR;
         const success = await markFeaturedAccount(pendingFeaturedEmail);
         if(success){
           status.textContent = 'Pago completado. Perfil destacado activado.';
+          const acc = JSON.parse(await safeGet('account:'+pendingFeaturedEmail, true));
+          const inv = await generarFacturaPremium(acc, price, details.id);
+          if(inv) abrirFacturaPremiumPDF(inv);
           if(session?.email === pendingFeaturedEmail){ showView('pro'); }
           setTimeout(closeFeaturedModal, 1100);
         } else {
