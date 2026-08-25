@@ -1844,11 +1844,13 @@
   }
 
   /* ============================================================
-     MATERIALES FAVORITOS: conexión mínima con Supabase (misma tabla
-     kv_store y namespace que index.html) para que la lista de precios
-     guardados sea la misma en las calculadoras y en el Panel de negocio.
+     MATERIALES FAVORITOS y PANEL DE NEGOCIO: mismas tablas
+     (materiales_favoritos / business_panel, con RLS por dueño) que usa
+     index.html, para que precios guardados y presupuestos sean los
+     mismos en las calculadoras y en el Panel de negocio. El cliente de
+     Supabase recupera automáticamente la sesión que haya dejado
+     index.html (persistSession, mismo proyecto y origen).
      ============================================================ */
-  var CLOUD_NAMESPACE = 'todooficios:v1';
   var cloudClient = null;
   var cloudEnabled = false;
   var cloudInitPromise = null;
@@ -1874,7 +1876,7 @@
       var cfg = window.TODOOFICIOS_LEGAL;
       try {
         var client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-        return client.from('kv_store').select('key').limit(1).then(function(res){
+        return client.from('professional_profiles').select('email').limit(1).then(function(res){
           if(res.error) return null;
           cloudClient = client;
           cloudEnabled = true;
@@ -1885,31 +1887,17 @@
     return cloudInitPromise;
   }
 
-  function cloudGet(key){
-    return initCloudClient().then(function(client){
-      if(!client || !cloudEnabled) return null;
-      return client.from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', key).maybeSingle()
-        .then(function(res){ return (res.error || !res.data) ? null : res.data.value; })
-        .catch(function(){ return null; });
-    });
-  }
-
-  function cloudSet(key, value){
-    return initCloudClient().then(function(client){
-      if(!client || !cloudEnabled) return false;
-      var payload = {namespace: CLOUD_NAMESPACE, key: key, value: value, updated_at: new Date().toISOString()};
-      return client.from('kv_store').upsert(payload, {onConflict: 'namespace,key'})
-        .then(function(res){ return !res.error; })
-        .catch(function(){ return false; });
-    });
-  }
-
   function cargarMaterialesFavoritos(){
     var email = proEmailActual();
     if(!email) return Promise.resolve([]);
-    return cloudGet('materiales:'+email).then(function(raw){
-      if(!raw) return [];
-      try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return [];
+      return client.from('materiales_favoritos').select('data').eq('owner_email', email).maybeSingle()
+        .then(function(res){
+          if(res.error || !res.data || !Array.isArray(res.data.data)) return [];
+          return res.data.data;
+        })
+        .catch(function(){ return []; });
     });
   }
 
@@ -1917,7 +1905,13 @@
     var email = proEmailActual();
     if(!email) return Promise.resolve(false);
     materialesCache = materialesCache.concat([{id:'m'+Date.now(), nombre:nombre, unidad:unidad||'ud', precio:precio||0}]);
-    return cloudSet('materiales:'+email, JSON.stringify(materialesCache));
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      var payload = {owner_email: email, data: materialesCache, updated_at: new Date().toISOString()};
+      return client.from('materiales_favoritos').upsert(payload, {onConflict: 'owner_email'})
+        .then(function(res){ return !res.error; })
+        .catch(function(){ return false; });
+    });
   }
 
   function chipsHTML(fieldKey){
@@ -1987,16 +1981,24 @@
   function cargarNegocioCompleto(){
     var email = proEmailActual();
     if(!email) return Promise.resolve(null);
-    return cloudGet('negocio:'+email).then(function(raw){
-      if(!raw) return null;
-      try { return JSON.parse(raw); } catch(e){ return null; }
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return null;
+      return client.from('business_panel').select('data').eq('owner_email', email).maybeSingle()
+        .then(function(res){ return (res.error || !res.data) ? null : res.data.data; })
+        .catch(function(){ return null; });
     });
   }
 
   function guardarNegocioCompleto(negocio){
     var email = proEmailActual();
     if(!email) return Promise.resolve(false);
-    return cloudSet('negocio:'+email, JSON.stringify(negocio));
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      var payload = {owner_email: email, data: negocio, updated_at: new Date().toISOString()};
+      return client.from('business_panel').upsert(payload, {onConflict: 'owner_email'})
+        .then(function(res){ return !res.error; })
+        .catch(function(){ return false; });
+    });
   }
 
   function cargarPresupuestosPendientes(){
