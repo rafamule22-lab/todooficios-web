@@ -676,6 +676,35 @@
   .muted-link{font-size:12.5px; color:var(--ink-soft); text-decoration:underline; background:none; border:none; padding:0; cursor:pointer;}
   .danger-link{font-size:12.5px; color:#a12626; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; opacity:0.75;}
   .danger-link:hover{opacity:1;}
+
+  /* ======================= COOKIE CONSENT ======================= */
+  .cookie-banner{position:fixed; left:0; right:0; bottom:0; z-index:600; background:var(--ink); color:#fff; padding:16px 20px; box-shadow:0 -8px 24px rgba(0,0,0,0.18); transform:translateY(110%); transition:transform .25s ease;}
+  .cookie-banner.show{transform:translateY(0);}
+  .cookie-banner-inner{max-width:1040px; margin:0 auto; display:flex; gap:18px; align-items:center; flex-wrap:wrap;}
+  .cookie-banner-text{flex:1; min-width:240px; font-size:13px; line-height:1.5; color:rgba(255,255,255,0.88);}
+  .cookie-banner-text a{color:#fff; text-decoration:underline;}
+  .cookie-banner-actions{display:flex; gap:8px; flex-wrap:wrap;}
+  .cookie-btn{font-family:'IBM Plex Mono'; font-size:12.5px; font-weight:600; padding:9px 14px; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.35); background:transparent; color:#fff;}
+  .cookie-btn.primary{background:var(--amber); border-color:var(--amber); color:#141412;}
+  .cookie-btn:hover{opacity:0.9;}
+  .cookie-modal-overlay{position:fixed; inset:0; z-index:700; background:rgba(20,20,18,0.55); display:none; align-items:center; justify-content:center; padding:16px;}
+  .cookie-modal-overlay.show{display:flex;}
+  .cookie-modal{background:#fff; border-radius:14px; max-width:440px; width:100%; padding:22px; max-height:86vh; overflow-y:auto;}
+  .cookie-modal h3{margin:0 0 4px; font-size:16px;}
+  .cookie-modal .sub{font-size:12.5px; color:var(--ink-soft); margin-bottom:14px;}
+  .cookie-pref-row{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--line);}
+  .cookie-pref-row:last-of-type{border-bottom:none;}
+  .cookie-pref-row .name{font-weight:600; font-size:13.5px;}
+  .cookie-pref-row .desc{font-size:12px; color:var(--ink-soft); margin-top:2px;}
+  .cookie-switch{position:relative; width:38px; height:22px; flex:none;}
+  .cookie-switch input{opacity:0; width:100%; height:100%; margin:0; position:absolute; cursor:pointer;}
+  .cookie-switch .track{position:absolute; inset:0; background:#d8d4c8; border-radius:999px; transition:background .15s;}
+  .cookie-switch .track::after{content:""; position:absolute; top:2px; left:2px; width:18px; height:18px; background:#fff; border-radius:50%; transition:transform .15s;}
+  .cookie-switch input:checked + .track{background:var(--amber);}
+  .cookie-switch input:checked + .track::after{transform:translateX(16px);}
+  .cookie-switch input:disabled + .track{opacity:0.55; cursor:not-allowed;}
+  .cookie-modal-actions{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap;}
+  .footer-cookie-prefs{background:none; border:none; padding:0; font:inherit; color:inherit; text-decoration:underline; cursor:pointer;}
   .msg{font-size:13px; padding:10px 12px; border-radius:7px; margin-bottom:16px; font-weight:600;}
   .msg.err{background:#fde8e8; color:#a12626; border:1px solid #f0b8b8;}
   .msg.ok{background:#eaf7e6; color:#1e6b2e; border:1px solid #b9e2ae;}
@@ -1313,6 +1342,7 @@
         <a href="aviso-legal.html" target="_blank" rel="noopener">Aviso Legal</a>
         <a href="politica-privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a>
         <a href="politica-cookies.html" target="_blank" rel="noopener">Política de Cookies</a>
+        <button type="button" class="footer-cookie-prefs" onclick="openCookiePreferences()">Preferencias de cookies</button>
       </div>
     </div>
     <div class="footer-bottom">© <span id="footerYear"></span> TodoOficios.es. Todos los derechos reservados.</div>
@@ -1783,6 +1813,15 @@ const LEGAL_DOCS = {
         <li>Email: ${escapeHtml(legal.emailContacto)}</li>
       </ul>
       <p>El usuario se compromete a hacer un uso adecuado del sitio y de sus contenidos, de conformidad con la legislación aplicable.</p>
+      <h3>TodoOficios.es es un intermediario, no el prestador del servicio</h3>
+      <p>TodoOficios.es presta un servicio de intermediación en línea: pone en contacto a clientes que buscan un servicio de oficios con profesionales autónomos o empresas independientes que ofrecen esos servicios. TodoOficios.es no es parte del contrato de prestación de servicios que se celebra entre el cliente y el profesional, no interviene en la ejecución del trabajo, no fija los precios finales del servicio ni garantiza sus resultados.</p>
+      <p>En consecuencia:</p>
+      <ul>
+        <li>Cada profesional que se anuncia en TodoOficios.es es responsable único de la legalidad de su actividad (alta como autónomo o sociedad, seguros, licencias y cualificación profesional que exija su oficio), de la calidad del trabajo realizado y de cualquier daño derivado de su prestación.</li>
+        <li>TodoOficios.es no responde por los actos, omisiones o incumplimientos de los profesionales listados, salvo en los supuestos en que, conforme al artículo 17 de la LSSI-CE, tenga conocimiento efectivo de que la actividad o información almacenada es ilícita y no actúe con diligencia para retirarla o inhabilitar el acceso a ella.</li>
+        <li>El usuario que contrata a un profesional a través de la plataforma lo hace bajo su propia responsabilidad; se recomienda verificar referencias, seguro de responsabilidad civil y presupuesto por escrito antes de iniciar cualquier trabajo.</li>
+        <li>Las reseñas y valoraciones publicadas por los usuarios reflejan su opinión personal. TodoOficios.es no verifica de forma sistemática su veracidad, si bien dispone de un canal de denuncia para reseñas falsas o abusivas en ${escapeHtml(legal.emailSoporte)}.</li>
+      </ul>
       `;
     })()
   },
@@ -1799,10 +1838,20 @@ const LEGAL_DOCS = {
         <li>Contenido aportado por el usuario: foto de perfil, fotos de trabajos, mensajes y reseñas.</li>
       </ul>
       <h3>Finalidad y base jurídica</h3>
+      <p>La base legal es distinta según tu relación con la plataforma:</p>
+      <p><strong>Si eres profesional (te registras para ofrecer tus servicios):</strong></p>
       <ul>
-        <li>Gestión de cuentas y prestación del servicio: ejecución de la relación contractual.</li>
-        <li>Geolocalización para mostrar resultados cercanos: consentimiento expreso del usuario, otorgado a través del permiso del navegador.</li>
-        <li>Atención de consultas: interés legítimo y/o consentimiento.</li>
+        <li>Creación y gestión de tu cuenta y ficha pública, gratuita o Premium: ejecución del contrato de prestación del servicio de intermediación.</li>
+        <li>Cobro de la suscripción Premium: ejecución contractual y cumplimiento de obligaciones fiscales.</li>
+        <li>Posicionamiento en búsquedas y visibilidad de tu ficha: ejecución contractual.</li>
+        <li>Comunicaciones sobre el servicio (novedades, avisos de facturación): interés legítimo derivado de la relación contractual existente, con opción de baja en cualquier momento.</li>
+      </ul>
+      <p><strong>Si eres cliente (buscas un profesional):</strong></p>
+      <ul>
+        <li>Mostrarte profesionales cercanos y ponerte en contacto con ellos: ejecución de medidas precontractuales a petición tuya.</li>
+        <li>Geolocalización aproximada para calcular distancias: consentimiento expreso, otorgado a través del permiso del navegador y revocable en cualquier momento.</li>
+        <li>Guardar tu historial de solicitudes y mensajes con profesionales: ejecución contractual e interés legítimo en la trazabilidad de la relación.</li>
+        <li>Atención de consultas fuera de estos casos: interés legítimo y/o consentimiento.</li>
       </ul>
       <h3>Mensajes y reseñas entre usuarios</h3>
       <p>Los mensajes que envíes a un profesional o cliente, así como las reseñas y valoraciones que publiques, se almacenan en el servicio y son visibles para el destinatario de la conversación o, en el caso de las reseñas, para cualquier visitante del perfil público del profesional valorado.</p>
@@ -1814,6 +1863,7 @@ const LEGAL_DOCS = {
         <li><strong>Google LLC</strong>: si eliges iniciar sesión con Google, recibe y trata tu nombre, email y foto de perfil para gestionar la autenticación.</li>
         <li><strong>Supabase Inc.</strong>: aloja en la nube la base de datos con las cuentas, mensajes, reseñas y demás contenidos del servicio (cuando la app funciona con backend en la nube; en modo local sin configurar, los datos se guardan solo en el propio dispositivo del usuario).</li>
         <li><strong>PayPal (Europe) S.à r.l. et Cie, S.C.A.</strong>: gestiona los datos de pago y facturación cuando el usuario utiliza el flujo de pago destacado. TodoOficios.es no almacena datos de tarjetas ni credenciales de pago.</li>
+        <li><strong>Google Ads / Google Analytics</strong>: si en el futuro activamos analítica o publicidad, Google LLC tratará datos de navegación mediante cookies, y solo lo hará después de que aceptes esas cookies en el panel de preferencias — ver la Política de Cookies.</li>
       </ul>
       <h3>Transferencias internacionales</h3>
       <p>Algunos de estos proveedores (Google, Supabase y PayPal) pueden alojar o procesar datos en servidores ubicados fuera del Espacio Económico Europeo. En esos casos, la transferencia se realiza acogiéndose a las garantías previstas en el RGPD (como las Cláusulas Contractuales Tipo aprobadas por la Comisión Europea o decisiones de adecuación), conforme a las políticas de privacidad publicadas por cada proveedor.</p>
@@ -1830,16 +1880,128 @@ const LEGAL_DOCS = {
     title: 'Política de Cookies y almacenamiento local',
     body: `
       <p>Este sitio utiliza tecnologías de almacenamiento en el dispositivo (como localStorage y service worker) para recordar sesión, preferencias y datos necesarios para el funcionamiento.</p>
-      <h3>Tipos de almacenamiento usados</h3>
+      <h3>Cookies técnicas (siempre activas)</h3>
       <ul>
         <li>Técnico/funcional: necesario para login, perfiles y funcionamiento básico.</li>
         <li>Persistencia local: datos de cuenta y estado de navegación en el navegador del usuario.</li>
         <li>Servicios de terceros bajo acción del usuario: el SDK de PayPal solo se carga cuando el usuario abre el flujo de pago destacado.</li>
       </ul>
-      <p>Al continuar usando la web y registrarte, aceptas este uso técnico del almacenamiento local.</p>
+      <p>Estas cookies técnicas son necesarias para el funcionamiento del sitio y no requieren consentimiento, conforme al artículo 22.2 de la LSSI-CE.</p>
+      <h3>Analítica y publicidad (solo con tu consentimiento)</h3>
+      <p>Cuando actives o rechaces estas categorías en el panel de preferencias, tu elección se guarda en tu propio navegador y se respeta hasta que la cambies:</p>
+      <ul>
+        <li><strong>Analítica</strong>: nos ayudaría a medir visitas y uso del sitio (p. ej. Google Analytics). No se activa por defecto.</li>
+        <li><strong>Publicidad</strong>: permitiría medir el resultado de campañas (p. ej. Google Ads). No se activa por defecto.</li>
+      </ul>
+      <p>Mientras estas categorías no estén activas en producción, ningún script de analítica o publicidad se carga en el sitio. Puedes cambiar tu elección en cualquier momento desde "Preferencias de cookies" en el pie de página.</p>
+      <p>Al continuar usando la web y registrarte, aceptas el uso técnico del almacenamiento local descrito arriba.</p>
     `
   }
 };
+
+/* ======================= COOKIE CONSENT ======================= */
+const COOKIE_CONSENT_KEY = 'todooficios_cookie_consent_v1';
+function getCookieConsent(){
+  try{
+    const raw = localStorage.getItem(COOKIE_CONSENT_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch(e){ return null; }
+}
+function setCookieConsent(analytics, marketing){
+  const consent = {necessary:true, analytics:!!analytics, marketing:!!marketing, ts:new Date().toISOString()};
+  try{ localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consent)); }catch(e){}
+  applyCookieConsent(consent);
+  return consent;
+}
+function applyCookieConsent(consent){
+  // Ningún script de analítica/publicidad existe todavía en producción. Este gate queda listo
+  // para cuando se active Google Ads/Analytics: solo debe cargarse el script si consent.analytics
+  // o consent.marketing es true. Ver Política de Cookies.
+  window.__todooficiosConsent = consent;
+}
+function ensureCookieBannerDom(){
+  if(document.getElementById('cookieBanner')) return;
+  const banner = document.createElement('div');
+  banner.className = 'cookie-banner';
+  banner.id = 'cookieBanner';
+  banner.innerHTML = `
+    <div class="cookie-banner-inner">
+      <div class="cookie-banner-text">Usamos almacenamiento técnico necesario para el funcionamiento del sitio. Cuando activemos cookies de analítica o publicidad, solo se cargarán con tu consentimiento. Más info en la <a href="politica-cookies.html" target="_blank" rel="noopener">Política de Cookies</a>.</div>
+      <div class="cookie-banner-actions">
+        <button type="button" class="cookie-btn" id="cookieRejectBtn">Rechazar analítica y publicidad</button>
+        <button type="button" class="cookie-btn" id="cookieConfigBtn">Configurar</button>
+        <button type="button" class="cookie-btn primary" id="cookieAcceptBtn">Aceptar todo</button>
+      </div>
+    </div>`;
+  document.body.appendChild(banner);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cookie-modal-overlay';
+  overlay.id = 'cookieModalOverlay';
+  overlay.innerHTML = `
+    <div class="cookie-modal">
+      <h3>Preferencias de cookies</h3>
+      <div class="sub">Puedes cambiar esta elección cuando quieras desde "Preferencias de cookies" en el pie de página.</div>
+      <div class="cookie-pref-row">
+        <div><div class="name">Necesarias</div><div class="desc">Sesión, login y funcionamiento básico. Siempre activas.</div></div>
+        <label class="cookie-switch"><input type="checkbox" checked disabled><span class="track"></span></label>
+      </div>
+      <div class="cookie-pref-row">
+        <div><div class="name">Analítica</div><div class="desc">Medir visitas y uso del sitio.</div></div>
+        <label class="cookie-switch"><input type="checkbox" id="cookiePrefAnalytics"><span class="track"></span></label>
+      </div>
+      <div class="cookie-pref-row">
+        <div><div class="name">Publicidad</div><div class="desc">Medir el resultado de campañas.</div></div>
+        <label class="cookie-switch"><input type="checkbox" id="cookiePrefMarketing"><span class="track"></span></label>
+      </div>
+      <div class="cookie-modal-actions">
+        <button type="button" class="cookie-btn" id="cookieSaveBtn">Guardar preferencias</button>
+        <button type="button" class="cookie-btn primary" id="cookieAcceptAllBtn">Aceptar todo</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  document.getElementById('cookieAcceptBtn').addEventListener('click', ()=>{ setCookieConsent(true, true); hideCookieBanner(); });
+  document.getElementById('cookieRejectBtn').addEventListener('click', ()=>{ setCookieConsent(false, false); hideCookieBanner(); });
+  document.getElementById('cookieConfigBtn').addEventListener('click', openCookiePreferences);
+  document.getElementById('cookieAcceptAllBtn').addEventListener('click', ()=>{ setCookieConsent(true, true); closeCookiePreferences(); hideCookieBanner(); });
+  document.getElementById('cookieSaveBtn').addEventListener('click', ()=>{
+    const analytics = document.getElementById('cookiePrefAnalytics').checked;
+    const marketing = document.getElementById('cookiePrefMarketing').checked;
+    setCookieConsent(analytics, marketing);
+    closeCookiePreferences();
+    hideCookieBanner();
+  });
+  overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeCookiePreferences(); });
+}
+function hideCookieBanner(){
+  const banner = document.getElementById('cookieBanner');
+  if(banner) banner.classList.remove('show');
+}
+function showCookieBanner(){
+  ensureCookieBannerDom();
+  document.getElementById('cookieBanner').classList.add('show');
+}
+function openCookiePreferences(){
+  ensureCookieBannerDom();
+  const consent = getCookieConsent();
+  document.getElementById('cookiePrefAnalytics').checked = !!(consent && consent.analytics);
+  document.getElementById('cookiePrefMarketing').checked = !!(consent && consent.marketing);
+  document.getElementById('cookieModalOverlay').classList.add('show');
+}
+function closeCookiePreferences(){
+  const overlay = document.getElementById('cookieModalOverlay');
+  if(overlay) overlay.classList.remove('show');
+}
+function initCookieConsent(){
+  const consent = getCookieConsent();
+  if(consent){
+    applyCookieConsent(consent);
+    return;
+  }
+  showCookieBanner();
+}
 
 function showToast(msg){
   const t = document.getElementById('toast');
@@ -5258,6 +5420,7 @@ async function init(){
   applyLegalProfileToFooter();
   applyLegalComplianceWarning();
   applyStorageModeWarning();
+  initCookieConsent();
   bindLegalActions(document);
   const footerYear = document.getElementById('footerYear');
   if(footerYear) footerYear.textContent = String(new Date().getFullYear());
