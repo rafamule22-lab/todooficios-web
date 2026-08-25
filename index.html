@@ -150,7 +150,7 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     padding:20px 28px;
-    background:var(--ink);
+    background:#1A1512;
     color:var(--paper-light);
     position:sticky; top:0; z-index:20;
     box-shadow:0 2px 18px rgba(0,0,0,0.12);
@@ -172,22 +172,58 @@
     stroke-linecap:round; stroke-linejoin:round;
   }
   .nav-btn.active svg{stroke:var(--paper-light);}
-  .nav-role-switch{
-    display:flex; gap:3px; padding:3px;
-    background:rgba(247,245,240,0.08); border:1px solid rgba(247,245,240,0.16); border-radius:11px;
+
+  /* ---------- Account area: login/register or role chip(s) ---------- */
+  .nav-auth{ position:relative; display:flex; align-items:center; gap:12px; }
+  .nav-auth-trigger{
+    background:transparent; border:none; color:var(--paper-light);
+    font-size:12.5px; font-weight:600; padding:9px 4px;
   }
-  .nav-role-switch .nav-btn{border-color:transparent;}
-  .nav-btn.has-chip{padding:5px 12px 5px 5px;}
-  .nav-account-chip{display:inline-flex; align-items:center; gap:7px; font-weight:600;}
-  .nav-account-chip .circle{
-    width:24px; height:24px; border-radius:50%; background:var(--amber); color:var(--ink);
+  .nav-auth-trigger.solid{
+    background:#C05A3A; color:#fff; padding:9px 17px; border-radius:7px;
+  }
+  .nav-auth-ghostlink{
+    background:transparent; border:none; color:rgba(247,245,240,0.75);
+    font-size:12px; font-weight:500; text-decoration:underline; text-decoration-style:dashed;
+    text-underline-offset:3px; white-space:nowrap;
+  }
+  .nav-auth-chip{
+    display:inline-flex; align-items:center; gap:8px;
+    background:rgba(247,245,240,0.08); border:1px solid var(--m-c); color:var(--paper-light);
+    padding:5px 12px 5px 5px; border-radius:9px; font-size:12.5px; font-weight:600;
+  }
+  .nav-auth-chip .circle{
+    width:24px; height:24px; border-radius:50%; background:var(--m-c); color:#fff;
     font-family:'Space Grotesk'; font-weight:700; font-size:11px;
-    display:flex; align-items:center; justify-content:center; position:relative; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
-  .nav-account-chip .circle::after{
-    content:''; position:absolute; bottom:-1px; right:-1px; width:8px; height:8px;
-    border-radius:50%; background:#2E8F6E; border:1.5px solid var(--ink);
+  .nav-auth-chip .name-block{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.15; }
+  .nav-auth-chip .name-block small{ font-size:9.5px; font-weight:600; color:var(--m-c); text-transform:uppercase; letter-spacing:0.03em; }
+  .nav-auth-chip .chev{ width:12px; height:12px; stroke:var(--paper-light); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; transition:transform .15s; }
+  .nav-auth-chip[aria-expanded="true"] .chev{ transform:rotate(180deg); }
+  .nav-auth-menu{
+    position:absolute; top:calc(100% + 10px); right:0; background:#fff; border-radius:10px;
+    box-shadow:0 12px 32px rgba(0,0,0,0.24); padding:6px; min-width:220px;
+    display:none; flex-direction:column; gap:2px; z-index:25;
   }
+  .nav-auth-menu.open{display:flex;}
+  .nav-auth-menu button{
+    display:flex; align-items:center; gap:10px; text-align:left; background:transparent; border:none;
+    color:var(--ink); padding:9px 10px; border-radius:7px; font-size:13px; font-weight:500;
+    font-family:inherit; cursor:pointer;
+  }
+  .nav-auth-menu button:hover{background:var(--paper-light);}
+  .nav-auth-menu svg{ width:16px; height:16px; flex-shrink:0; stroke:var(--m-c, var(--ink-soft)); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .nav-auth-menu .sep{height:1px; background:var(--line); margin:4px 2px;}
+
+  /* ---------- Trust strip ---------- */
+  .trust-strip{ display:flex; align-items:center; gap:8px; padding:9px 28px; background:#140F0C; flex-wrap:wrap; }
+  .trust-badge{
+    display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600;
+    color:var(--paper-light); background:rgba(247,245,240,0.07); padding:5px 12px; border-radius:999px; white-space:nowrap;
+  }
+  .trust-badge svg{ width:12px; height:12px; stroke:var(--amber); fill:none; stroke-width:2; flex-shrink:0; }
+  @media (max-width:768px){ .trust-strip{padding:8px 14px;} }
 
   .nav-menu-toggle{
     display:inline-flex; align-items:center;
@@ -1186,22 +1222,19 @@
     <div class="brand-tag">TodoOficios.es</div>
   </div>
   <div class="nav-links">
-    <button class="nav-btn" data-view="home" style="--nav-c:#141412">
+    <button class="nav-btn" data-view="home" style="--nav-c:#1A1512">
       <svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/></svg>Inicio
     </button>
     <button class="nav-btn" data-view="buscar" style="--nav-c:#1C7A8C">
       <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>Buscar
     </button>
-    <div class="nav-role-switch">
-      <button class="nav-btn" id="navClientBtn" data-view="client" style="--nav-c:#2E8F6E">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Soy cliente
-      </button>
-      <button class="nav-btn" id="navProBtn" data-view="pro" style="--nav-c:#C05A3A">
-        <svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg>Soy profesional
-      </button>
-    </div>
+    <div class="nav-auth" id="navAuth"></div>
   </div>
   <button class="nav-menu-toggle" id="openDrawerBtn" type="button">☰ Menú</button>
+</div>
+<div class="trust-strip">
+  <span class="trust-badge"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg>Profesionales verificados</span>
+  <span class="trust-badge"><svg viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.7-4.3 4.1 1.1 5.9L12 16.7l-5.3 2.9 1.1-5.9L3.5 9.6l5.9-.7L12 3.5z"/></svg>Valoraciones reales de clientes</span>
 </div>
 
 <div class="legal-alert" id="legalPendingAlert">Aviso de configuración: faltan datos legales obligatorios en legal-config.js (razón social, NIF/CIF o domicilio).</div>
@@ -2308,26 +2341,65 @@ function setActiveNav(name){
   renderNavAccountChips();
 }
 
+async function logoutPro(){
+  await safeDelete('session-email', false).catch(()=>{});
+  session = null; account = null;
+  dashboardMode = 'ficha';
+  showToast('Cerraste sesión.');
+  showView('home');
+}
+async function logoutClient(){
+  await safeDelete('session-email-client', false).catch(()=>{});
+  clientSession = null; clientAccount = null;
+  showToast('Cerraste sesión de cliente.');
+  showView('home');
+}
+
 function renderNavAccountChips(){
-  const proBtn = document.getElementById('navProBtn');
-  if(proBtn){
-    if(session && account){
-      proBtn.classList.add('has-chip');
-      proBtn.innerHTML = `<span class="nav-account-chip"><span class="circle">${escapeHtml((account.name||'?').charAt(0).toUpperCase())}</span>${escapeHtml((account.name||'Perfil').split(' ')[0])}</span>`;
-    } else {
-      proBtn.classList.remove('has-chip');
-      proBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg>Soy profesional';
-    }
-  }
-  const clientBtn = document.getElementById('navClientBtn');
-  if(clientBtn){
-    if(clientSession && clientAccount){
-      clientBtn.classList.add('has-chip');
-      clientBtn.innerHTML = `<span class="nav-account-chip"><span class="circle">${escapeHtml((clientAccount.name||'?').charAt(0).toUpperCase())}</span>${escapeHtml((clientAccount.name||'Cliente').split(' ')[0])}</span>`;
-    } else {
-      clientBtn.classList.remove('has-chip');
-      clientBtn.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Soy cliente';
-    }
+  const wrap = document.getElementById('navAuth');
+  if(!wrap) return;
+
+  const proChip = ()=> `
+    <button class="nav-auth-chip" style="--m-c:#C05A3A" data-menu="authMenuPro" aria-haspopup="true" aria-expanded="false">
+      <span class="circle">${escapeHtml((account.name||'?').charAt(0).toUpperCase())}</span>
+      <span class="name-block">${escapeHtml((account.name||'Perfil').split(' ')[0])}<small>Profesional</small></span>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="nav-auth-menu" id="authMenuPro">
+      <button data-view="pro" style="--m-c:#C05A3A"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.5-6.2 7.5-6.2s7.5 2.2 7.5 6.2"/></svg>Mi perfil</button>
+      <div class="sep"></div>
+      <button data-action="logout-pro"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
+    </div>`;
+
+  const clientChip = ()=> `
+    <button class="nav-auth-chip" style="--m-c:#2E8F6E" data-menu="authMenuClient" aria-haspopup="true" aria-expanded="false">
+      <span class="circle">${escapeHtml((clientAccount.name||'?').charAt(0).toUpperCase())}</span>
+      <span class="name-block">${escapeHtml((clientAccount.name||'Cliente').split(' ')[0])}<small>Cliente</small></span>
+      <svg class="chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="nav-auth-menu" id="authMenuClient">
+      <button data-view="client" style="--m-c:#2E8F6E"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20c0-4 3.5-6.2 7.5-6.2s7.5 2.2 7.5 6.2"/></svg>Mi perfil</button>
+      <div class="sep"></div>
+      <button data-action="logout-client"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
+    </div>`;
+
+  const hasPro = !!(session && account);
+  const hasClient = !!(clientSession && clientAccount);
+
+  if(!hasPro && !hasClient){
+    wrap.innerHTML = `
+      <button class="nav-auth-trigger ghost" data-menu="authMenuChoose">Iniciar sesión</button>
+      <button class="nav-auth-trigger solid" data-menu="authMenuChoose">Regístrate</button>
+      <div class="nav-auth-menu" id="authMenuChoose">
+        <button data-view="client" style="--m-c:#2E8F6E"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>Busco un profesional</button>
+        <button data-view="pro" style="--m-c:#C05A3A"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg>Ofrezco mis servicios</button>
+      </div>`;
+  } else if(hasPro && !hasClient){
+    wrap.innerHTML = `<button class="nav-auth-ghostlink" data-view="client">¿Buscas un profesional?</button>${proChip()}`;
+  } else if(hasClient && !hasPro){
+    wrap.innerHTML = `<button class="nav-auth-ghostlink" data-view="pro">¿Tienes un oficio? Anúnciate</button>${clientChip()}`;
+  } else {
+    wrap.innerHTML = `${clientChip()}${proChip()}`;
   }
 }
 
@@ -2661,12 +2733,7 @@ function bindClient(){
 
   const logoutBtn = document.getElementById('client-logout');
   if(logoutBtn){
-    logoutBtn.onclick = async ()=>{
-      await safeDelete('session-email-client', false).catch(()=>{});
-      clientSession = null; clientAccount = null;
-      showToast('Cerraste sesión de cliente.');
-      showView('home');
-    };
+    logoutBtn.onclick = logoutClient;
   }
   const deleteClientBtn = document.getElementById('deleteClientAccountBtn');
   if(deleteClientBtn){
@@ -2960,13 +3027,7 @@ function bindPro(){
         currentDetailEmail = account.email;
         showView('detalle');
       };
-      document.getElementById('logoutBtn').onclick = async ()=>{
-        await safeDelete('session-email', false).catch(()=>{});
-        session = null; account = null;
-        dashboardMode = 'ficha';
-        showToast('Cerraste sesión.');
-        showView('home');
-      };
+      document.getElementById('logoutBtn').onclick = logoutPro;
       document.getElementById('deleteAccountBtn').onclick = async ()=>{
         if(!confirm('¿Eliminar tu cuenta y tu ficha pública de TodoOficios.es? Se borrarán tu perfil, tus datos del Panel de negocio y tus reseñas recibidas. Esta acción no se puede deshacer.')) return;
         const email = account.email;
@@ -5107,6 +5168,37 @@ function bindDetalle(){
 document.querySelectorAll('.nav-btn').forEach(b=>{
   b.addEventListener('click', ()=> showView(b.dataset.view));
 });
+
+const navAuth = document.getElementById('navAuth');
+if(navAuth){
+  navAuth.addEventListener('click', (e)=>{
+    const trigger = e.target.closest('[data-menu]');
+    if(trigger){
+      e.stopPropagation();
+      const menu = document.getElementById(trigger.dataset.menu);
+      const wasOpen = menu.classList.contains('open');
+      navAuth.querySelectorAll('.nav-auth-menu.open').forEach(m=>m.classList.remove('open'));
+      navAuth.querySelectorAll('[data-menu][aria-expanded]').forEach(t=>t.setAttribute('aria-expanded','false'));
+      if(!wasOpen){
+        menu.classList.add('open');
+        navAuth.querySelectorAll(`[data-menu="${trigger.dataset.menu}"]`).forEach(t=>t.setAttribute('aria-expanded','true'));
+      }
+      return;
+    }
+    const actionItem = e.target.closest('[data-action]');
+    if(actionItem){
+      if(actionItem.dataset.action === 'logout-pro') logoutPro();
+      if(actionItem.dataset.action === 'logout-client') logoutClient();
+      return;
+    }
+    const navItem = e.target.closest('[data-view]');
+    if(navItem) showView(navItem.dataset.view);
+  });
+  document.addEventListener('click', ()=>{
+    navAuth.querySelectorAll('.nav-auth-menu.open').forEach(m=>m.classList.remove('open'));
+    navAuth.querySelectorAll('[data-menu][aria-expanded]').forEach(t=>t.setAttribute('aria-expanded','false'));
+  });
+}
 
 
 const openDrawerBtn = document.getElementById('openDrawerBtn');
