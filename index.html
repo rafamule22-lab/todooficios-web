@@ -2006,12 +2006,22 @@ const PROMO_FREE_PRO_LIMIT = 300;
 const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
 const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
-const PREMIUM_PRICE_FIRST_YEAR = 4.99; // €/mes de enganche durante los primeros 12 meses pagados
-const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes a partir del mes 13
+const PREMIUM_PRICE_FIRST_YEAR = 4.99; // €/mes de enganche durante el año 1 (o los primeros PREMIUM_FOUNDER_MONTHS si es cuenta fundadora)
+const PREMIUM_PRICE_YEAR2 = 6.99;      // €/mes durante el año 2 del escalonado
+const PREMIUM_PRICE_YEAR3 = 8.99;      // €/mes durante el año 3 del escalonado
+const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes techo, a partir del año 4
+const PREMIUM_FOUNDER_MONTHS = 24;     // cuentas con premiumPromo (primeros PROMO_FREE_PRO_LIMIT profesionales) mantienen el precio de año 1 el doble de meses antes de entrar al escalonado
 const PREMIUM_DURATION_MS = 30*24*60*60*1000; // cada pago cubre 1 mes
 const PREMIUM_TRIAL_DAYS = 14; // prueba gratis de Premium para profesionales recién inscritos que no entran en la promo de lanzamiento
 const PREMIUM_TRIAL_MS = PREMIUM_TRIAL_DAYS*24*60*60*1000;
-function premiumPrice(acc){ return (acc.premiumMonthsPaid||0) < 12 ? PREMIUM_PRICE_FIRST_YEAR : PREMIUM_PRICE_RENEWAL; }
+function premiumPrice(acc){
+  const paid = acc.premiumMonthsPaid || 0;
+  const year1Months = acc.premiumPromo ? PREMIUM_FOUNDER_MONTHS : 12;
+  if(paid < year1Months) return PREMIUM_PRICE_FIRST_YEAR;
+  if(paid < year1Months + 12) return PREMIUM_PRICE_YEAR2;
+  if(paid < year1Months + 24) return PREMIUM_PRICE_YEAR3;
+  return PREMIUM_PRICE_RENEWAL;
+}
 
 // Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
 // que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
@@ -2802,7 +2812,7 @@ function renderPremiumPanelBody(account){
   return `
     <div class="premium-banner">
       <span class="premium-banner-ic">★</span>
-      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price}/mes durante el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes) da más visibilidad, hasta 10 fotos y presupuestos en PDF sin marca de agua.</span>
+      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (desde ${price}/mes, subiendo poco a poco hasta ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes a partir del año 4) da más visibilidad, hasta 10 fotos y presupuestos en PDF sin marca de agua.</span>
       ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}/mes</button>` : ''}
     </div>
     ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">${account.premiumTrial ? 'Tu prueba gratis de bienvenida ya terminó — ' : ''}Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos.</p>`}`;

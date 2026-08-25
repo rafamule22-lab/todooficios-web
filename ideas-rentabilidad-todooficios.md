@@ -8,9 +8,14 @@ probarla.
 ## Estado del negocio (referencia rápida)
 
 - Cuenta profesional gratuita para siempre, con ficha visible en búsquedas.
-- Plan Premium: 4,99 €/mes durante los primeros 12 meses pagados, 9,99 €/mes
-  desde el mes 13. Da mejor posicionamiento en búsquedas y hasta 10 fotos de
-  trabajos (gratis: 3 fotos).
+- Plan Premium, escalonado a 4 tramos (implementado 2026-08-25,
+  `premiumPrice()` en `index.html`): 4,99 €/mes el año 1, 6,99 €/mes el año 2,
+  8,99 €/mes el año 3, 9,99 €/mes techo desde el año 4. Cuentas fundadoras
+  (`premiumPromo`, primeros `PROMO_FREE_PRO_LIMIT` profesionales) mantienen el
+  precio de año 1 durante 24 meses en vez de 12 antes de entrar al escalonado.
+  Da mejor posicionamiento en búsquedas, hasta 10 fotos de trabajos (gratis: 3
+  fotos) y presupuestos en PDF sin marca de agua (gratis: PDF con "Generado
+  con TodoOficios.es").
 - Límites del plan gratuito en el Panel de negocio (`FREE_LIMITS`): 5 clientes,
   5 gastos/mes, 3 presupuestos/mes, 5 citas activas simultáneas, 5 materiales
   favoritos. Premium sin límite en ninguna herramienta.
@@ -173,18 +178,41 @@ gratuita y una Premium (`account.featuredUntil` en el futuro) en un
 navegador headless y se comprobó que cada pestaña renderiza el contenido
 correcto según el plan.
 
+## 5. Escalonado de precio Premium + precio fundador + banners actualizados (implementado 2026-08-25)
+
+Se llevaron a código tres de los pendientes del bloque 3:
+
+- **Escalonado a 4 tramos**: `premiumPrice()` en `index.html` ahora calcula
+  el precio por meses de pago acumulados (`acc.premiumMonthsPaid`) en vez de
+  un único salto a los 12 meses — año 1: 4,99 €, año 2: 6,99 €, año 3:
+  8,99 €, año 4 en adelante: 9,99 € (techo). Verificado con 15 casos de
+  prueba (con y sin `premiumPromo`) antes de aplicarlo.
+- **Precio fundador de 24 meses**: cuentas con `acc.premiumPromo` (los
+  primeros `PROMO_FREE_PRO_LIMIT` profesionales) usan 24 meses en vez de 12
+  como duración del tramo a 4,99 €/mes antes de entrar al escalonado normal
+  — vía la nueva constante `PREMIUM_FOUNDER_MONTHS`, dentro de la misma
+  función.
+- **Banners de campaña actualizados**: el banner de ventajas Premium
+  (`Main.dc.html`) sustituyó dos bullets genéricos por "Agente financiero
+  incluido" y "Asesor fiscal completo + envío al gestor"; el banner
+  comparativo (`Comparativa.dc.html`) sumó 3 filas nuevas a la tabla (Agente
+  financiero, Calendario fiscal completo, Envío de gastos al gestor).
+  Republicado en el mismo enlace:
+  [artifact](https://claude.ai/code/artifact/0aa3913f-1e9e-4b81-92e6-b829d32f9aa5).
+- La **marca de agua en el PDF de presupuestos** (mencionada como pendiente
+  en el bloque 3) resultó que ya estaba implementada en `index.html`
+  (`abrirPresupuestoPDF`, línea ~3481): PDF con "Presupuesto generado con
+  TodoOficios.es" en gratis, sin marca en Premium. No hizo falta tocar
+  código para eso.
+
 ## Pendiente de retomar
 
 - Decidir duración final del trial (14 vs 30 días) y si se pide tarjeta.
-- Diseñar la restricción de marca de agua en el PDF antes de tocar código.
 - Explorar si tiene sentido, más adelante, un sistema de créditos por
   contacto en paralelo a Premium (ver bloque 2).
-- Decidir si se implementa el escalonado a 4 tramos del Plan Premium
-  (bloque 3) y, si se aprueba, tocar `premiumPrice()` en `index.html`.
 - Elegir la ciudad/comarca faro para concentrar el arranque de la
   campaña (bloque 3) y activar el programa de referidos entre
   profesionales.
-- Si conviene, actualizar los banners de campaña (bloque 3) para reflejar
-  la nueva diferenciación por módulo del bloque 4, ya que hoy solo hablan
-  de los topes numéricos y no mencionan Agente financiero / Asesor fiscal
-  / Envío al gestor como exclusivos de Premium.
+- Actualizar el documento de Google Drive "Campaña de publicidad para
+  arrancar" con el escalonado de 4 tramos y el precio fundador de 24 meses
+  (por ahora solo reflejado en este documento y en el código).
