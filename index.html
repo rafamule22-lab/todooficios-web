@@ -1967,8 +1967,14 @@ async function getRatings(){
 }
 async function addRating(rating){
   const list = await getRatings();
-  list.push(rating);
-  return await safeSet('ratings', JSON.stringify(list), true);
+  // Un cliente solo puede tener una reseña activa por profesional: si ya había
+  // valorado a este profesional, la nueva reseña sustituye a la anterior en vez
+  // de sumarse (evita que una misma cuenta infle o hunda una media repitiendo envíos).
+  const filtered = rating.clientEmail
+    ? list.filter(r => !(r.proEmail === rating.proEmail && r.clientEmail === rating.clientEmail))
+    : list;
+  filtered.push(rating);
+  return await safeSet('ratings', JSON.stringify(filtered), true);
 }
 async function deleteRating(id){
   const list = await getRatings();
@@ -5008,17 +5014,21 @@ function bindDetalle(){
     const msgBox = document.getElementById('ratingMsg');
     msgBox.innerHTML = '';
 
+    // El formulario solo se muestra con sesión de cliente activa, pero se revalida
+    // aquí por si la sesión expiró mientras la vista estaba abierta.
+    if(!clientSession){ msgBox.innerHTML = '<div class="msg err">Debes iniciar sesión como cliente para valorar.</div>'; return; }
     if(!name){ msgBox.innerHTML = '<div class="msg err">Escribí tu nombre para dejar la valoración.</div>'; return; }
     const missing = RATING_CRITERIA.find(c => !(criteria[c.key] > 0));
     if(missing){ msgBox.innerHTML = `<div class="msg err">Puntúa "${missing.label}" de 1 a 5 estrellas.</div>`; return; }
     if(!window.__ratingRehire){ msgBox.innerHTML = '<div class="msg err">Indica si volverías a contratar a este profesional.</div>'; return; }
 
     const overall = RATING_CRITERIA.reduce((s,c)=> s + criteria[c.key], 0) / RATING_CRITERIA.length;
+    const isUpdate = RATINGS.some(r => r.proEmail === currentDetailEmail && r.clientEmail === clientSession.email);
     await setMyClientName(name);
     const saved = await addRating({
       id: 'rt'+Date.now(),
       proEmail: currentDetailEmail,
-      clientEmail: clientSession ? clientSession.email : null,
+      clientEmail: clientSession.email,
       clientName: name,
       criteria: { ...criteria },
       overall,
@@ -5031,7 +5041,7 @@ function bindDetalle(){
       msgBox.innerHTML = '<div class="msg err">No se pudo guardar tu valoración. Inténtalo nuevamente.</div>';
       return;
     }
-    showToast('¡Gracias por tu valoración!');
+    showToast(isUpdate ? 'Actualizamos tu valoración anterior. ¡Gracias!' : '¡Gracias por tu valoración!');
     showView('detalle');
   };
 
