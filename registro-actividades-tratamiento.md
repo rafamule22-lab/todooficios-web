@@ -157,6 +157,26 @@ base de datos en la nube (Supabase).
 confirmar el DPA de Google Ads/Analytics (tratamiento 12 de la checklist legal) y revisar
 si la mayor recogida de datos de navegación exige reconsiderar la designación de DPO.
 
+## 12. Facturación de la suscripción Premium — PREVISTO, NO ACTIVO (bloqueado por `PAYMENTS_ENABLED = false`)
+
+| Campo | Detalle |
+|---|---|
+| Finalidad | Emitir la factura fiscal de cada cobro de la cuota Premium (`generarFacturaPremium()` en `index.html`, tabla `invoices` en Supabase). |
+| Base legal | Cumplimiento de una obligación legal (art. 29.2.e LGT, RD 1619/2012) y ejecución contractual. |
+| Estado | Código implementado y probado (agosto 2026), pero no se emite ninguna factura real todavía: los pagos siguen desactivados (`PAYMENTS_ENABLED = false`) y, aunque se activaran, la función se niega a numerar mientras el emisor (TodoOficios.es) siga con datos fiscales pendientes en `legal-config.js`. |
+| Interesados | Profesionales con plan Premium activo. |
+| Categorías de datos | Nombre/razón social, NIF, email del profesional; importe, base, IVA y referencia de pago de PayPal. |
+| Encargados / destinatarios | Supabase Inc. (tabla `invoices`). |
+| Transferencias internacionales | Igual que el resto de tratamientos alojados en Supabase. |
+| Conservación | Mínimo 4 años (LGT), recomendable 6 (Código de Comercio). |
+
+**Aviso de seguridad (ver también `supabase-invoices-table.sql`):** la política de lectura de
+la tabla `invoices` es tan abierta como el resto de esta app (cualquiera con la anon key
+puede leer todas las facturas, no solo las propias). Es el mismo modelo que ya usa
+`kv_store`, pero aquí hay NIF real de terceros — antes de activar pagos reales conviene
+sustituirlo por Supabase Auth + una política por `profesional_email`, o mover la lectura a
+una Edge Function con la service role key.
+
 ---
 
 ## Encargados del tratamiento — resumen y estado de los contratos (DPA)
