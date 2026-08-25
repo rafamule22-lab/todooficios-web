@@ -1324,9 +1324,9 @@
         <div class="footer-contact">
           Contacto general: <a id="footerContactEmailLink" href="mailto:contacto@todooficios.es">contacto@todooficios.es</a><br>
           Soporte: <a id="footerSupportEmailLink" href="mailto:soporte@todooficios.es">soporte@todooficios.es</a><br>
-          Teléfono: <a id="footerPhoneLink" href="tel:+34910000000">+34 910 00 00 00</a>
+          <span id="footerPhoneRow">Teléfono: <a id="footerPhoneLink" href="tel:+34910000000">+34 910 00 00 00</a></span>
         </div>
-        <div class="footer-legal-data">
+        <div class="footer-legal-data" id="footerLegalIdentity">
           Titular: <strong id="footerRazonSocial">PENDIENTE_RAZON_SOCIAL</strong><br>
           NIF/CIF: <span id="footerNifCif">PENDIENTE_NIF_CIF</span><br>
           Domicilio: <span id="footerDomicilio">PENDIENTE_DOMICILIO_FISCAL</span>
@@ -1749,14 +1749,17 @@ function hasPendingLegalData(legal){
   const required = [legal.razonSocial, legal.nifCif, legal.domicilio];
   return required.some(v => !v || String(v).trim() === '' || String(v).includes('PENDIENTE_'));
 }
+const PLACEHOLDER_PHONE = '+34 910 00 00 00';
 function applyLegalProfileToFooter(){
   const legal = getLegalProfile();
   const contactLink = document.getElementById('footerContactEmailLink');
   const supportLink = document.getElementById('footerSupportEmailLink');
   const phoneLink = document.getElementById('footerPhoneLink');
+  const phoneRow = document.getElementById('footerPhoneRow');
   const razonSocialEl = document.getElementById('footerRazonSocial');
   const nifCifEl = document.getElementById('footerNifCif');
   const domicilioEl = document.getElementById('footerDomicilio');
+  const legalIdentityEl = document.getElementById('footerLegalIdentity');
   const socialLinksEl = document.getElementById('footerSocialLinks');
   if(contactLink){
     contactLink.textContent = legal.emailContacto;
@@ -1766,11 +1769,20 @@ function applyLegalProfileToFooter(){
     supportLink.textContent = legal.emailSoporte;
     supportLink.href = `mailto:${legal.emailSoporte}`;
   }
-  if(phoneLink){
+  // El número por defecto es un placeholder (todo ceros), no un teléfono real: mientras no se
+  // sustituya en legal-config.js, es mejor no mostrar ningún teléfono que mostrar uno que no
+  // existe — un visitante que llame a un número falso pierde más confianza que no ver ninguno.
+  const hasRealPhone = legal.telefono && legal.telefono.trim() !== PLACEHOLDER_PHONE;
+  if(phoneRow) phoneRow.style.display = hasRealPhone ? '' : 'none';
+  if(phoneLink && hasRealPhone){
     const digits = legal.telefono.replace(/\s+/g, '');
     phoneLink.textContent = legal.telefono;
     phoneLink.href = `tel:${digits}`;
   }
+  // Igual con la razón social/NIF/domicilio: mientras sigan siendo "PENDIENTE_...", se oculta el
+  // bloque entero en vez de imprimir ese texto a cualquier visitante que llegue al pie de página.
+  const legalDataReady = !hasPendingLegalData(legal);
+  if(legalIdentityEl) legalIdentityEl.style.display = legalDataReady ? '' : 'none';
   if(razonSocialEl) razonSocialEl.textContent = legal.razonSocial;
   if(nifCifEl) nifCifEl.textContent = legal.nifCif;
   if(domicilioEl) domicilioEl.textContent = legal.domicilio;
@@ -1791,10 +1803,14 @@ function applyLegalComplianceWarning(){
 function applyStorageModeWarning(){
   const alertEl = document.getElementById('storageModeAlert');
   if(!alertEl) return;
-  if(isSharedStorageAvailable()){
-    alertEl.classList.remove('show');
-  } else {
+  // Aviso para quien desarrolla, no para quien visita: si Supabase no responde en producción
+  // (caída puntual, CDN bloqueado por un adblocker...), la app ya cae sola a almacenamiento
+  // local — no hace falta asustar al visitante con un mensaje técnico de configuración.
+  const isLocalEnv = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if(isLocalEnv && !isSharedStorageAvailable()){
     alertEl.classList.add('show');
+  } else {
+    alertEl.classList.remove('show');
   }
 }
 
