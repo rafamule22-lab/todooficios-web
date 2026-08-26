@@ -185,6 +185,10 @@
     background:transparent; border:1px solid rgba(247,245,240,0.25); color:var(--paper-light);
     padding:9px 14px; border-radius:7px; font-size:13.5px; font-weight:600;
   }
+
+  .tb-row1{display:contents;}
+  .tb-account-chip{display:none; background:transparent; border:none; padding:0; cursor:pointer; flex-shrink:0; color:var(--paper-light); font:inherit;}
+  .tb-account-chip.show{display:inline-flex;}
   .mason-mascot{
     display:inline-block; flex-shrink:0;
     width:155px; height:56px; margin-left:8px;
@@ -1052,7 +1056,8 @@
 
   @media (max-width:768px){
     .topbar{padding:16px 14px; flex-direction:column; align-items:flex-start; gap:10px;}
-    .brand{width:100%;}
+    .tb-row1{display:flex; align-items:center; justify-content:space-between; width:100%; gap:10px;}
+    .brand{width:auto; flex:1; min-width:0;}
     .brand-mark{height:72px;}
     .brand-tag{font-size:14px;}
     .nav-links{display:none;}
@@ -1204,10 +1209,13 @@
   </div>
 </div>
 <div class="topbar">
-  <button class="brand" type="button" id="brandHomeBtn" aria-label="Ir a inicio">
-    <img class="brand-mark" src="assets/logo.png" alt="">
-    <div class="brand-tag">TodoOficios.es</div>
-  </button>
+  <div class="tb-row1">
+    <button class="brand" type="button" id="brandHomeBtn" aria-label="Ir a inicio">
+      <img class="brand-mark" src="assets/logo.png" alt="">
+      <div class="brand-tag">TodoOficios.es</div>
+    </button>
+    <button class="tb-account-chip" id="tbAccountChip" type="button" data-view="pro"></button>
+  </div>
   <div class="nav-links">
     <button class="nav-btn" data-view="home">Inicio</button>
     <button class="nav-btn" id="navProBtn" data-view="pro">Soy profesional</button>
@@ -2479,6 +2487,19 @@ function renderNavAccountChips(){
     } else {
       clientBtn.classList.remove('has-chip');
       clientBtn.textContent = 'Soy cliente';
+    }
+  }
+
+  const tbChip = document.getElementById('tbAccountChip');
+  if(tbChip){
+    const who = (session && account) ? {name:account.name, view:'pro'} : (clientSession && clientAccount) ? {name:clientAccount.name, view:'client'} : null;
+    if(who){
+      tbChip.classList.add('show');
+      tbChip.dataset.view = who.view;
+      tbChip.innerHTML = `<span class="nav-account-chip"><span class="circle">${escapeHtml((who.name||'?').charAt(0).toUpperCase())}</span>${escapeHtml((who.name||'Perfil').split(' ')[0])}</span>`;
+    } else {
+      tbChip.classList.remove('show');
+      tbChip.innerHTML = '';
     }
   }
 }
