@@ -155,7 +155,10 @@
     position:sticky; top:0; z-index:20;
     box-shadow:0 2px 18px rgba(0,0,0,0.12);
   }
-  .brand{display:flex; align-items:center; gap:16px; flex:1; min-width:0;}
+  .brand{
+    display:flex; align-items:center; gap:16px; flex:1; min-width:0;
+    background:transparent; border:none; padding:0; color:inherit; text-align:left; cursor:pointer; font:inherit;
+  }
   .brand-mark{height:96px; width:auto; flex-shrink:0; filter:invert(1);}
   .brand-tag{font-size:17px; opacity:0.98; letter-spacing:0.04em; text-transform:none; font-family:'IBM Plex Sans'; font-weight:700;}
   .nav-links{display:flex; gap:6px; margin-left:auto;}
@@ -1169,10 +1172,10 @@
   </div>
 </div>
 <div class="topbar">
-  <div class="brand">
-    <img class="brand-mark" src="assets/logo.png" alt="TodoOficios.es">
+  <button class="brand" type="button" id="brandHomeBtn" aria-label="Ir a inicio">
+    <img class="brand-mark" src="assets/logo.png" alt="">
     <div class="brand-tag">TodoOficios.es</div>
-  </div>
+  </button>
   <div class="nav-links">
     <button class="nav-btn" data-view="home">Inicio</button>
     <button class="nav-btn" id="navProBtn" data-view="pro">Soy profesional</button>
@@ -1907,9 +1910,9 @@ function haversineKm(a, b){
 /* ======================= CUENTAS (solo profesionales) ======================= */
 async function getAllProfessionals(){
   const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+  const rawAccounts = await Promise.all(index.map(email => safeGet('account:'+email, true)));
   const list = [];
-  for(const email of index){
-    const raw = await safeGet('account:'+email, true);
+  for(const raw of rawAccounts){
     if(!raw) continue;
     const acc = JSON.parse(raw);
     if(acc.type === 'course-provider') continue;
@@ -1997,6 +2000,7 @@ let RATINGS = [];
 let currentDetailEmail = null;
 let pendingFeaturedEmail = null;
 let activeGroupFilter = null;
+let buscarProsCache = [];  // profesionales ya ordenados, cargados una vez al entrar a "Buscar"
 let proAuthMode = 'registro'; // 'registro' | 'login', solo aplica si no hay sesión profesional
 let clientAuthMode = 'registro';
 
@@ -4716,7 +4720,8 @@ function proCardHTML(p){
 }
 
 async function renderBuscar(){
-  const pros = applyFilters(sortPros(await getAllProfessionals()), '');
+  buscarProsCache = sortPros(await getAllProfessionals());
+  const pros = applyFilters(buscarProsCache, '');
   return `
   <div class="section-label">Buscar profesional</div>
   <div class="section-heading">¿Qué necesitas resolver hoy?</div>
@@ -4755,9 +4760,9 @@ function bindBuscar(){
   const textInput = document.getElementById('sf-text');
   const dropdown = document.getElementById('sfDropdown');
 
-  const doFilter = async ()=>{
+  const doFilter = ()=>{
     const q = textInput.value;
-    const pros = applyFilters(sortPros(await getAllProfessionals()), q);
+    const pros = applyFilters(buscarProsCache, q);
     document.getElementById('results-list').innerHTML = pros.length ? pros.map(proCardHTML).join('') : '<div class="empty-state">No encontramos resultados para tu búsqueda.</div>';
     bindResultButtons();
   };
@@ -5085,6 +5090,7 @@ function bindDetalle(){
 document.querySelectorAll('.nav-btn').forEach(b=>{
   b.addEventListener('click', ()=> showView(b.dataset.view));
 });
+document.getElementById('brandHomeBtn')?.addEventListener('click', ()=> showView('home'));
 
 
 const openDrawerBtn = document.getElementById('openDrawerBtn');
