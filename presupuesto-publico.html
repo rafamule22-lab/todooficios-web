@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presupuesto | TodoOficios.es</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="icon" href="assets/icon-512.png" type="image/png" sizes="512x512">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#141412; --ink-soft:#4a4842; --paper:#FFFFFF; --paper-light:#F3F3F1;
+    --amber:#F2B705; --amber-deep:#D9A400; --purple:#7458C2; --line:rgba(20,20,18,0.15);
+    --ok:#2E8F6E; --bad:#C05A3A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'IBM Plex Sans',sans-serif;background:var(--paper-light);color:var(--ink);line-height:1.5;}
+  h1,h2,h3{font-family:'Space Grotesk',sans-serif;margin:0;}
+  .top{background:var(--ink);color:var(--paper-light);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .top a{color:inherit;text-decoration:none;font-size:13px;border:1px solid rgba(247,245,240,0.25);border-radius:7px;padding:8px 12px;}
+  .top a:hover{background:rgba(247,245,240,0.1);}
+  .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 70px;}
+  .state{padding:60px 16px;text-align:center;color:var(--ink-soft);}
+  .doc{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px 26px;box-shadow:0 12px 30px rgba(0,0,0,0.06);}
+  .doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:3px solid var(--ink);padding-bottom:16px;margin-bottom:20px;flex-wrap:wrap;}
+  .doc-brand{display:flex;align-items:center;gap:12px;}
+  .doc-brand .ic{width:44px;height:44px;border-radius:10px;background:var(--purple);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+  .doc-brand .ic svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .doc-brand .ic img{width:100%;height:100%;object-fit:cover;}
+  .doc-brand h2{font-size:19px;margin-bottom:3px;}
+  .doc-brand .meta{font-size:12.5px;color:var(--ink-soft);line-height:1.55;}
+  .doc-num{text-align:right;font-family:'IBM Plex Mono',monospace;}
+  .doc-num .n{font-size:14px;font-weight:700;}
+  .doc-num .d{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .two-col{display:flex;gap:28px;flex-wrap:wrap;margin-bottom:22px;}
+  .box h3{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--purple);margin:0 0 6px;font-weight:700;}
+  .box div{font-size:12.5px;line-height:1.55;}
+  table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:13px;}
+  th{text-align:left;font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.05em;color:var(--purple);border-bottom:2px solid var(--ink);padding:8px 6px;font-weight:700;}
+  td{padding:9px 6px;border-bottom:1px solid #eee;}
+  tbody tr:nth-child(even) td{background:#faf9f7;}
+  .totales{margin-left:auto;width:290px;max-width:100%;}
+  .totales div{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;font-family:'IBM Plex Mono',monospace;color:#555;}
+  .totales .total{font-weight:700;font-size:16px;color:var(--ink);border-top:2px solid var(--ink);margin-top:6px;padding:9px 10px 7px;background:#fff8e1;margin-left:-10px;margin-right:-10px;}
+  .condiciones{margin-top:22px;font-size:12.5px;color:var(--ink-soft);line-height:1.6;border-left:3px solid var(--purple);padding-left:12px;}
+  .fotos{margin-top:22px;}
+  .fotos h3{font-family:'IBM Plex Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;color:var(--purple);margin:0 0 8px;font-weight:700;}
+  .fotos-grid{display:flex;gap:10px;flex-wrap:wrap;}
+  .fotos-grid img{width:140px;height:105px;object-fit:cover;border-radius:8px;border:1px solid #eee;}
+  .action-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin-top:20px;}
+  .action-card h3{font-size:1.05rem;margin-bottom:10px;}
+  .action-card label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  .action-card input[type="text"]{width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);font-size:14px;font-family:inherit;margin-bottom:14px;}
+  .check-row{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--ink-soft);margin-bottom:16px;}
+  .action-btns{display:flex;gap:12px;flex-wrap:wrap;}
+  .btn{padding:12px 18px;border-radius:8px;font-weight:600;font-size:14px;border:none;cursor:pointer;font-family:inherit;}
+  .btn-accept{background:var(--ok);color:#fff;}
+  .btn-accept:hover{opacity:0.9;}
+  .btn-reject{background:transparent;color:var(--bad);border:1.5px solid var(--bad);}
+  .btn-reject:hover{background:rgba(192,90,58,0.08);}
+  .btn:disabled{opacity:0.5;cursor:not-allowed;}
+  .status-banner{border-radius:12px;padding:16px 20px;margin-top:20px;font-size:14px;}
+  .status-banner.ok{background:rgba(46,143,110,0.1);border:1px solid rgba(46,143,110,0.35);color:#1f6b52;}
+  .status-banner.bad{background:rgba(192,90,58,0.08);border:1.5px solid rgba(192,90,58,0.3);color:var(--bad);}
+  .status-banner.warn{background:rgba(217,164,0,0.1);border:1px solid rgba(217,164,0,0.35);color:#8a6600;}
+  .msg-err{color:var(--bad);font-size:13.5px;margin-top:10px;}
+  footer{margin-top:30px;font-size:12px;color:var(--ink-soft);text-align:center;}
+  footer a{color:var(--amber-deep);font-weight:600;text-decoration:none;}
+  @media print{ .action-card, .top{display:none;} }
+</style>
+</head>
+<body>
+  <div class="top">
+    <span class="brand">TodoOficios.es</span>
+    <a href="index.html">Ir a TodoOficios.es →</a>
+  </div>
+  <div class="wrap" id="app">
+    <div class="state">Cargando presupuesto…</div>
+  </div>
+  <script src="legal-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="presupuesto-publico.js"></script>
+</body>
+</html>

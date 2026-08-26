@@ -2317,6 +2317,50 @@ async function getNegocio(email){
 async function saveNegocio(email, data){
   return await safeSet('negocio:'+email, JSON.stringify(data), true);
 }
+
+/* ======================= PRESUPUESTO PÚBLICO (enlace de aceptación para el cliente) =======================
+   Se guarda una copia mínima y aislada del presupuesto bajo una clave propia
+   (presupuesto-publico:<shareId>), nunca el objeto "negocio" completo del profesional,
+   para que quien reciba el enlace solo pueda ver y responder a ese presupuesto concreto. */
+function generarShareId(){
+  try {
+    const bytes = new Uint8Array(12);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b=>b.toString(36)).join('').slice(0,16) + Date.now().toString(36);
+  } catch(e){ return 'sp'+Date.now()+Math.random().toString(36).slice(2,10); }
+}
+
+function presupuestoPublicoSnapshot(p, datosNegocio, cuentaProfesional){
+  const d = datosNegocio || {};
+  return {
+    numero: p.numero, fecha: p.fecha, validezDias: p.validezDias||30,
+    concepto: p.concepto||'', direccionObra: p.direccionObra||'',
+    cliente: p.cliente||'', clienteNif: p.clienteNif||'', clienteDireccion: p.clienteDireccion||'', clienteTelefono: p.clienteTelefono||'',
+    partidas: p.partidas||[], base: p.base, ivaDesglose: p.ivaDesglose || [{pct:p.ivaPct||0, base:p.base, cuota:p.cuota}],
+    cuota: p.cuota, irpfAplica: !!p.irpfAplica, irpfPct: p.irpfPct||0, irpfImporte: p.irpfImporte||0, total: p.total,
+    formaPago: p.formaPago||'Transferencia bancaria', fotos: p.fotos||[],
+    emisor: {
+      nombre: d.nombreFiscal || cuentaProfesional?.name || '', nif: d.nif||'', direccion: d.direccion||'',
+      telefono: d.telefono || cuentaProfesional?.phone || '', email: d.email || cuentaProfesional?.email || '',
+      foto: cuentaProfesional?.photo || ''
+    },
+    estado: p.estado || 'Pendiente', firmaNombre: p.firmaNombre||'', firmaFecha: p.firmaFecha||''
+  };
+}
+
+async function publicarPresupuesto(p){
+  if(!p.shareId) p.shareId = generarShareId();
+  const snapshot = presupuestoPublicoSnapshot(p, negocio.datos, account);
+  const ok = await safeSet('presupuesto-publico:'+p.shareId, JSON.stringify(snapshot), true);
+  return ok ? p.shareId : null;
+}
+
+async function comprobarRespuestaPublica(p){
+  if(!p.shareId) return null;
+  const raw = await safeGet('presupuesto-publico:'+p.shareId, true);
+  if(!raw) return null;
+  try { return JSON.parse(raw); } catch(e){ return null; }
+}
 /* Materiales favoritos: clave propia (no dentro de negocio:<email>) para que calculadoras.html
    pueda leerla/escribirla sin tocar el resto de los datos de negocio del profesional. */
 async function getMateriales(email){
@@ -3606,7 +3650,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button><button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -4170,6 +4214,7 @@ async function renderNegocio(){
           ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Reenviar PDF</button></span>`).join('')}
         </div>
       </div>` : ''}
+      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">🔄 Comprobar si algún cliente respondió</button>` : ''}
       ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
       <div id="negocio-presupuestos-list">${negocio.presupuestos.length ? negocio.presupuestos.slice().reverse().map(presupuestoRowHTML).join('') : '<div class="empty-state">Todavía no registraste presupuestos.</div>'}</div>
 
@@ -4640,7 +4685,8 @@ function bindNegocio(){
         ...orig,
         id:'p'+Date.now(), numero, fecha: todayISO(),
         partidas: (orig.partidas||[]).map(x=>({...x})),
-        estado:'Pendiente', createdAt: Date.now()
+        estado:'Pendiente', createdAt: Date.now(),
+        shareId: undefined, firmaNombre: undefined, firmaFecha: undefined
       });
       const saved = await saveNegocio(account.email, negocio);
       if(saved){ showToast(`Presupuesto ${numero} creado a partir de ${orig.numero}.`); showView('negocio'); }
@@ -4653,7 +4699,48 @@ function bindNegocio(){
       showView('negocio');
       return;
     }
+    const shareBtn = e.target.closest('[data-share-presupuesto]');
+    if(shareBtn){
+      const p = negocio.presupuestos.find(x=>x.id===shareBtn.dataset.sharePresupuesto);
+      if(!p) return;
+      shareBtn.disabled = true;
+      shareBtn.textContent = 'Preparando enlace…';
+      const yaExistia = !!p.shareId;
+      const shareId = await publicarPresupuesto(p);
+      shareBtn.disabled = false;
+      shareBtn.textContent = '🔗 Compartir con el cliente';
+      if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
+      if(!yaExistia) await saveNegocio(account.email, negocio);
+      const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
+      try { await navigator.clipboard.writeText(url); showToast('Enlace copiado: ' + url); }
+      catch(e){ showToast('Copia este enlace para tu cliente: ' + url); }
+      return;
+    }
   });
+
+  const checkRespuestasBtn = document.getElementById('pp-check-respuestas');
+  if(checkRespuestasBtn){
+    checkRespuestasBtn.onclick = async ()=>{
+      checkRespuestasBtn.disabled = true;
+      checkRespuestasBtn.textContent = 'Comprobando…';
+      const candidatos = negocio.presupuestos.filter(p=>p.shareId && p.estado==='Pendiente');
+      let cambios = 0;
+      for(const p of candidatos){
+        const publico = await comprobarRespuestaPublica(p);
+        if(publico && publico.estado && publico.estado !== 'Pendiente'){
+          p.estado = publico.estado;
+          p.firmaNombre = publico.firmaNombre||'';
+          p.firmaFecha = publico.firmaFecha||'';
+          cambios++;
+        }
+      }
+      if(cambios) await saveNegocio(account.email, negocio);
+      checkRespuestasBtn.disabled = false;
+      checkRespuestasBtn.textContent = '🔄 Comprobar si algún cliente respondió';
+      showToast(cambios ? `${cambios} presupuesto${cambios>1?'s':''} actualizado${cambios>1?'s':''}.` : 'Sin novedades por ahora.');
+      if(cambios) showView('negocio');
+    };
+  }
 
   const ppStaleBanner = document.querySelector('.pp-stale-banner');
   if(ppStaleBanner){
@@ -5113,6 +5200,7 @@ function bindPresupuestoForm(){
     }
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el presupuesto. Inténtalo de nuevo.</div>'; return; }
+    if(editando && editando.shareId) publicarPresupuesto(editando); // refresca el enlace ya compartido, sin bloquear el guardado
     negocioEditPresupuestoId = null;
     showToast(editando ? `Presupuesto ${numero} actualizado — ${formatEUR(total)}.` : `Presupuesto ${numero} creado — ${formatEUR(total)}.`);
     showView('negocio');
