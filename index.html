@@ -572,10 +572,7 @@
 
   .ng-overview{display:none;}
   .ng-overview.active{display:block;}
-  .ng-back-link{display:none;}
-  .ng-back-link.active{display:inline-flex; align-items:center; gap:5px;}
-  .ng-ficha-link{display:none;}
-  .ng-ficha-link.active{display:inline-flex; align-items:center; gap:5px;}
+  a.ng-back-link{display:inline-flex; align-items:center; margin-bottom:22px;}
 
   .nav-list{display:flex; flex-direction:column; gap:9px; margin-bottom:18px; max-width:900px;}
   .nav-card{display:flex; align-items:center; gap:13px; background:var(--paper-light); color:var(--ink); border-radius:11px; padding:13px 15px; cursor:pointer; transition:.15s; border:1.5px solid var(--line); border-left:3px solid var(--tab-accent, var(--amber-deep));}
@@ -3972,8 +3969,7 @@ async function renderNegocio(){
   if(!negocioTabs.some(t=>t.key===negocioTab)) negocioTab = 'pendientes';
 
   return `
-  <a href="javascript:void(0)" class="back-link ng-ficha-link ${negocioTab==='pendientes'?'active':''}" id="ng-ficha-link" data-view="pro">← Volver a mi ficha</a>
-  <a href="javascript:void(0)" class="back-link ng-back-link ${negocioTab==='pendientes'?'':'active'}" id="ng-back-link" data-ng-tab="pendientes">← Volver al resumen</a>
+  <a href="javascript:void(0)" class="back-link ng-back-link" id="ng-back-link"></a>
 
   <div class="ng-overview ${negocioTab==='pendientes'?'active':''}" id="ng-overview">
     <div class="ng-intro">
@@ -4394,19 +4390,30 @@ async function renderNegocio(){
   </div>`;
 }
 
+function updateNegocioBackLink(){
+  const backLink = document.getElementById('ng-back-link');
+  if(!backLink) return;
+  const arrow = '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; margin-right:4px;"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
+  if(negocioTab === 'pendientes'){
+    backLink.innerHTML = arrow + 'Volver a mi ficha';
+    backLink.onclick = ()=> showView('pro');
+  } else {
+    backLink.innerHTML = arrow + 'Volver al resumen';
+    backLink.onclick = ()=> activateNegocioTab('pendientes');
+  }
+}
+
 function activateNegocioTab(tab){
   negocioTab = tab;
   document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
   const overview = document.getElementById('ng-overview');
   if(overview) overview.classList.toggle('active', negocioTab==='pendientes');
-  const backLink = document.getElementById('ng-back-link');
-  if(backLink) backLink.classList.toggle('active', negocioTab!=='pendientes');
-  const fichaLink = document.getElementById('ng-ficha-link');
-  if(fichaLink) fichaLink.classList.toggle('active', negocioTab==='pendientes');
+  updateNegocioBackLink();
   window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function bindNegocio(){
+  updateNegocioBackLink();
   document.querySelectorAll('[data-ng-tab]').forEach(el=>{
     el.onclick = ()=> activateNegocioTab(el.dataset.ngTab);
   });
