@@ -340,6 +340,17 @@
   .drawer-sub{margin:2px 0 0 0; padding-left:10px; border-left:1px solid var(--line); display:grid; gap:6px;}
   .drawer-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:70; opacity:0; pointer-events:none; transition:opacity .25s ease;}
   .drawer-backdrop.show{opacity:1; pointer-events:auto;}
+  .quick-group{display:none; flex-direction:column; gap:7px; padding:2px 2px 16px; border-bottom:1px solid var(--line); margin-bottom:2px;}
+  .quick-group.show{display:flex;}
+  .quick-group-title{font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); padding:0 2px 2px;}
+  .quick-item{display:flex; align-items:center; gap:10px; padding:10px 9px; border-radius:11px; background:var(--paper-light); cursor:pointer;}
+  .quick-item .m-ic{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .quick-item .m-ic svg{width:12px; height:12px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .quick-item .qi-text{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .quick-item .qi-label{font-size:13px; font-weight:600;}
+  .quick-item .qi-sub{font-size:11px; color:var(--ink-soft); font-weight:500;}
+  .quick-item .count-badge{font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:700; background:rgba(217,164,0,0.18); color:var(--amber-deep); padding:2px 7px; border-radius:5px; flex-shrink:0;}
+  .quick-item .chev{font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft); flex-shrink:0;}
   .featured-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:120; display:none; align-items:center; justify-content:center; padding:18px;}
   .featured-modal-backdrop.show{display:flex;}
   .featured-modal{width:min(520px,100%); background:#fff; border-radius:18px; padding:24px; box-shadow:0 24px 60px rgba(0,0,0,0.18); position:relative;}
@@ -1130,6 +1141,8 @@
         <span>Soy cliente</span>
       </a>
     </div>
+
+    <div class="quick-group" id="drawerQuickGroup"></div>
 
     <a class="drawer-group-head" href="javascript:void(0)" data-view="app" style="text-decoration:none; color:inherit;">
       <div class="m-ic" style="background:#7458C2;"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 18h8"/></svg></div>
@@ -2502,6 +2515,38 @@ function renderNavAccountChips(){
     } else {
       tbChip.classList.remove('show');
       tbChip.innerHTML = '';
+    }
+  }
+
+  const quickGroup = document.getElementById('drawerQuickGroup');
+  if(quickGroup){
+    if(session && account){
+      quickGroup.classList.add('show');
+      quickGroup.innerHTML = `
+        <div class="quick-group-title">Tu cuenta</div>
+        <div class="quick-item" data-view="negocio">
+          <div class="m-ic" style="background:var(--amber-deep);"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="14" rx="2"/><path d="M3.5 8h17M8 14h4"/></svg></div>
+          <div class="qi-text"><span class="qi-label">Panel de negocios</span><span class="qi-sub">Gastos, agenda, clientes…</span></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="quick-item" data-view="pro">
+          <div class="m-ic" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
+          <div class="qi-text"><span class="qi-label">Mi ficha pública</span></div>
+          <span class="chev">›</span>
+        </div>`;
+    } else if(clientSession && clientAccount){
+      const favCount = (clientAccount.favorites || []).length;
+      quickGroup.classList.add('show');
+      quickGroup.innerHTML = `
+        <div class="quick-group-title">Tu cuenta</div>
+        <div class="quick-item" data-view="client">
+          <div class="m-ic" style="background:var(--c-clientes);"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.6 8 2.4 4.5 6 4c2.2-.3 4 1 6 3.3C14 5 15.8 3.7 18 4c3.6.5 5.4 4 4 7.7C19.5 16.4 12 21 12 21z"/></svg></div>
+          <div class="qi-text"><span class="qi-label">Mis favoritos</span></div>
+          ${favCount ? `<span class="count-badge">${favCount}</span>` : '<span class="chev">›</span>'}
+        </div>`;
+    } else {
+      quickGroup.classList.remove('show');
+      quickGroup.innerHTML = '';
     }
   }
 }
