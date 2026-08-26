@@ -3593,7 +3593,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -4570,6 +4570,30 @@ function bindNegocio(){
       negocio.presupuestos = negocio.presupuestos.filter(x=>x.id!==p.id);
       const saved = await saveNegocio(account.email, negocio);
       if(saved){ showToast('Presupuesto eliminado.'); showView('negocio'); }
+      return;
+    }
+    const dupBtn = e.target.closest('[data-dup-presupuesto]');
+    if(dupBtn){
+      const orig = negocio.presupuestos.find(x=>x.id===dupBtn.dataset.dupPresupuesto);
+      if(!orig) return;
+      const inicioMes = todayISO().slice(0,7);
+      const presupuestosMes = negocio.presupuestos.filter(p => (p.fecha||'').startsWith(inicioMes));
+      const premium = isProPremium(account);
+      if(!premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes){
+        showToast(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`);
+        return;
+      }
+      negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+      const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+      negocio.presupuestos.push({
+        ...orig,
+        id:'p'+Date.now(), numero, fecha: todayISO(),
+        partidas: (orig.partidas||[]).map(x=>({...x})),
+        estado:'Pendiente', createdAt: Date.now()
+      });
+      const saved = await saveNegocio(account.email, negocio);
+      if(saved){ showToast(`Presupuesto ${numero} creado a partir de ${orig.numero}.`); showView('negocio'); }
+      return;
     }
   });
 

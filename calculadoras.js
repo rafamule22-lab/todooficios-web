@@ -1961,8 +1961,10 @@
     } catch(e){ return 0; }
   }
 
-  function botonAnadirPresupuestoHTML(res){
+  function botonAnadirPresupuestoHTML(calc, res){
     if(!isProfessionalLoggedIn()) return '';
+    var cat = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0];
+    if(cat && cat.grupo === 'electricidad') return '';
     var relevantes = res.filter(function(r){ return !r.link; });
     if(!relevantes.length) return '';
     return '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">➕ Añadir a un presupuesto</button>' +
@@ -2163,7 +2165,7 @@
         out.innerHTML = res.map(function(r){
           if(r.link) return '<a class="cec-result-cta" href="' + r.href + '">' + r.label + '</a>';
           return '<div class="cec-result-row"><span>' + r.label + '</span><strong>' + r.value + (r.unit ? ' ' + r.unit : '') + '</strong></div>';
-        }).join('') + botonAnadirPresupuestoHTML(res);
+        }).join('') + botonAnadirPresupuestoHTML(calc, res);
         out.classList.remove('cec-error');
         var addBtn = document.getElementById('cecAddBudget');
         var picker = document.getElementById('cecAddPicker');
