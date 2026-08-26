@@ -47,7 +47,12 @@
   .cec-back:hover{color:var(--ink);}
   .cec-section-title{font-size:1.25rem;margin:6px 0 14px;display:flex;align-items:center;gap:10px;}
   .cec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
-  .cec-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;transition:transform .12s, box-shadow .12s;}
+  .cec-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;transition:transform .12s, box-shadow .12s;}
+  .cec-fav-star{position:absolute;top:6px;right:6px;background:none;border:none;font-size:17px;line-height:1;cursor:pointer;color:var(--line);padding:4px;z-index:2;}
+  .cec-fav-star:hover{color:var(--amber-deep);}
+  .cec-fav-star.is-fav{color:var(--amber-deep);}
+  .cec-section-title .cec-fav-star{position:static;font-size:20px;margin-left:auto;}
+  .cec-group-fav .cec-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .cec-card:hover, .cec-card:focus-visible{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.10);outline:2px solid var(--amber);}
   .cec-card-icon{margin-bottom:8px;height:40px;display:flex;align-items:center;justify-content:center;}
   .cec-card-title{font-size:13.5px;font-weight:600;line-height:1.3;}
@@ -107,6 +112,15 @@
   .mat-chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:999px;background:rgba(107,99,85,0.12);color:#6B6355;border:1px solid rgba(107,99,85,0.3);cursor:pointer;}
   .mat-chip:hover{background:rgba(107,99,85,0.22);}
   .calc-save-fav-link{font-size:12px;color:var(--ink-soft);text-decoration:underline;background:none;border:none;padding:0;cursor:pointer;margin-top:6px;display:inline-block;font-family:'IBM Plex Sans',sans-serif;}
+  .cec-draft-wrap{position:relative;}
+  .cec-draft-pill{display:inline-flex;align-items:center;gap:6px;background:var(--amber);color:var(--ink);border:none;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;}
+  .cec-draft-pill:hover{background:var(--amber-deep);}
+  .cec-draft-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.18);width:260px;max-width:80vw;padding:10px;z-index:20;}
+  .cec-draft-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 4px;font-size:12.5px;border-bottom:1px solid var(--line);}
+  .cec-draft-item:last-child{border-bottom:none;}
+  .cec-draft-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cec-draft-item button{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 4px;flex-shrink:0;}
+  .cec-draft-menu a.btn-link{display:block;margin-top:8px;text-align:center;background:var(--ink);color:#fff;border-radius:8px;padding:9px;text-decoration:none;font-size:12.5px;font-weight:600;}
   @media (max-width:520px){
     .cec-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
     .cec-form{grid-template-columns:1fr;}
@@ -116,6 +130,10 @@
 <body>
   <div class="cec-top">
     <span class="cec-brand"><span class="mic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></span>Calculadoras TodoOficios</span>
+    <div id="cecDraftWrap" class="cec-draft-wrap" style="display:none;">
+      <button type="button" class="cec-draft-pill" id="cecDraftPill"></button>
+      <div class="cec-draft-menu" id="cecDraftMenu" style="display:none;"></div>
+    </div>
     <a class="cec-home" href="index.html">← Volver a TodoOficios.es</a>
   </div>
   <main class="cec-wrap">

@@ -1985,6 +1985,7 @@
   var cloudEnabled = false;
   var cloudInitPromise = null;
   var materialesCache = [];
+  var calcFavoritasCache = [];
   var calcActualId = null;
 
   function proEmailActual(){
@@ -2052,6 +2053,36 @@
     return cloudSet('materiales:'+email, JSON.stringify(materialesCache));
   }
 
+  /* ============================================================
+     CALCULADORAS FAVORITAS: acceso rápido a las calculadoras que
+     usa habitualmente el profesional, guardadas en la misma nube.
+     ============================================================ */
+  function cargarCalcFavoritas(){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve([]);
+    return cloudGet('calc-favoritas:'+email).then(function(raw){
+      if(!raw) return [];
+      try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
+    });
+  }
+
+  function esCalcFavorita(id){ return calcFavoritasCache.indexOf(id) !== -1; }
+
+  function toggleCalcFavorita(id){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(false);
+    if(esCalcFavorita(id)) calcFavoritasCache = calcFavoritasCache.filter(function(x){ return x !== id; });
+    else calcFavoritasCache = calcFavoritasCache.concat([id]);
+    return cloudSet('calc-favoritas:'+email, JSON.stringify(calcFavoritasCache));
+  }
+
+  function favoritaStarHTML(id){
+    var on = esCalcFavorita(id);
+    return '<button type="button" class="cec-fav-star' + (on ? ' is-fav' : '') + '" data-fav-calc="' + id + '" title="' +
+      (on ? 'Quitar de favoritas' : 'Añadir a favoritas') + '" aria-label="' + (on ? 'Quitar de favoritas' : 'Añadir a favoritas') + '">' +
+      (on ? '★' : '☆') + '</button>';
+  }
+
   function chipsHTML(fieldKey){
     if(!materialesCache.length) return '';
     return '<span class="mat-chips">' + materialesCache.map(function(m){
@@ -2091,6 +2122,65 @@
       localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
       return lista.length;
     } catch(e){ return 0; }
+  }
+
+  function quitarDelBorradorPresupuesto(id){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(!proEmail) return;
+      var lista = leerBorradorPresupuesto().filter(function(d){ return d.id !== id; });
+      localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
+    } catch(e){}
+  }
+
+  function vaciarBorradorPresupuesto(){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(proEmail) localStorage.removeItem('presupuesto-draft:'+proEmail);
+    } catch(e){}
+  }
+
+  /* Indicador persistente en la barra superior: cuántas partidas van
+     acumuladas para el próximo presupuesto, aunque se navegue entre
+     varias calculadoras distintas antes de crearlo. */
+  function renderDraftIndicator(){
+    var wrap = document.getElementById('cecDraftWrap');
+    var pill = document.getElementById('cecDraftPill');
+    var menu = document.getElementById('cecDraftMenu');
+    if(!wrap || !pill || !menu) return;
+    var lista = leerBorradorPresupuesto();
+    if(!isProfessionalLoggedIn() || !lista.length){
+      wrap.style.display = 'none';
+      menu.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    pill.textContent = '🧾 ' + lista.length + (lista.length === 1 ? ' partida guardada' : ' partidas guardadas');
+    menu.innerHTML = lista.map(function(d){
+      return '<div class="cec-draft-item"><span title="' + escapeHtml(d.concepto) + '">' + escapeHtml(d.concepto) + '</span>' +
+        '<button type="button" data-remove-draft="' + d.id + '" title="Quitar" aria-label="Quitar">✕</button></div>';
+    }).join('') + '<a class="btn-link" href="index.html?view=negocio">Ir a mi presupuesto →</a>';
+  }
+
+  function bindDraftIndicator(){
+    var pill = document.getElementById('cecDraftPill');
+    var menu = document.getElementById('cecDraftMenu');
+    if(!pill || !menu) return;
+    pill.addEventListener('click', function(){
+      menu.style.display = menu.style.display === 'none' ? '' : 'none';
+    });
+    menu.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-remove-draft]');
+      if(!btn) return;
+      quitarDelBorradorPresupuesto(btn.getAttribute('data-remove-draft'));
+      renderDraftIndicator();
+      var menuAfter = document.getElementById('cecDraftMenu');
+      if(menuAfter) menuAfter.style.display = '';
+    });
+    document.addEventListener('click', function(e){
+      if(menu.style.display === 'none') return;
+      if(!menu.contains(e.target) && e.target !== pill) menu.style.display = 'none';
+    });
   }
 
   function botonAnadirPresupuestoHTML(calc, res){
@@ -2186,8 +2276,28 @@
       '</div>';
   }
 
+  function attachFavStarHandlers(container, afterToggle){
+    Array.prototype.forEach.call(container.querySelectorAll('[data-fav-calc]'), function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-fav-calc');
+        toggleCalcFavorita(id).then(afterToggle);
+      });
+    });
+  }
+
   function renderHome(){
     var html = '';
+    if(isProfessionalLoggedIn() && calcFavoritasCache.length){
+      var favCalcs = calcFavoritasCache.map(function(id){ return CALCULADORAS.filter(function(x){ return x.id === id; })[0]; }).filter(Boolean);
+      if(favCalcs.length){
+        html += '<div class="cec-group cec-group-fav"><h2 class="cec-group-title">★ Tus calculadoras</h2><div class="cec-grid">' +
+          favCalcs.map(function(c){
+            return '<div class="cec-card" data-calc="' + c.id + '" tabindex="0" role="button">' + favoritaStarHTML(c.id) +
+              '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>';
+          }).join('') + '</div></div>';
+      }
+    }
     GRUPOS.forEach(function(g){
       var cats = CATEGORIAS.filter(function(c){ return c.grupo === g.id; });
       if(cats.length === 0) return;
@@ -2211,6 +2321,11 @@
       node.addEventListener('click', function(){ goToCategory(node.getAttribute('data-cat')); });
       node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCategory(node.getAttribute('data-cat')); });
     });
+    Array.prototype.forEach.call(elHome.querySelectorAll('[data-calc]'), function(node){
+      node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+    });
+    attachFavStarHandlers(elHome, renderHome);
   }
 
   function renderCategoria(catId){
@@ -2218,6 +2333,7 @@
     var lista = CALCULADORAS.filter(function(c){ return c.cat === catId; });
     var html = '<h2 class="cec-section-title">' + catIconHTML(cat, 28) + cat.nombre + '</h2><div class="cec-grid">';
     lista.forEach(function(c){ html += '<div class="cec-card" data-calc="' + c.id + '" tabindex="0" role="button">' +
+      (isProfessionalLoggedIn() ? favoritaStarHTML(c.id) : '') +
       '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>'; });
     html += '</div>';
     elCat.innerHTML = html;
@@ -2225,6 +2341,7 @@
       node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
       node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
     });
+    attachFavStarHandlers(elCat, function(){ renderCategoria(catId); });
   }
 
   function fieldHTML(f){
@@ -2262,11 +2379,24 @@
     var calc = CALCULADORAS.filter(function(c){ return c.id === calcId; })[0];
     if(!calc) return;
     calcActualId = calc.id;
-    var html = '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + '</h2>' +
+    var html = '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + (isProfessionalLoggedIn() ? favoritaStarHTML(calc.id) : '') + '</h2>' +
       (calc.info ? '<p class="cec-info">' + calc.info + '</p>' : '') +
       '<div class="cec-form">' + calc.fields.map(fieldHTML).join('') + '</div>' +
       '<div class="cec-result" id="cecResult"></div>';
     elCalc.innerHTML = html;
+    var favStarBtn = elCalc.querySelector('[data-fav-calc]');
+    if(favStarBtn){
+      favStarBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        toggleCalcFavorita(calc.id).then(function(){
+          var on = esCalcFavorita(calc.id);
+          favStarBtn.classList.toggle('is-fav', on);
+          favStarBtn.textContent = on ? '★' : '☆';
+          favStarBtn.title = on ? 'Quitar de favoritas' : 'Añadir a favoritas';
+          favStarBtn.setAttribute('aria-label', favStarBtn.title);
+        });
+      });
+    }
     elCalc.onclick = function(e){
       var chip = e.target.closest('.mat-chip');
       if(chip){
@@ -2331,6 +2461,7 @@
               toast.textContent = 'Añadido — llevas ' + n + (n === 1 ? ' partida guardada' : ' partidas guardadas') + ' para tu próximo presupuesto';
             }
             if(picker) picker.style.display = 'none';
+            renderDraftIndicator();
           });
         }
         if(pickerListEl){
@@ -2424,6 +2555,12 @@
         materialesCache = lista;
         refrescarChipsFavoritos();
       });
+      cargarCalcFavoritas().then(function(lista){
+        calcFavoritasCache = lista;
+        if(elHome && elHome.style.display !== 'none') renderHome();
+      });
+      bindDraftIndicator();
+      renderDraftIndicator();
     }
   }
 

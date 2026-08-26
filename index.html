@@ -5001,7 +5001,7 @@ function renderApp(){
     <div class="how-card-ic">
       <div class="ic-circle" style="background:#3E5FBF;"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17.5v-10z"/></svg></div>
       <h3>Mis proyectos</h3>
-      <p>Agrupa varios cálculos en un mismo proyecto de obra antes de convertirlo en presupuesto.</p>
+      <p>Ya puedes ir guardando partidas de varias calculadoras distintas para el mismo trabajo — se acumulan en un indicador en la barra superior de Calculadoras hasta que las uses todas juntas en un presupuesto.</p>
     </div>
     <div class="how-card-ic">
       <div class="ic-circle" style="background:#7458C2;"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
@@ -5659,6 +5659,10 @@ function handleViewParam(){
   const view = params.get('view');
   if(view === 'pro' || view === 'client' || view === 'buscar'){
     showView(view);
+  }
+  if(view === 'negocio' && account){
+    negocioTab = 'presupuestos';
+    showView('negocio');
   }
 }
 
