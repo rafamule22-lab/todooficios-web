@@ -2529,7 +2529,7 @@
     elCat.style.display = name === 'cat' ? '' : 'none';
     elCalc.style.display = name === 'calc' ? '' : 'none';
     elBack.style.display = name === 'home' ? 'none' : '';
-    if(elHero) elHero.style.display = name === 'calc' ? 'none' : '';
+    if(elHero) elHero.style.display = name === 'home' ? '' : 'none';
     window.scrollTo(0,0);
   }
 
