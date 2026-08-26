@@ -687,6 +687,10 @@
   .pp-totales-row{display:flex; justify-content:space-between; padding:3px 0;}
   .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
 
+  .pp-fotos-preview{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .pp-foto-thumb{position:relative; width:70px; height:70px; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  .pp-foto-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .pp-foto-thumb button{position:absolute; top:2px; right:2px; background:rgba(20,20,18,0.65); color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:1; cursor:pointer;}
   .pp-stale-banner{background:rgba(192,90,58,0.08); border:1.5px solid rgba(192,90,58,0.3); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13.5px;}
   .pp-stale-banner strong{display:block; margin-bottom:8px; color:#C05A3A;}
   .pp-stale-list{display:flex; flex-direction:column; gap:6px;}
@@ -3671,6 +3675,10 @@ function abrirPresupuestoPDF(id){
   .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px; font-family:'IBM Plex Mono',monospace; color:#555;}
   .totales .total{font-weight:700; font-size:16px; color:#141412; border-top:2px solid #141412; margin-top:6px; padding:9px 10px 7px; background:#fff8e1; margin-left:-10px; margin-right:-10px;}
   .condiciones{margin-top:26px; font-size:12px; color:#666; line-height:1.6; border-left:3px solid #7458C2; padding-left:12px;}
+  .doc-fotos{margin-top:26px;}
+  .doc-fotos h3{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#7458C2; margin:0 0 8px; font-weight:700;}
+  .doc-fotos-grid{display:flex; gap:10px; flex-wrap:wrap;}
+  .doc-fotos-grid img{width:140px; height:105px; object-fit:cover; border-radius:8px; border:1px solid #eee;}
   .firma{margin-top:50px; display:flex; justify-content:space-between;}
   .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
   .watermark{margin-top:36px; text-align:center;}
@@ -3727,6 +3735,12 @@ function abrirPresupuestoPDF(id){
     <div><strong>Forma de pago:</strong> ${escapeHtml(p.formaPago||'Transferencia bancaria')}</div>
     <div><strong>Validez del presupuesto:</strong> ${p.validezDias||30} días desde la fecha de emisión.</div>
   </div>
+
+  ${(p.fotos||[]).length ? `
+  <div class="doc-fotos">
+    <h3>Fotos del trabajo</h3>
+    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}">`).join('')}</div>
+  </div>` : ''}
 
   <div class="firma">
     <div>Firma del profesional</div>
@@ -4241,6 +4255,12 @@ async function renderNegocio(){
           </div>
 
           <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="${escapeHtml(presupuestoEditando?.formaPago||'Transferencia bancaria')}"></div>
+
+          <div class="field">
+            <label>Fotos del trabajo <small>(opcional, máx. 3)</small></label>
+            <input type="file" id="ng-pre-fotos" accept="image/*" multiple>
+            <div id="pp-fotos-preview" class="pp-fotos-preview"></div>
+          </div>
 
           <div id="pp-totales" class="pp-totales"></div>
 
@@ -4843,6 +4863,37 @@ function bindPresupuestoForm(){
     ? editando.partidas.map(p=>({...p}))
     : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
 
+  let ppFotos = editando ? (editando.fotos||[]).slice() : [];
+  const FOTOS_MAX = 3;
+
+  function renderFotosPreview(){
+    const el = document.getElementById('pp-fotos-preview');
+    if(!el) return;
+    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
+  }
+  renderFotosPreview();
+
+  const fotosInput = document.getElementById('ng-pre-fotos');
+  if(fotosInput){
+    fotosInput.onchange = async ()=>{
+      const files = Array.from(fotosInput.files || []).slice(0, Math.max(0, FOTOS_MAX - ppFotos.length));
+      fotosInput.value = '';
+      for(const file of files){
+        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){}
+      }
+      renderFotosPreview();
+    };
+  }
+  const fotosPreviewEl = document.getElementById('pp-fotos-preview');
+  if(fotosPreviewEl){
+    fotosPreviewEl.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-remove-foto]');
+      if(!btn) return;
+      ppFotos.splice(Number(btn.dataset.removeFoto), 1);
+      renderFotosPreview();
+    });
+  }
+
   const cancelEditBtn = document.getElementById('ng-pre-cancel-edit');
   if(cancelEditBtn){
     cancelEditBtn.onclick = ()=>{ negocioEditPresupuestoId = null; showView('negocio'); };
@@ -5021,7 +5072,7 @@ function bindPresupuestoForm(){
       clienteNif: clienteObj ? (clienteObj.nif||'') : '',
       clienteDireccion: clienteObj ? (clienteObj.direccion||'') : '',
       clienteTelefono: clienteObj ? (clienteObj.telefono||'') : '',
-      concepto, direccionObra, partidas: partidasValidas,
+      concepto, direccionObra, partidas: partidasValidas, fotos: ppFotos.slice(),
       base: Math.round(subtotal*100)/100, ivaPct, cuota: Math.round(cuota*100)/100,
       irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
       total: Math.round(total*100)/100, validezDias, formaPago
