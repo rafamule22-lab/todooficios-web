@@ -84,14 +84,15 @@
     {id:'construccion', nombre:'Materiales y construcción', icon:'bricks', color:'#7458C2'},
     {id:'instalaciones', nombre:'Instalaciones', icon:'wrench', color:'#C05A3A'},
     {id:'reformas', nombre:'Reformas', icon:'house', color:'#2E8F6E'},
-    {id:'geometria', nombre:'Geometría y conversores', icon:'ruler', color:'#3E5FBF'}
+    {id:'geometria', nombre:'Geometría y conversores', icon:'ruler', color:'#3E5FBF'},
+    {id:'avanzado', nombre:'Electrónica avanzada (opcional)', icon:'chip', color:'#8f8878', colapsado:true}
   ];
   var CATEGORIAS = [
     {id:'fundamentales', grupo:'electricidad', nombre:'Fundamentales', icon:'gauge', desc:'Ley de Ohm, potencias, resistencia e impedancia'},
     {id:'instalacion', grupo:'electricidad', nombre:'Instalación y conductores', icon:'plug', desc:'Dimensionamiento, caídas de tensión, cortocircuitos y protecciones'},
-    {id:'componentes', grupo:'electricidad', nombre:'Componentes electrónicos', icon:'chip', desc:'Códigos de colores, SMD, condensadores, fusibles y más'},
-    {id:'transformadores', grupo:'electricidad', nombre:'Transformadores y potencia', icon:'coil', desc:'Relación de transformación y corrección del factor de potencia'},
-    {id:'utilidades', grupo:'electricidad', nombre:'Utilidades', icon:'battery', desc:'Baterías, antenas, CCTV, sensores y efecto Joule'},
+    {id:'componentes', grupo:'avanzado', nombre:'Componentes electrónicos', icon:'chip', desc:'Códigos de colores, SMD, condensadores, fusibles y más'},
+    {id:'transformadores', grupo:'avanzado', nombre:'Transformadores y potencia', icon:'coil', desc:'Relación de transformación y corrección del factor de potencia'},
+    {id:'utilidades', grupo:'avanzado', nombre:'Utilidades', icon:'battery', desc:'Baterías, antenas, CCTV, sensores y efecto Joule'},
     {id:'materiales', grupo:'construccion', nombre:'Materiales de obra', icon:'bricks', desc:'Ladrillos, mortero, cemento, hormigón, yeso, pladur y aislamiento'},
     {id:'suelos', grupo:'construccion', nombre:'Suelos y revestimientos', icon:'tiles', desc:'Baldosas, tarima, rodapié, mortero cola y juntas'},
     {id:'pintura', grupo:'construccion', nombre:'Pintura', icon:'brush', desc:'Superficie a pintar, litros necesarios y coste orientativo'},
@@ -313,6 +314,98 @@
      CATEGORÍA: INSTALACIÓN Y CONDUCTORES
      ============================================================ */
   var INSTALACION = [
+    {
+      id:'cuadro_mando_general', cat:'instalacion', icono:'⏚', titulo:'Cuadro de mando general de la vivienda (REBT)',
+      contieneMaterial:true,
+      info:'Lista de protecciones (IGA, diferenciales, automáticos) y metros de cable por circuito según el grado de electrificación de la ITC-BT-25. Valores orientativos y editables: comprueba siempre el proyecto y la normativa vigente antes de comprar el material.',
+      fields:[
+        {key:'suministro', label:'Tipo de suministro', type:'select', options:[
+          {value:'mono', label:'Monofásico (230V)'}, {value:'tri', label:'Trifásico (400V)'}
+        ], def:'mono'},
+        {key:'grado', label:'Grado de electrificación', type:'select', options:[
+          {value:'basica', label:'Básica (mín. 5.750 W) — circuitos C1 a C5'},
+          {value:'elevada', label:'Elevada (mín. 9.200 W) — C1 a C5 + circuitos adicionales'}
+        ], def:'basica'},
+        {key:'m_c1', label:'C1 · Iluminación', unit:'m', type:'number', def:25},
+        {key:'m_c2', label:'C2 · Tomas de uso general y frigorífico', unit:'m', type:'number', def:40},
+        {key:'m_c3', label:'C3 · Cocina y horno', unit:'m', type:'number', def:6},
+        {key:'m_c4', label:'C4 · Lavadora, lavavajillas y termo eléctrico', unit:'m', type:'number', def:8},
+        {key:'m_c5', label:'C5 · Baño y auxiliar de cocina', unit:'m', type:'number', def:10},
+        {key:'m_c7', label:'C7 · Calefacción (solo si es grado elevado; 0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c8', label:'C8 · Aire acondicionado (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c9', label:'C9 · Secadora independiente (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c10', label:'C10 · Automatización y seguridad (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c11', label:'C11 · Punto adicional de tomas/baño (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c12', label:'C12 · Punto adicional de cocina/electrodomésticos (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'dps', label:'Protección contra sobretensiones (DPS, ITC-BT-23)', type:'select', options:[
+          {value:'no', label:'No incluir'}, {value:'si', label:'Incluir'}
+        ], def:'no'}
+      ],
+      compute:function(v){
+        var suministro = gv(v,'suministro','mono'), grado = gv(v,'grado','basica'), dps = gv(v,'dps','no');
+        var esElevada = grado === 'elevada';
+        var polosPrincipal = suministro === 'tri' ? '4P (tetrapolar)' : '2P (bipolar)';
+        var polosCircuito = '2P (bipolar)'; // los circuitos de una vivienda son monofásicos aunque el suministro general sea trifásico
+
+        var CIRCUITOS = [
+          {id:'C1', nombre:'Iluminación', pia:10, mm2:1.5, key:'m_c1', siempre:true},
+          {id:'C2', nombre:'Tomas de uso general y frigorífico', pia:16, mm2:2.5, key:'m_c2', siempre:true},
+          {id:'C3', nombre:'Cocina y horno', pia:25, mm2:6, key:'m_c3', siempre:true},
+          {id:'C4', nombre:'Lavadora, lavavajillas y termo eléctrico', pia:20, mm2:4, key:'m_c4', siempre:true},
+          {id:'C5', nombre:'Baño y auxiliar de cocina', pia:16, mm2:2.5, key:'m_c5', siempre:true},
+          {id:'C7', nombre:'Calefacción', pia:16, mm2:2.5, key:'m_c7'},
+          {id:'C8', nombre:'Aire acondicionado', pia:25, mm2:6, key:'m_c8'},
+          {id:'C9', nombre:'Secadora independiente', pia:16, mm2:2.5, key:'m_c9'},
+          {id:'C10', nombre:'Automatización y seguridad', pia:10, mm2:1.5, key:'m_c10'},
+          {id:'C11', nombre:'Punto adicional de tomas/baño', pia:16, mm2:2.5, key:'m_c11'},
+          {id:'C12', nombre:'Punto adicional de cocina/electrodomésticos', pia:20, mm2:4, key:'m_c12'}
+        ];
+
+        // Los circuitos C1-C5 siempre se incluyen; los C7-C12 solo si tienen metros > 0 y el grado es elevado
+        var incluidos = CIRCUITOS.map(function(def){
+          var metros = gnOpt(v, def.key, 0);
+          if(!def.siempre){
+            if(!esElevada || metros <= 0) return null;
+          }
+          return {id:def.id, nombre:def.nombre, pia:def.pia, mm2:def.mm2, metros:metros};
+        }).filter(Boolean);
+
+        must(incluidos.some(function(c){ return c.metros > 0; }), 'Indica al menos los metros de cable de un circuito');
+
+        var igaA = esElevada ? 63 : 40;
+        var numDiferenciales = esElevada ? 2 : 1;
+
+        var res = [];
+        res.push({label:'Suministro', value: suministro === 'tri' ? 'Trifásico (400V)' : 'Monofásico (230V)', unit:''});
+        res.push({label:'Grado de electrificación', value: esElevada ? 'Elevada' : 'Básica', unit:''});
+        res.push({label:'IGA (interruptor general automático)', value: igaA + 'A, ' + polosPrincipal, unit:''});
+        res.push({label:'Diferencial(es) 30mA (tipo AC/A)', value: numDiferenciales + ' × 40A, ' + polosPrincipal, unit:''});
+        if(esElevada) res.push({label:'Distribución habitual de diferenciales', value:'1º: C1, C2, C5, C7, C8, C10, C11 · 2º: C3, C4, C9, C12', unit:''});
+        if(dps === 'si') res.push({label:'Protector de sobretensiones (DPS tipo 2)', value:'1', unit:'ud, ITC-BT-23'});
+
+        var porAmperaje = {};
+        incluidos.forEach(function(c){
+          if(c.metros <= 0) return;
+          porAmperaje[c.pia] = (porAmperaje[c.pia]||0) + 1;
+        });
+        Object.keys(porAmperaje).map(Number).sort(function(a,b){ return a-b; }).forEach(function(a){
+          res.push({label:'Automático (PIA) ' + polosCircuito + ' · ' + a + 'A', value: porAmperaje[a], unit:'uds'});
+        });
+
+        var porSeccion = {};
+        incluidos.forEach(function(c){
+          if(c.metros <= 0) return;
+          porSeccion[c.mm2] = (porSeccion[c.mm2]||0) + c.metros;
+        });
+        Object.keys(porSeccion).map(Number).sort(function(a,b){ return a-b; }).forEach(function(s){
+          res.push({label:'Cable ' + s + 'mm²', value: fmt(porSeccion[s],1), unit:'m'});
+        });
+
+        res.push({label:'Circuitos incluidos', value: incluidos.filter(function(c){ return c.metros>0; }).map(function(c){ return c.id + ' ' + c.nombre; }).join(' · '), unit:''});
+
+        return res;
+      }
+    },
     {
       id:'dimensionamiento_conductores', cat:'instalacion', icono:'⏚', titulo:'Dimensionamiento de conductores',
       info:'Sección orientativa por densidad de corriente admisible según material y método de instalación (valores simplificados; verifica siempre con las tablas de tu normativa vigente).',
@@ -1248,32 +1341,34 @@
     },
     {
       id:'mortero_albanileria', cat:'materiales', titulo:'Mortero de albañilería',
-      info:'kg = superficie × espesor(cm) × consumo por cm de espesor (orientativo ≈17 kg/m²/cm)',
+      info:'kg = superficie × espesor(cm) × consumo por cm de espesor (orientativo ≈17 kg/m²/cm), con merma por mermado/derrame',
       fields:[
         {key:'area', label:'Superficie a asentar/enlucir', unit:'m²', type:'number'},
         {key:'espesor', label:'Espesor de la capa', unit:'cm', type:'number', def:1.5},
-        {key:'consumo', label:'Consumo por cm de espesor', unit:'kg/m²/cm', type:'number', def:17}
+        {key:'consumo', label:'Consumo por cm de espesor', unit:'kg/m²/cm', type:'number', def:17},
+        {key:'merma', label:'Merma por derrame/mermado', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), esp = gn(v,'espesor'), cons = gnOpt(v,'consumo',17);
-        var kg = area*esp*cons;
+        var area = gn(v,'area'), esp = gn(v,'espesor'), cons = gnOpt(v,'consumo',17), merma = gnOpt(v,'merma',10);
+        var kg = area*esp*cons*(1+merma/100);
         return [{label:'Mortero necesario', value: fmt(kg,1), unit:'kg'},
                 {label:'Sacos de 25 kg', value: fmt(Math.ceil(kg/25),0), unit:'sacos'}];
       }
     },
     {
       id:'cemento_arena', cat:'materiales', titulo:'Cemento y arena (dosificación)',
-      info:'A partir del volumen total de mezcla y la proporción cemento:arena en volumen (densidades orientativas: cemento 1400 kg/m³, arena 1500 kg/m³)',
+      info:'A partir del volumen total de mezcla y la proporción cemento:arena en volumen (densidades orientativas: cemento 1400 kg/m³, arena 1500 kg/m³), con merma por derrame',
       fields:[
         {key:'volumen', label:'Volumen total de mezcla', unit:'m³', type:'number'},
         {key:'proporcion', label:'Proporción cemento:arena', type:'select', options:[
           {value:'2', label:'1:2 (muy resistente)'}, {value:'3', label:'1:3 (habitual)'},
           {value:'4', label:'1:4'}, {value:'5', label:'1:5 (poco exigente)'}
-        ], def:'3'}
+        ], def:'3'},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var vol = gn(v,'volumen'), r = gn(v,'proporcion');
-        var volCemento = vol/(1+r), volArena = vol*r/(1+r);
+        var vol = gn(v,'volumen'), r = gn(v,'proporcion'), merma = gnOpt(v,'merma',5);
+        var volCemento = vol/(1+r)*(1+merma/100), volArena = vol*r/(1+r)*(1+merma/100);
         var kgCemento = volCemento*1400, kgArena = volArena*1500;
         return [
           {label:'Cemento', value: fmt(kgCemento,0), unit:'kg'},
@@ -1284,15 +1379,16 @@
     },
     {
       id:'hormigon', cat:'materiales', titulo:'Hormigón necesario',
-      info:'Volumen = largo × ancho × profundidad. Cemento orientativo ≈300 kg/m³ para hormigón en masa tipo HM-20',
+      info:'Volumen = largo × ancho × profundidad, con margen por irregularidades del encofrado/terreno. Cemento orientativo ≈300 kg/m³ para hormigón en masa tipo HM-20',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
         {key:'ancho', label:'Ancho', unit:'m', type:'number'},
-        {key:'profundidad', label:'Profundidad / espesor', unit:'m', type:'number'}
+        {key:'profundidad', label:'Profundidad / espesor', unit:'m', type:'number'},
+        {key:'merma', label:'Margen por encofrado/terreno irregular', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad');
-        var vol = l*a*p;
+        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad'), merma = gnOpt(v,'merma',5);
+        var vol = l*a*p*(1+merma/100);
         return [
           {label:'Volumen de hormigón', value: fmt(vol,3), unit:'m³'},
           {label:'Cemento orientativo (≈300 kg/m³)', value: fmt(vol*300,0), unit:'kg'}
@@ -1301,15 +1397,16 @@
     },
     {
       id:'grava_arido', cat:'materiales', titulo:'Grava / árido necesario',
-      info:'Volumen = largo × ancho × profundidad. Densidad orientativa del árido ≈1.5 t/m³',
+      info:'Volumen = largo × ancho × profundidad, con margen por asentamiento/irregularidades. Densidad orientativa del árido ≈1.5 t/m³',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
         {key:'ancho', label:'Ancho', unit:'m', type:'number'},
-        {key:'profundidad', label:'Profundidad de la capa', unit:'m', type:'number'}
+        {key:'profundidad', label:'Profundidad de la capa', unit:'m', type:'number'},
+        {key:'merma', label:'Margen por asentamiento', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad');
-        var vol = l*a*p;
+        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad'), merma = gnOpt(v,'merma',10);
+        var vol = l*a*p*(1+merma/100);
         return [
           {label:'Volumen de árido', value: fmt(vol,3), unit:'m³'},
           {label:'Peso orientativo (≈1.5 t/m³)', value: fmt(vol*1.5,2), unit:'t'}
@@ -1318,27 +1415,29 @@
     },
     {
       id:'yeso_enlucido', cat:'materiales', titulo:'Yeso / enlucido',
-      info:'kg ≈ superficie × espesor(mm) × 1 kg/m²/mm (regla orientativa habitual)',
+      info:'kg ≈ superficie × espesor(mm) × 1 kg/m²/mm (regla orientativa habitual), con merma por derrame',
       fields:[
         {key:'area', label:'Superficie a enlucir', unit:'m²', type:'number'},
-        {key:'espesor', label:'Espesor de la capa', unit:'mm', type:'number', def:15}
+        {key:'espesor', label:'Espesor de la capa', unit:'mm', type:'number', def:15},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), esp = gn(v,'espesor');
-        var kg = area*esp;
+        var area = gn(v,'area'), esp = gn(v,'espesor'), merma = gnOpt(v,'merma',10);
+        var kg = area*esp*(1+merma/100);
         return [{label:'Yeso necesario', value: fmt(kg,0), unit:'kg'},
                 {label:'Sacos de 25 kg', value: fmt(Math.ceil(kg/25),0), unit:'sacos'}];
       }
     },
     {
       id:'pladur', cat:'materiales', titulo:'Pladur / placas de yeso laminado',
-      info:'Placa estándar 1.2×2.4 m ≈2.88 m², con 10% de merma para cortes',
+      info:'Placa estándar 1.2×2.4 m ≈2.88 m², con merma editable para cortes',
       fields:[
-        {key:'area', label:'Superficie a cubrir (ambas caras si aplica)', unit:'m²', type:'number'}
+        {key:'area', label:'Superficie a cubrir (ambas caras si aplica)', unit:'m²', type:'number'},
+        {key:'merma', label:'Merma para cortes', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area');
-        var placas = Math.ceil((area*1.1)/2.88);
+        var area = gn(v,'area'), merma = gnOpt(v,'merma',10);
+        var placas = Math.ceil((area*(1+merma/100))/2.88);
         return [
           {label:'Placas necesarias', value: fmt(placas,0), unit:'uds'},
           {label:'Perfilería orientativa', value: fmt(Math.round(area*0.9),0), unit:'m lineales'},
@@ -1348,15 +1447,16 @@
     },
     {
       id:'aislamiento', cat:'materiales', titulo:'Aislamiento (paneles / rollos)',
-      info:'Nº de paquetes = superficie × 1.05 (merma) / superficie que cubre cada paquete',
+      info:'Nº de paquetes = superficie × (1 + merma) / superficie que cubre cada paquete',
       fields:[
         {key:'area', label:'Superficie a aislar', unit:'m²', type:'number'},
-        {key:'cobertura', label:'Superficie que cubre cada rollo/panel', unit:'m²', type:'number', def:8}
+        {key:'cobertura', label:'Superficie que cubre cada rollo/panel', unit:'m²', type:'number', def:8},
+        {key:'merma', label:'Merma por solapes/recortes', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var area = gn(v,'area'), cob = gn(v,'cobertura');
+        var area = gn(v,'area'), cob = gn(v,'cobertura'), merma = gnOpt(v,'merma',5);
         must(cob > 0, 'La cobertura debe ser mayor que 0');
-        return [{label:'Rollos / paneles necesarios', value: fmt(Math.ceil((area*1.05)/cob),0), unit:'uds'}];
+        return [{label:'Rollos / paneles necesarios', value: fmt(Math.ceil((area*(1+merma/100))/cob),0), unit:'uds'}];
       }
     }
   ];
@@ -1387,16 +1487,17 @@
     },
     {
       id:'litros_pintura', cat:'pintura', titulo:'Litros de pintura necesarios',
-      info:'Litros = superficie × nº de manos / rendimiento del producto',
+      info:'Litros = superficie × nº de manos / rendimiento del producto, con margen para retoques',
       fields:[
         {key:'area', label:'Superficie a pintar', unit:'m²', type:'number'},
         {key:'rendimiento', label:'Rendimiento de la pintura', unit:'m²/litro', type:'number', def:6},
-        {key:'manos', label:'Número de manos', unit:'', type:'number', def:2}
+        {key:'manos', label:'Número de manos', unit:'', type:'number', def:2},
+        {key:'merma', label:'Margen para retoques', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var area = gn(v,'area'), rend = gnOpt(v,'rendimiento',6), manos = gnOpt(v,'manos',2);
+        var area = gn(v,'area'), rend = gnOpt(v,'rendimiento',6), manos = gnOpt(v,'manos',2), merma = gnOpt(v,'merma',5);
         must(rend > 0, 'El rendimiento debe ser mayor que 0');
-        var litros = (area*manos)/rend;
+        var litros = (area*manos)/rend*(1+merma/100);
         return [
           {label:'Litros necesarios', value: fmt(litros,2), unit:'L'},
           {label:'Botes de 4 L recomendados', value: fmt(Math.ceil(litros/4),0), unit:'uds'}
@@ -1470,34 +1571,36 @@
     },
     {
       id:'mortero_cola', cat:'suelos', titulo:'Mortero cola necesario',
-      info:'kg = superficie × consumo por m² (según llana/tamaño de pieza)',
+      info:'kg = superficie × consumo por m² (según llana/tamaño de pieza), con merma por derrame',
       fields:[
         {key:'area', label:'Superficie a alicatar/pavimentar', unit:'m²', type:'number'},
-        {key:'consumo', label:'Consumo', unit:'kg/m²', type:'number', def:4}
+        {key:'consumo', label:'Consumo', unit:'kg/m²', type:'number', def:4},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), cons = gnOpt(v,'consumo',4);
-        var kg = area*cons;
+        var area = gn(v,'area'), cons = gnOpt(v,'consumo',4), merma = gnOpt(v,'merma',10);
+        var kg = area*cons*(1+merma/100);
         return [{label:'Mortero cola necesario', value: fmt(kg,1), unit:'kg'},
                 {label:'Sacos de 25 kg', value: fmt(Math.ceil(kg/25),0), unit:'sacos'}];
       }
     },
     {
       id:'juntas_alicatado', cat:'suelos', titulo:'Material de juntas necesario',
-      info:'kg/m² ≈ ((L+A)/(L·A)) × espesor de pieza × ancho de junta × densidad del material',
+      info:'kg/m² ≈ ((L+A)/(L·A)) × espesor de pieza × ancho de junta × densidad del material, con merma por derrame',
       fields:[
         {key:'area', label:'Superficie alicatada', unit:'m²', type:'number'},
         {key:'lado_l', label:'Largo de la pieza', unit:'cm', type:'number', def:33},
         {key:'lado_a', label:'Ancho de la pieza', unit:'cm', type:'number', def:33},
         {key:'espesor_pieza', label:'Espesor de la pieza', unit:'mm', type:'number', def:8},
         {key:'ancho_junta', label:'Ancho de junta', unit:'mm', type:'number', def:3},
-        {key:'densidad', label:'Densidad del material de juntas', unit:'kg/m³', type:'number', def:1600}
+        {key:'densidad', label:'Densidad del material de juntas', unit:'kg/m³', type:'number', def:1600},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), L = gn(v,'lado_l')/100, A = gn(v,'lado_a')/100, esp = gn(v,'espesor_pieza')/1000, junta = gn(v,'ancho_junta')/1000, dens = gnOpt(v,'densidad',1600);
+        var area = gn(v,'area'), L = gn(v,'lado_l')/100, A = gn(v,'lado_a')/100, esp = gn(v,'espesor_pieza')/1000, junta = gn(v,'ancho_junta')/1000, dens = gnOpt(v,'densidad',1600), merma = gnOpt(v,'merma',10);
         must(L > 0 && A > 0, 'Las dimensiones de la pieza deben ser mayores que 0');
         var kgM2 = ((L+A)/(L*A))*esp*junta*dens;
-        var kg = kgM2*area;
+        var kg = kgM2*area*(1+merma/100);
         return [
           {label:'Consumo estimado', value: fmt(kgM2,3), unit:'kg/m²'},
           {label:'Material de juntas necesario', value: fmt(kg,2), unit:'kg'}
@@ -1819,6 +1922,35 @@
 
   var CALCULADORAS = FUNDAMENTALES.concat(INSTALACION, COMPONENTES, TRANSFORMADORES, UTILIDADES, MATERIALES, PINTURA, SUELOS, FONTANERIA, REFORMAS, GEOMETRIA);
 
+  /* Sinónimos de búsqueda: términos que el usuario puede escribir aunque no aparezcan
+     literalmente en el título de la calculadora. */
+  var SINONIMOS = {
+    cuadro_mando_general: ['cuadro electrico', 'cuadro de luz', 'icp', 'magnetotermico', 'diferencial', 'automaticos', 'pia', 'protecciones'],
+    dimensionamiento_conductores: ['cable', 'calibre de cable', 'seccion de cable', 'grosor de cable'],
+    dimensionamiento_conductores_protecciones: ['cable', 'calibre de cable'],
+    caida_tension: ['cable', 'voltaje que se pierde'],
+    hormigon: ['concreto'],
+    yeso_enlucido: ['escayola', 'guarnecido'],
+    pladur: ['tabique', 'carton yeso', 'panel de yeso'],
+    ladrillos_bloques: ['tabique', 'bloque de hormigon'],
+    cemento_arena: ['mortero'],
+    mortero_albanileria: ['mortero de cemento'],
+    baldosas_azulejos: ['gres', 'alicatado', 'ceramica'],
+    juntas_alicatado: ['lechada'],
+    metros_tuberia: ['canerias', 'pvc', 'multicapa'],
+    coste_pintura: ['gotele', 'presupuesto de pintura'],
+    color_resistencia_bandas: ['codigo de colores resistencias'],
+    puesta_tierra: ['toma de tierra'],
+    estimacion_reforma: ['reforma integral', 'reforma de bano', 'reforma de cocina']
+  };
+
+  function coincideBusqueda(c, t){
+    if(normaliza(c.titulo).indexOf(t) !== -1) return true;
+    var alias = SINONIMOS[c.id];
+    if(!alias) return false;
+    return alias.some(function(a){ return normaliza(a).indexOf(t) !== -1; });
+  }
+
   /* ============================================================
      MOTOR: renderizado y navegación
      ============================================================ */
@@ -1964,7 +2096,7 @@
   function botonAnadirPresupuestoHTML(calc, res){
     if(!isProfessionalLoggedIn()) return '';
     var cat = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0];
-    if(cat && cat.grupo === 'electricidad') return '';
+    if(cat && cat.grupo === 'electricidad' && !calc.contieneMaterial) return '';
     var relevantes = res.filter(function(r){ return !r.link; });
     if(!relevantes.length) return '';
     return '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">➕ Añadir a un presupuesto</button>' +
@@ -2059,15 +2191,20 @@
     GRUPOS.forEach(function(g){
       var cats = CATEGORIAS.filter(function(c){ return c.grupo === g.id; });
       if(cats.length === 0) return;
-      html += '<div class="cec-group"><h2 class="cec-group-title">' + grupoIconHTML(g) + g.nombre + '</h2><div class="cec-grid">';
+      var gridHTML = '<div class="cec-grid">';
       cats.forEach(function(c){
         var n = CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length;
-        html += '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
+        gridHTML += '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
           '<div class="cec-card-icon">' + catIconHTML(c, 40) + '</div>' +
           '<div class="cec-card-title">' + c.nombre + '</div>' +
           '<div class="cec-card-sub">' + c.desc + ' · ' + n + ' calculadoras</div></div>';
       });
-      html += '</div></div>';
+      gridHTML += '</div>';
+      if(g.colapsado){
+        html += '<details class="cec-group cec-group-advanced"><summary class="cec-group-title">' + grupoIconHTML(g) + g.nombre + '</summary>' + gridHTML + '</details>';
+      } else {
+        html += '<div class="cec-group"><h2 class="cec-group-title">' + grupoIconHTML(g) + g.nombre + '</h2>' + gridHTML + '</div>';
+      }
     });
     elHome.innerHTML = html;
     Array.prototype.forEach.call(elHome.querySelectorAll('[data-cat]'), function(node){
@@ -2246,7 +2383,7 @@
   function renderBusqueda(term){
     var t = normaliza(term);
     if(!t){ elSearchResults.style.display = 'none'; elSearchResults.innerHTML=''; return; }
-    var res = CALCULADORAS.filter(function(c){ return normaliza(c.titulo).indexOf(t) !== -1; }).slice(0, 20);
+    var res = CALCULADORAS.filter(function(c){ return coincideBusqueda(c, t); }).slice(0, 20);
     if(res.length === 0){ elSearchResults.style.display=''; elSearchResults.innerHTML = '<div class="cec-no-results">Sin resultados</div>'; return; }
     elSearchResults.style.display = '';
     elSearchResults.innerHTML = res.map(function(c){

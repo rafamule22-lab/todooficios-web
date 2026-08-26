@@ -6,7 +6,9 @@
 <title>Calculadoras Online Gratis: Electricidad, Reformas y Construcción | TodoOficios.es</title>
 <meta name="description" content="Más de 90 calculadoras online gratuitas para reformas, construcción, electricidad, pintura, suelos y fontanería: materiales, cortes, presupuestos orientativos y más. Gratis con cuenta de cliente o profesional.">
 <link rel="canonical" href="https://todooficios.es/calculadoras.html">
-<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="icon" href="assets/icon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="assets/icon-512.png">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Calculadoras Online Gratis: Electricidad, Reformas y Construcción | TodoOficios.es">
@@ -68,6 +70,13 @@
   .cec-error-msg{color:#ffb4b4;font-size:13.5px;font-family:'IBM Plex Sans',sans-serif;}
   .cec-group{margin-bottom:28px;}
   .cec-group-title{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .cec-group-advanced{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;}
+  .cec-group-advanced .cec-group-title{cursor:pointer;list-style:none;margin:0;color:var(--ink-soft);}
+  .cec-group-advanced .cec-group-title::-webkit-details-marker{display:none;}
+  .cec-group-advanced .cec-group-title::after{content:'▸';margin-left:auto;color:var(--ink-soft);font-size:13px;}
+  .cec-group-advanced[open] .cec-group-title::after{content:'▾';}
+  .cec-group-advanced[open] .cec-group-title{margin-bottom:14px;color:var(--ink);}
+  .cec-group-advanced .cec-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .cec-result-cta{margin-top:6px;display:block;background:var(--amber);color:var(--ink);text-align:center;font-weight:600;padding:12px 14px;border-radius:8px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;font-size:14px;}
   .cec-result-cta:hover{background:var(--amber-deep);}
   .cec-gate{position:fixed;inset:0;background:rgba(20,20,18,0.6);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
@@ -140,6 +149,6 @@
   </div>
   <script src="legal-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="calculadoras.js?v=6"></script>
+  <script src="calculadoras.js?v=7"></script>
 </body>
 </html>
