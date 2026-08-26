@@ -42,9 +42,10 @@
 <meta name="apple-mobile-web-app-title" content="TodoOficios">
 <meta name="application-name" content="TodoOficios.es">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="assets/logo.png" type="image/png" sizes="192x192">
-<link rel="shortcut icon" href="assets/logo.png" type="image/png">
-<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="icon" href="assets/icon-512.png" type="image/png" sizes="512x512">
+<link rel="shortcut icon" href="assets/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icon-512.png">
 <link rel="canonical" href="https://todooficios.es/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
 <meta name="description" content="Encuentra fontaneros, electricistas, albañiles y más profesionales verificados cerca de ti en TodoOficios.es.">
@@ -673,8 +674,8 @@
   .pp-mini-btn.bad{border-color:#f0bcbc; color:#a12626;}
   .pp-mini-btn:hover{border-color:var(--ink); color:var(--ink);}
 
-  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2.2fr 0.8fr 0.8fr 1fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
-  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:2fr 0.6fr 0.7fr 0.85fr 0.85fr 0.85fr 0.3fr;}
+  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2fr 0.7fr 0.7fr 0.9fr 0.65fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
+  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:1.8fr 0.55fr 0.6fr 0.8fr 0.6fr 0.8fr 0.85fr 0.3fr;}
   #pp-partidas-table .pp-coste-cell{display:none;}
   #pp-partidas-table.has-coste .pp-coste-cell{display:block;}
   .pp-partidas-head{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:2px;}
@@ -686,6 +687,16 @@
   .pp-totales-row{display:flex; justify-content:space-between; padding:3px 0;}
   .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
 
+  .pp-fotos-preview{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .pp-foto-thumb{position:relative; width:70px; height:70px; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  .pp-foto-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .pp-foto-thumb button{position:absolute; top:2px; right:2px; background:rgba(20,20,18,0.65); color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:1; cursor:pointer;}
+  .pp-stale-banner{background:rgba(192,90,58,0.08); border:1.5px solid rgba(192,90,58,0.3); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13.5px;}
+  .pp-stale-banner strong{display:block; margin-bottom:8px; color:#C05A3A;}
+  .pp-stale-list{display:flex; flex-direction:column; gap:6px;}
+  .pp-stale-list span{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .pp-filtro-input{width:100%; padding:10px 14px; border-radius:9px; border:1px solid var(--line); font-size:14px; font-family:inherit; background:#fff; margin-bottom:12px;}
+  .pp-filtro-input:focus{outline:2px solid var(--amber);}
   .pp-draft-banner{display:flex; align-items:center; gap:12px; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
   .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .pp-draft-banner .pp-draft-ic svg{width:17px; height:17px; stroke:var(--c-presupuestos); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
@@ -2172,6 +2183,7 @@ let account = null;       // cuenta del profesional logueado
 let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
 let materialesFavoritos = null; // lista de materiales guardados del profesional (clave propia: se comparte también con calculadoras.html)
 let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
+let negocioEditPresupuestoId = null; // id del presupuesto que se está editando (null = se está creando uno nuevo)
 let dashboardMode = 'ficha'; // 'ficha' muestra el perfil público del profesional; 'editar' abre el formulario
 let clientSession = null;  // {email} cliente
 let clientAccount = null;  // cuenta del cliente
@@ -2304,6 +2316,50 @@ async function getNegocio(email){
 }
 async function saveNegocio(email, data){
   return await safeSet('negocio:'+email, JSON.stringify(data), true);
+}
+
+/* ======================= PRESUPUESTO PÚBLICO (enlace de aceptación para el cliente) =======================
+   Se guarda una copia mínima y aislada del presupuesto bajo una clave propia
+   (presupuesto-publico:<shareId>), nunca el objeto "negocio" completo del profesional,
+   para que quien reciba el enlace solo pueda ver y responder a ese presupuesto concreto. */
+function generarShareId(){
+  try {
+    const bytes = new Uint8Array(12);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b=>b.toString(36)).join('').slice(0,16) + Date.now().toString(36);
+  } catch(e){ return 'sp'+Date.now()+Math.random().toString(36).slice(2,10); }
+}
+
+function presupuestoPublicoSnapshot(p, datosNegocio, cuentaProfesional){
+  const d = datosNegocio || {};
+  return {
+    numero: p.numero, fecha: p.fecha, validezDias: p.validezDias||30,
+    concepto: p.concepto||'', direccionObra: p.direccionObra||'',
+    cliente: p.cliente||'', clienteNif: p.clienteNif||'', clienteDireccion: p.clienteDireccion||'', clienteTelefono: p.clienteTelefono||'',
+    partidas: p.partidas||[], base: p.base, ivaDesglose: p.ivaDesglose || [{pct:p.ivaPct||0, base:p.base, cuota:p.cuota}],
+    cuota: p.cuota, irpfAplica: !!p.irpfAplica, irpfPct: p.irpfPct||0, irpfImporte: p.irpfImporte||0, total: p.total,
+    formaPago: p.formaPago||'Transferencia bancaria', fotos: p.fotos||[],
+    emisor: {
+      nombre: d.nombreFiscal || cuentaProfesional?.name || '', nif: d.nif||'', direccion: d.direccion||'',
+      telefono: d.telefono || cuentaProfesional?.phone || '', email: d.email || cuentaProfesional?.email || '',
+      foto: cuentaProfesional?.photo || ''
+    },
+    estado: p.estado || 'Pendiente', firmaNombre: p.firmaNombre||'', firmaFecha: p.firmaFecha||''
+  };
+}
+
+async function publicarPresupuesto(p){
+  if(!p.shareId) p.shareId = generarShareId();
+  const snapshot = presupuestoPublicoSnapshot(p, negocio.datos, account);
+  const ok = await safeSet('presupuesto-publico:'+p.shareId, JSON.stringify(snapshot), true);
+  return ok ? p.shareId : null;
+}
+
+async function comprobarRespuestaPublica(p){
+  if(!p.shareId) return null;
+  const raw = await safeGet('presupuesto-publico:'+p.shareId, true);
+  if(!raw) return null;
+  try { return JSON.parse(raw); } catch(e){ return null; }
 }
 /* Materiales favoritos: clave propia (no dentro de negocio:<email>) para que calculadoras.html
    pueda leerla/escribirla sin tocar el resto de los datos de negocio del profesional. */
@@ -2564,6 +2620,7 @@ function playMasonAnimation(){
 }
 
 async function showView(name){
+  if(name !== 'negocio') negocioEditPresupuestoId = null;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const target = document.getElementById('view-'+name);
   target.classList.add('active');
@@ -3593,7 +3650,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button><button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -3632,8 +3689,13 @@ function abrirPresupuestoPDF(id){
       <td style="text-align:center;">${escapeHtml(x.unidad)}</td>
       <td style="text-align:right;">${x.cantidad}</td>
       <td style="text-align:right;">${formatEUR(x.precio)}</td>
+      <td style="text-align:right;">${x.iva===undefined ? (p.ivaPct||0) : x.iva}%</td>
       <td style="text-align:right;">${formatEUR(x.cantidad*x.precio)}</td>
     </tr>`).join('');
+
+  // Presupuestos antiguos guardaban un único ivaPct/cuota; los nuevos traen el
+  // desglose por tipo de IVA ya calculado en ivaDesglose.
+  const ivaDesglose = p.ivaDesglose || [{pct: p.ivaPct||0, base: p.base, cuota: p.cuota}];
 
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>Presupuesto ${escapeHtml(p.numero)}</title>
@@ -3643,8 +3705,9 @@ function abrirPresupuestoPDF(id){
   body{font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
   .doc-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
   .doc-brand{display:flex; align-items:center; gap:12px;}
-  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;}
   .doc-brand .ic svg{width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .doc-brand .ic img{width:100%; height:100%; object-fit:cover;}
   .doc-head h1{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 3px;}
   .doc-head .meta{font-size:12px; color:#666; line-height:1.55;}
   .doc-num{text-align:right; font-family:'IBM Plex Mono',monospace;}
@@ -3661,6 +3724,10 @@ function abrirPresupuestoPDF(id){
   .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px; font-family:'IBM Plex Mono',monospace; color:#555;}
   .totales .total{font-weight:700; font-size:16px; color:#141412; border-top:2px solid #141412; margin-top:6px; padding:9px 10px 7px; background:#fff8e1; margin-left:-10px; margin-right:-10px;}
   .condiciones{margin-top:26px; font-size:12px; color:#666; line-height:1.6; border-left:3px solid #7458C2; padding-left:12px;}
+  .doc-fotos{margin-top:26px;}
+  .doc-fotos h3{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#7458C2; margin:0 0 8px; font-weight:700;}
+  .doc-fotos-grid{display:flex; gap:10px; flex-wrap:wrap;}
+  .doc-fotos-grid img{width:140px; height:105px; object-fit:cover; border-radius:8px; border:1px solid #eee;}
   .firma{margin-top:50px; display:flex; justify-content:space-between;}
   .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
   .watermark{margin-top:36px; text-align:center;}
@@ -3669,7 +3736,7 @@ function abrirPresupuestoPDF(id){
 </style></head><body>
   <div class="doc-head">
     <div class="doc-brand">
-      <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <div class="ic">${account.photo ? `<img src="${account.photo}" alt="">` : `<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>`}</div>
       <div>
         <h1>${escapeHtml(emisorNombre)}</h1>
         <div class="meta">
@@ -3702,13 +3769,13 @@ function abrirPresupuestoPDF(id){
   </div>
 
   <table>
-    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">Importe</th></tr></thead>
+    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">IVA</th><th style="text-align:right;">Importe</th></tr></thead>
     <tbody>${filasHTML}</tbody>
   </table>
 
   <div class="totales">
     <div><span>Subtotal</span><span>${formatEUR(p.base)}</span></div>
-    <div><span>IVA (${p.ivaPct}%)</span><span>${formatEUR(p.cuota)}</span></div>
+    ${ivaDesglose.map(d=>`<div><span>IVA (${d.pct}%)${ivaDesglose.length>1?' — base '+formatEUR(d.base):''}</span><span>${formatEUR(d.cuota)}</span></div>`).join('')}
     ${p.irpfAplica ? `<div><span>Retención IRPF (${p.irpfPct}%)</span><span>−${formatEUR(p.irpfImporte)}</span></div>` : ''}
     <div class="total"><span>TOTAL</span><span>${formatEUR(p.total)}</span></div>
   </div>
@@ -3717,6 +3784,12 @@ function abrirPresupuestoPDF(id){
     <div><strong>Forma de pago:</strong> ${escapeHtml(p.formaPago||'Transferencia bancaria')}</div>
     <div><strong>Validez del presupuesto:</strong> ${p.validezDias||30} días desde la fecha de emisión.</div>
   </div>
+
+  ${(p.fotos||[]).length ? `
+  <div class="doc-fotos">
+    <h3>Fotos del trabajo</h3>
+    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}">`).join('')}</div>
+  </div>` : ''}
 
   <div class="firma">
     <div>Firma del profesional</div>
@@ -3783,12 +3856,15 @@ function abrirResumenGastosPDF(gastos){
   win.document.close();
 }
 
+const IVA_OPCIONES = [21, 10, 4, 0];
 function ppPartidaRowHTML(idx, p){
+  const iva = p.iva===undefined ? 21 : p.iva;
   return `<div class="pp-partidas-row" data-pidx="${idx}">
     <input type="text" class="pp-desc" value="${escapeHtml(p.descripcion)}" placeholder="Ej. Sustitución de grifería">
     <select class="pp-unidad">${UNIDADES_PRESUPUESTO.map(u=>`<option value="${escapeHtml(u)}" ${p.unidad===u?'selected':''}>${escapeHtml(u)}</option>`).join('')}</select>
     <input type="number" class="pp-cantidad" min="0" step="0.01" value="${p.cantidad}">
     <input type="number" class="pp-precio" min="0" step="0.01" value="${p.precio}">
+    <select class="pp-iva" title="IVA de esta línea">${IVA_OPCIONES.map(v=>`<option value="${v}" ${Number(iva)===v?'selected':''}>${v}%</option>`).join('')}</select>
     <input type="number" class="pp-coste pp-coste-cell" min="0" step="0.01" value="${p.coste||0}">
     <span class="pp-importe-cell">${formatEUR((Number(p.cantidad)||0)*(Number(p.precio)||0))}</span>
     <button type="button" class="pp-row-remove" data-remove-idx="${idx}" title="Quitar línea">×</button>
@@ -3891,6 +3967,8 @@ async function renderNegocio(){
 
   const presupuestosPendientes = negocio.presupuestos.filter(p => p.estado === 'Pendiente' || !p.estado);
   const totalPresupuestosPendientes = presupuestosPendientes.reduce((s,p)=> s + (Number(p.total)||0), 0);
+  const diasSinRespuesta = (fecha)=> Math.floor((new Date(hoy+'T00:00:00') - new Date((fecha||hoy)+'T00:00:00')) / 86400000);
+  const presupuestosSinRespuesta = presupuestosPendientes.filter(p => diasSinRespuesta(p.fecha) >= 5).sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
 
   const citasProximas = negocio.agenda
     .filter(c => c.fecha >= hoy)
@@ -3937,6 +4015,7 @@ async function renderNegocio(){
   const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
   const materialesLimitReached = !premium && materialesFavoritos.length >= FREE_LIMITS.materiales;
   const presupuestoDraft = getPresupuestoDraft(account.email);
+  const presupuestoEditando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
 
   function premiumLockHTML(mensaje, bullets){
     return `
@@ -4128,6 +4207,15 @@ async function renderNegocio(){
   <div class="ng-tab-panel ${negocioTab==='presupuestos'?'active':''}" data-tab="presupuestos">
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('presupuestos')} Presupuestos</div>
+      ${presupuestosSinRespuesta.length ? `
+      <div class="pp-stale-banner">
+        <strong>${presupuestosSinRespuesta.length} presupuesto${presupuestosSinRespuesta.length>1?'s':''} sin respuesta desde hace 5 días o más</strong>
+        <div class="pp-stale-list">
+          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Reenviar PDF</button></span>`).join('')}
+        </div>
+      </div>` : ''}
+      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">🔄 Comprobar si algún cliente respondió</button>` : ''}
+      ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
       <div id="negocio-presupuestos-list">${negocio.presupuestos.length ? negocio.presupuestos.slice().reverse().map(presupuestoRowHTML).join('') : '<div class="empty-state">Todavía no registraste presupuestos.</div>'}</div>
 
       <details class="ng-add">
@@ -4147,8 +4235,8 @@ async function renderNegocio(){
         </div>
       </details>
 
-      ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
-      ${presupuestoDraft.length ? `
+      ${(presupuestosLimitReached && !presupuestoEditando) ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
+      ${(presupuestoDraft.length && !presupuestoEditando) ? `
       <div class="pp-draft-banner">
         <div class="pp-draft-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
         <div class="pp-draft-txt">
@@ -4159,27 +4247,28 @@ async function renderNegocio(){
         <button type="button" class="pp-draft-dismiss" id="pp-draft-dismiss" title="Descartar" aria-label="Descartar partidas guardadas">✕</button>
       </div>` : ''}
       <details class="ng-add" open>
-        <summary>Crear presupuesto</summary>
+        <summary>${presupuestoEditando ? `Editando presupuesto ${escapeHtml(presupuestoEditando.numero)}` : 'Crear presupuesto'}</summary>
         <div class="ng-add-body">
+          ${presupuestoEditando ? `<div class="msg" style="margin-bottom:12px;">Editando <strong>${escapeHtml(presupuestoEditando.numero)}</strong> — ${escapeHtml(presupuestoEditando.cliente)}. <button type="button" class="pp-mini-btn" id="ng-pre-cancel-edit">Cancelar edición</button></div>` : ''}
           <div class="field-row">
             <div class="field">
               <label>Cliente</label>
               <select id="ng-pre-cliente-select">
                 <option value="">— Cliente nuevo (escribe abajo) —</option>
-                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)}</option>`).join('')}
+                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}" ${presupuestoEditando && presupuestoEditando.clienteId===c.id ? 'selected':''}>${escapeHtml(c.nombre)}</option>`).join('')}
               </select>
             </div>
-            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa"></div>
+            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa" value="${presupuestoEditando && !presupuestoEditando.clienteId ? escapeHtml(presupuestoEditando.cliente) : ''}"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño"></div>
-            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente"></div>
+            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño" value="${escapeHtml(presupuestoEditando?.concepto||'')}"></div>
+            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente" value="${escapeHtml(presupuestoEditando?.direccionObra||'')}"></div>
           </div>
 
           <label>Partidas</label>
           <div id="pp-partidas-table">
             <div class="pp-partidas-row pp-partidas-head">
-              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
+              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span>IVA</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
             </div>
             <div id="pp-partidas-rows"></div>
           </div>
@@ -4195,34 +4284,40 @@ async function renderNegocio(){
           </div>
 
           <div class="field" style="margin-top:16px;">
-            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle"> Calcular margen (añade una columna de coste por línea)</label>
+            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle" ${presupuestoEditando && presupuestoEditando.partidas.some(p=>Number(p.coste)>0) ? 'checked':''}> Calcular margen (añade una columna de coste por línea)</label>
           </div>
 
           <div class="field-row" style="margin-top:6px;">
             <div class="field">
-              <label>IVA</label>
+              <label>IVA por defecto <small>(para líneas nuevas — cada línea puede tener el suyo)</small></label>
               <select id="ng-pre-iva">
-                <option value="21">21% (general)</option>
+                <option value="21" selected>21% (general)</option>
                 <option value="10">10% (reforma vivienda particular, +2 años)</option>
                 <option value="4">4%</option>
                 <option value="0">0% / exento</option>
               </select>
             </div>
-            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="30"></div>
+            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="${presupuestoEditando?.validezDias||30}"></div>
           </div>
 
           <div class="field" id="pp-irpf-field">
-            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle"> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
+            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle" ${presupuestoEditando?.irpfAplica ? 'checked':''}> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
             <div class="field-row" style="margin-top:8px;">
-              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15">15% (general)</option><option value="7">7% (nuevos autónomos, 1º-3º año)</option></select></div>
+              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15" ${(!presupuestoEditando || presupuestoEditando.irpfPct!==7) ? 'selected':''}>15% (general)</option><option value="7" ${presupuestoEditando?.irpfPct===7 ? 'selected':''}>7% (nuevos autónomos, 1º-3º año)</option></select></div>
             </div>
           </div>
 
-          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="Transferencia bancaria"></div>
+          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="${escapeHtml(presupuestoEditando?.formaPago||'Transferencia bancaria')}"></div>
+
+          <div class="field">
+            <label>Fotos del trabajo <small>(opcional, máx. 3)</small></label>
+            <input type="file" id="ng-pre-fotos" accept="image/*" multiple>
+            <div id="pp-fotos-preview" class="pp-fotos-preview"></div>
+          </div>
 
           <div id="pp-totales" class="pp-totales"></div>
 
-          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">Crear presupuesto</button>
+          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">${presupuestoEditando ? 'Guardar cambios' : 'Crear presupuesto'}</button>
           <div id="ng-pre-msg"></div>
         </div>
       </details>`}
@@ -4404,6 +4499,7 @@ function updateNegocioBackLink(){
 }
 
 function activateNegocioTab(tab){
+  if(tab !== 'presupuestos') negocioEditPresupuestoId = null;
   negocioTab = tab;
   document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
   const overview = document.getElementById('ng-overview');
@@ -4570,8 +4666,104 @@ function bindNegocio(){
       negocio.presupuestos = negocio.presupuestos.filter(x=>x.id!==p.id);
       const saved = await saveNegocio(account.email, negocio);
       if(saved){ showToast('Presupuesto eliminado.'); showView('negocio'); }
+      return;
+    }
+    const dupBtn = e.target.closest('[data-dup-presupuesto]');
+    if(dupBtn){
+      const orig = negocio.presupuestos.find(x=>x.id===dupBtn.dataset.dupPresupuesto);
+      if(!orig) return;
+      const inicioMes = todayISO().slice(0,7);
+      const presupuestosMes = negocio.presupuestos.filter(p => (p.fecha||'').startsWith(inicioMes));
+      const premium = isProPremium(account);
+      if(!premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes){
+        showToast(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`);
+        return;
+      }
+      negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+      const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+      negocio.presupuestos.push({
+        ...orig,
+        id:'p'+Date.now(), numero, fecha: todayISO(),
+        partidas: (orig.partidas||[]).map(x=>({...x})),
+        estado:'Pendiente', createdAt: Date.now(),
+        shareId: undefined, firmaNombre: undefined, firmaFecha: undefined
+      });
+      const saved = await saveNegocio(account.email, negocio);
+      if(saved){ showToast(`Presupuesto ${numero} creado a partir de ${orig.numero}.`); showView('negocio'); }
+      return;
+    }
+    const editBtn = e.target.closest('[data-edit-presupuesto]');
+    if(editBtn){
+      negocioEditPresupuestoId = editBtn.dataset.editPresupuesto;
+      activateNegocioTab('presupuestos');
+      showView('negocio');
+      return;
+    }
+    const shareBtn = e.target.closest('[data-share-presupuesto]');
+    if(shareBtn){
+      const p = negocio.presupuestos.find(x=>x.id===shareBtn.dataset.sharePresupuesto);
+      if(!p) return;
+      shareBtn.disabled = true;
+      shareBtn.textContent = 'Preparando enlace…';
+      const yaExistia = !!p.shareId;
+      const shareId = await publicarPresupuesto(p);
+      shareBtn.disabled = false;
+      shareBtn.textContent = '🔗 Compartir con el cliente';
+      if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
+      if(!yaExistia) await saveNegocio(account.email, negocio);
+      const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
+      try { await navigator.clipboard.writeText(url); showToast('Enlace copiado: ' + url); }
+      catch(e){ showToast('Copia este enlace para tu cliente: ' + url); }
+      return;
     }
   });
+
+  const checkRespuestasBtn = document.getElementById('pp-check-respuestas');
+  if(checkRespuestasBtn){
+    checkRespuestasBtn.onclick = async ()=>{
+      checkRespuestasBtn.disabled = true;
+      checkRespuestasBtn.textContent = 'Comprobando…';
+      const candidatos = negocio.presupuestos.filter(p=>p.shareId && p.estado==='Pendiente');
+      let cambios = 0;
+      for(const p of candidatos){
+        const publico = await comprobarRespuestaPublica(p);
+        if(publico && publico.estado && publico.estado !== 'Pendiente'){
+          p.estado = publico.estado;
+          p.firmaNombre = publico.firmaNombre||'';
+          p.firmaFecha = publico.firmaFecha||'';
+          cambios++;
+        }
+      }
+      if(cambios) await saveNegocio(account.email, negocio);
+      checkRespuestasBtn.disabled = false;
+      checkRespuestasBtn.textContent = '🔄 Comprobar si algún cliente respondió';
+      showToast(cambios ? `${cambios} presupuesto${cambios>1?'s':''} actualizado${cambios>1?'s':''}.` : 'Sin novedades por ahora.');
+      if(cambios) showView('negocio');
+    };
+  }
+
+  const ppStaleBanner = document.querySelector('.pp-stale-banner');
+  if(ppStaleBanner){
+    ppStaleBanner.addEventListener('click', (e)=>{
+      const pdfBtn = e.target.closest('[data-pdf-id]');
+      if(pdfBtn) abrirPresupuestoPDF(pdfBtn.dataset.pdfId);
+    });
+  }
+
+  const ppFiltroInput = document.getElementById('pp-filtro');
+  if(ppFiltroInput){
+    ppFiltroInput.oninput = ()=>{
+      const q = ppFiltroInput.value.trim().toLowerCase();
+      const listEl = document.getElementById('negocio-presupuestos-list');
+      const filtradas = !q ? negocio.presupuestos.slice().reverse() : negocio.presupuestos.slice().reverse().filter(p=>
+        (p.numero||'').toLowerCase().includes(q) ||
+        (p.cliente||'').toLowerCase().includes(q) ||
+        (p.estado||'Pendiente').toLowerCase().includes(q) ||
+        (p.concepto||'').toLowerCase().includes(q)
+      );
+      listEl.innerHTML = filtradas.length ? filtradas.map(presupuestoRowHTML).join('') : '<div class="empty-state">Ningún presupuesto coincide con la búsqueda.</div>';
+    };
+  }
 
   document.getElementById('negocio-clientes-list').addEventListener('click', async (e)=>{
     const delBtn = e.target.closest('[data-del-cliente]');
@@ -4760,7 +4952,49 @@ function bindPresupuestoForm(){
   // a su límite mensual (ver premiumLockHTML en renderNegocio) — sin form, nada que enlazar.
   if(!document.getElementById('ng-pre-add')) return;
 
-  let ppPartidas = [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
+  const editando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
+
+  // Los presupuestos antiguos tenían un único IVA global (editando.ivaPct) en vez de
+  // uno por línea: si una partida no trae "iva" propio, se hereda de ahí al editar.
+  let ppPartidas = editando
+    ? editando.partidas.map(p=>({...p, iva: p.iva===undefined ? (editando.ivaPct===undefined?21:editando.ivaPct) : p.iva}))
+    : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:21}];
+
+  let ppFotos = editando ? (editando.fotos||[]).slice() : [];
+  const FOTOS_MAX = 3;
+
+  function renderFotosPreview(){
+    const el = document.getElementById('pp-fotos-preview');
+    if(!el) return;
+    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
+  }
+  renderFotosPreview();
+
+  const fotosInput = document.getElementById('ng-pre-fotos');
+  if(fotosInput){
+    fotosInput.onchange = async ()=>{
+      const files = Array.from(fotosInput.files || []).slice(0, Math.max(0, FOTOS_MAX - ppFotos.length));
+      fotosInput.value = '';
+      for(const file of files){
+        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){}
+      }
+      renderFotosPreview();
+    };
+  }
+  const fotosPreviewEl = document.getElementById('pp-fotos-preview');
+  if(fotosPreviewEl){
+    fotosPreviewEl.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-remove-foto]');
+      if(!btn) return;
+      ppFotos.splice(Number(btn.dataset.removeFoto), 1);
+      renderFotosPreview();
+    });
+  }
+
+  const cancelEditBtn = document.getElementById('ng-pre-cancel-edit');
+  if(cancelEditBtn){
+    cancelEditBtn.onclick = ()=>{ negocioEditPresupuestoId = null; showView('negocio'); };
+  }
 
   function renderRows(){
     const rowsEl = document.getElementById('pp-partidas-rows');
@@ -4769,14 +5003,25 @@ function bindPresupuestoForm(){
     recalcTotales();
   }
 
+  function ivaDesgloseDe(partidas){
+    const grupos = {};
+    partidas.forEach(p=>{
+      const pct = p.iva===undefined ? 21 : Number(p.iva);
+      const base = (Number(p.cantidad)||0)*(Number(p.precio)||0);
+      if(!grupos[pct]) grupos[pct] = 0;
+      grupos[pct] += base;
+    });
+    return Object.keys(grupos).map(Number).sort((a,b)=>b-a).map(pct=>({pct, base: grupos[pct], cuota: grupos[pct]*pct/100}));
+  }
+
   function recalcTotales(){
     const subtotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.precio)||0), 0);
     const costeTotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.coste)||0), 0);
-    const ivaPct = Number(document.getElementById('ng-pre-iva')?.value || 21);
+    const desglose = ivaDesgloseDe(ppPartidas);
+    const cuota = desglose.reduce((s,d)=> s + d.cuota, 0);
     const irpfToggle = document.getElementById('pp-irpf-toggle');
     const irpfAplica = irpfToggle ? irpfToggle.checked : false;
     const irpfPct = Number(document.getElementById('ng-pre-irpf-pct')?.value || 15);
-    const cuota = subtotal * ivaPct/100;
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
     const margen = subtotal - costeTotal;
@@ -4796,7 +5041,7 @@ function bindPresupuestoForm(){
     if(totalesEl){
       totalesEl.innerHTML = `
         <div class="pp-totales-row"><span>Subtotal</span><span>${formatEUR(subtotal)}</span></div>
-        <div class="pp-totales-row"><span>IVA (${ivaPct}%)</span><span>${formatEUR(cuota)}</span></div>
+        ${desglose.map(d=>`<div class="pp-totales-row"><span>IVA (${d.pct}%)${desglose.length>1?' — base '+formatEUR(d.base):''}</span><span>${formatEUR(d.cuota)}</span></div>`).join('')}
         ${irpfAplica ? `<div class="pp-totales-row"><span>Retención IRPF (${irpfPct}%)</span><span>−${formatEUR(irpfImporte)}</span></div>` : ''}
         <div class="pp-totales-row total"><span>TOTAL</span><span>${formatEUR(total)}</span></div>
         ${hasCoste ? `<div class="pp-totales-row" style="margin-top:8px; opacity:0.75;"><span>Margen estimado</span><span>${formatEUR(margen)} (${margenPct.toFixed(1)}%)</span></div>` : ''}
@@ -4804,8 +5049,10 @@ function bindPresupuestoForm(){
     }
   }
 
+  function ivaPorDefecto(){ return Number(document.getElementById('ng-pre-iva')?.value || 21); }
+
   document.getElementById('pp-add-partida').onclick = ()=>{
-    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0});
+    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:ivaPorDefecto()});
     renderRows();
   };
 
@@ -4822,7 +5069,7 @@ function bindPresupuestoForm(){
       const m = materialesFavoritos.find(x=>x.id===item.dataset.favId);
       if(!m) return;
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
-      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0};
+      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0, iva:ivaPorDefecto()};
       if(soloVacia) ppPartidas = [nueva]; else ppPartidas.push(nueva);
       favMenu.style.display = 'none';
       renderRows();
@@ -4840,6 +5087,7 @@ function bindPresupuestoForm(){
     else if(e.target.classList.contains('pp-cantidad')) p.cantidad = e.target.value;
     else if(e.target.classList.contains('pp-precio')) p.precio = e.target.value;
     else if(e.target.classList.contains('pp-coste')) p.coste = e.target.value;
+    else if(e.target.classList.contains('pp-iva')) p.iva = Number(e.target.value);
     recalcTotales();
   });
 
@@ -4881,7 +5129,7 @@ function bindPresupuestoForm(){
     draftUseBtn.onclick = ()=>{
       const draft = getPresupuestoDraft(account.email);
       if(!draft.length) return;
-      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0}));
+      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0, iva:ivaPorDefecto()}));
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
       ppPartidas = soloVacia ? nuevas : ppPartidas.concat(nuevas);
       clearPresupuestoDraft(account.email);
@@ -4909,7 +5157,7 @@ function bindPresupuestoForm(){
       return;
     }
     const partidasValidas = ppPartidas
-      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0}))
+      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0, iva:Number(p.iva===undefined?21:p.iva)}))
       .filter(p=>p.descripcion && p.cantidad>0 && p.precio>=0);
     if(!partidasValidas.length){
       msgBox.innerHTML = '<div class="msg err">Añade al menos una línea con descripción, cantidad y precio.</div>';
@@ -4917,37 +5165,44 @@ function bindPresupuestoForm(){
     }
     const concepto = document.getElementById('ng-pre-concepto').value.trim();
     const direccionObra = document.getElementById('ng-pre-direccion-obra').value.trim();
-    const ivaPct = Number(document.getElementById('ng-pre-iva').value);
     const validezDias = Number(document.getElementById('ng-pre-validez').value) || 30;
     const formaPago = document.getElementById('ng-pre-pago').value.trim() || 'Transferencia bancaria';
     const irpfAplica = document.getElementById('pp-irpf-toggle').checked;
     const irpfPct = Number(document.getElementById('ng-pre-irpf-pct').value);
 
     const subtotal = partidasValidas.reduce((s,p)=> s + p.cantidad*p.precio, 0);
-    const cuota = subtotal * ivaPct/100;
+    const ivaDesglose = ivaDesgloseDe(partidasValidas).map(d=>({pct:d.pct, base:Math.round(d.base*100)/100, cuota:Math.round(d.cuota*100)/100}));
+    const cuota = ivaDesglose.reduce((s,d)=> s + d.cuota, 0);
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
 
-    negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
-    const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
-
-    negocio.presupuestos.push({
-      id:'p'+Date.now(), numero, fecha: todayISO(),
+    const datosComunes = {
       clienteId: clienteObj ? clienteObj.id : null,
       cliente: clienteObj ? clienteObj.nombre : clienteNombreNuevo,
       clienteTipo: clienteObj ? (clienteObj.tipo||'Particular') : 'Particular',
       clienteNif: clienteObj ? (clienteObj.nif||'') : '',
       clienteDireccion: clienteObj ? (clienteObj.direccion||'') : '',
       clienteTelefono: clienteObj ? (clienteObj.telefono||'') : '',
-      concepto, direccionObra, partidas: partidasValidas,
-      base: Math.round(subtotal*100)/100, ivaPct, cuota: Math.round(cuota*100)/100,
+      concepto, direccionObra, partidas: partidasValidas, fotos: ppFotos.slice(),
+      base: Math.round(subtotal*100)/100, ivaDesglose, cuota: Math.round(cuota*100)/100,
       irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
-      total: Math.round(total*100)/100, validezDias, formaPago,
-      estado:'Pendiente', createdAt: Date.now()
-    });
+      total: Math.round(total*100)/100, validezDias, formaPago
+    };
+
+    let numero;
+    if(editando){
+      numero = editando.numero;
+      Object.assign(editando, datosComunes);
+    } else {
+      negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+      numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+      negocio.presupuestos.push({ id:'p'+Date.now(), numero, fecha: todayISO(), ...datosComunes, estado:'Pendiente', createdAt: Date.now() });
+    }
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el presupuesto. Inténtalo de nuevo.</div>'; return; }
-    showToast(`Presupuesto ${numero} creado — ${formatEUR(total)}.`);
+    if(editando && editando.shareId) publicarPresupuesto(editando); // refresca el enlace ya compartido, sin bloquear el guardado
+    negocioEditPresupuestoId = null;
+    showToast(editando ? `Presupuesto ${numero} actualizado — ${formatEUR(total)}.` : `Presupuesto ${numero} creado — ${formatEUR(total)}.`);
     showView('negocio');
   };
 }
@@ -4976,7 +5231,7 @@ function renderApp(){
     <div class="how-card-ic">
       <div class="ic-circle" style="background:#3E5FBF;"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17.5v-10z"/></svg></div>
       <h3>Mis proyectos</h3>
-      <p>Agrupa varios cálculos en un mismo proyecto de obra antes de convertirlo en presupuesto.</p>
+      <p>Ya puedes ir guardando partidas de varias calculadoras distintas para el mismo trabajo — se acumulan en un indicador en la barra superior de Calculadoras hasta que las uses todas juntas en un presupuesto.</p>
     </div>
     <div class="how-card-ic">
       <div class="ic-circle" style="background:#7458C2;"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
@@ -5634,6 +5889,10 @@ function handleViewParam(){
   const view = params.get('view');
   if(view === 'pro' || view === 'client' || view === 'buscar'){
     showView(view);
+  }
+  if(view === 'negocio' && account){
+    negocioTab = 'presupuestos';
+    showView('negocio');
   }
 }
 
