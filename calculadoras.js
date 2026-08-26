@@ -1822,7 +1822,7 @@
   /* ============================================================
      MOTOR: renderizado y navegación
      ============================================================ */
-  var elHome, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate;
+  var elHome, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate, elHero;
 
   function isRegistered(){
     // La cuenta (account:/client:) puede vivir solo en Supabase cuando el sitio
@@ -2237,6 +2237,7 @@
     elCat.style.display = name === 'cat' ? '' : 'none';
     elCalc.style.display = name === 'calc' ? '' : 'none';
     elBack.style.display = name === 'home' ? 'none' : '';
+    if(elHero) elHero.style.display = name === 'calc' ? 'none' : '';
     window.scrollTo(0,0);
   }
 
@@ -2267,6 +2268,7 @@
     elBack = document.getElementById('cecBack');
     elBackLabel = document.getElementById('cecBackLabel');
     elGate = document.getElementById('cecGate');
+    elHero = document.getElementById('cecHero');
     renderHome();
     showView('home');
     elSearch.addEventListener('input', function(){ renderBusqueda(elSearch.value); });
