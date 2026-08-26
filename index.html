@@ -562,6 +562,8 @@
   .ng-overview.active{display:block;}
   .ng-back-link{display:none;}
   .ng-back-link.active{display:inline-flex; align-items:center; gap:5px;}
+  .ng-ficha-link{display:none;}
+  .ng-ficha-link.active{display:inline-flex; align-items:center; gap:5px;}
 
   .nav-list{display:flex; flex-direction:column; gap:9px; margin-bottom:18px; max-width:900px;}
   .nav-card{display:flex; align-items:center; gap:13px; background:var(--paper-light); color:var(--ink); border-radius:11px; padding:13px 15px; cursor:pointer; transition:.15s; border:1.5px solid var(--line); border-left:3px solid var(--tab-accent, var(--amber-deep));}
@@ -3918,7 +3920,7 @@ async function renderNegocio(){
   if(!negocioTabs.some(t=>t.key===negocioTab)) negocioTab = 'pendientes';
 
   return `
-  <a href="javascript:void(0)" class="back-link" data-view="pro">← Volver a mi ficha</a>
+  <a href="javascript:void(0)" class="back-link ng-ficha-link ${negocioTab==='pendientes'?'active':''}" id="ng-ficha-link" data-view="pro">← Volver a mi ficha</a>
   <a href="javascript:void(0)" class="back-link ng-back-link ${negocioTab==='pendientes'?'':'active'}" id="ng-back-link" data-ng-tab="pendientes">← Volver al resumen</a>
 
   <div class="ng-overview ${negocioTab==='pendientes'?'active':''}" id="ng-overview">
@@ -4347,6 +4349,9 @@ function activateNegocioTab(tab){
   if(overview) overview.classList.toggle('active', negocioTab==='pendientes');
   const backLink = document.getElementById('ng-back-link');
   if(backLink) backLink.classList.toggle('active', negocioTab!=='pendientes');
+  const fichaLink = document.getElementById('ng-ficha-link');
+  if(fichaLink) fichaLink.classList.toggle('active', negocioTab==='pendientes');
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 
 function bindNegocio(){
