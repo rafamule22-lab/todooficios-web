@@ -3983,6 +3983,10 @@ async function renderNegocio(){
       <details class="ng-add">
         <summary>Añadir gasto</summary>
         <div class="ng-add-body">
+          <button type="button" class="btn btn-outline btn-block file-btn" id="ng-gas-scan-btn">📷 Escanear factura (rellena los datos solo)
+            <input type="file" accept="image/*" capture="environment" id="ng-gas-foto">
+          </button>
+          <div id="ng-gas-scan-msg"></div>
           <div class="field-row">
             <div class="field"><label>Fecha</label><input type="date" id="ng-gas-fecha" value="${hoy}"></div>
             <div class="field"><label>Proveedor</label><input type="text" id="ng-gas-proveedor" placeholder="Ej. Ferretería Sur"></div>
@@ -4327,6 +4331,43 @@ function bindNegocio(){
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el cliente. Inténtalo de nuevo.</div>'; return; }
     showToast('Cliente añadido.');
     showView('negocio');
+  };
+
+  const ngGasFotoInput = document.getElementById('ng-gas-foto');
+  if(ngGasFotoInput) ngGasFotoInput.onchange = async (e)=>{
+    const file = e.target.files[0];
+    e.target.value = '';
+    if(!file) return;
+    const scanMsg = document.getElementById('ng-gas-scan-msg');
+    scanMsg.innerHTML = '<div class="msg">Leyendo factura…</div>';
+    try{
+      const dataUrl = await compressImage(file, 1400);
+      const client = await initSupabaseClient();
+      if(!client){
+        scanMsg.innerHTML = '<div class="msg err">Escanear factura necesita conexión con el servidor. Rellena los datos a mano.</div>';
+        return;
+      }
+      const { data, error } = await client.functions.invoke('parse-gasto', { body: { image: dataUrl } });
+      if(error || !data || data.error){
+        let msg = (data && data.error) || 'No se pudo leer la factura. Rellena los datos a mano.';
+        if(error && error.context && typeof error.context.json === 'function'){
+          try{ const errBody = await error.context.json(); if(errBody && errBody.error) msg = errBody.error; }catch(_e){}
+        }
+        scanMsg.innerHTML = `<div class="msg err">${escapeHtml(msg)}</div>`;
+        return;
+      }
+      document.getElementById('ng-gas-fecha').value = data.fecha || hoy;
+      document.getElementById('ng-gas-proveedor').value = data.proveedor || '';
+      document.getElementById('ng-gas-concepto').value = data.concepto || '';
+      if(data.categoria) document.getElementById('ng-gas-categoria').value = data.categoria;
+      if(data.total) document.getElementById('ng-gas-total').value = data.total;
+      if(data.ivaPct !== undefined && data.ivaPct !== null) document.getElementById('ng-gas-iva').value = String(data.ivaPct);
+      const avisoConfianza = data.confianza === 'baja' ? ' La foto no se leyó del todo clara: revisa bien los importes.' : '';
+      scanMsg.innerHTML = `<div class="msg ok">Factura leída. Revisa los datos y pulsa "Añadir gasto".${avisoConfianza}</div>`;
+    }catch(err){
+      console.error('parse-gasto:', err);
+      scanMsg.innerHTML = '<div class="msg err">No se pudo leer la factura. Rellena los datos a mano.</div>';
+    }
   };
 
   const ngGasAddBtn = document.getElementById('ng-gas-add');
