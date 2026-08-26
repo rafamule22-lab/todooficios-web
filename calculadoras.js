@@ -2232,20 +2232,42 @@
     });
   }
 
+  function ivaMasFrecuente(partidas, ivaPctLegacy){
+    var conteo = {};
+    (partidas||[]).forEach(function(x){
+      var pct = x.iva===undefined ? ivaPctLegacy : Number(x.iva);
+      if(pct===undefined || pct===null || isNaN(pct)) return;
+      conteo[pct] = (conteo[pct]||0) + 1;
+    });
+    var mejor = null, mejorN = -1;
+    Object.keys(conteo).forEach(function(k){ if(conteo[k] > mejorN){ mejorN = conteo[k]; mejor = Number(k); } });
+    return mejor===null ? 21 : mejor;
+  }
+
   function anadirPartidaAPresupuestoExistente(presupuestoId, concepto, importe){
     return cargarNegocioCompleto().then(function(negocio){
       if(!negocio || !Array.isArray(negocio.presupuestos)) return null;
       var p = negocio.presupuestos.filter(function(x){ return x.id === presupuestoId; })[0];
       if(!p) return null;
       if(!Array.isArray(p.partidas)) p.partidas = [];
-      p.partidas.push({descripcion: concepto, unidad:'ud', cantidad:1, precio: importe||0, coste:0});
+      var ivaLinea = ivaMasFrecuente(p.partidas, Number(p.ivaPct));
+      p.partidas.push({descripcion: concepto, unidad:'ud', cantidad:1, precio: importe||0, coste:0, iva: ivaLinea});
       var subtotal = p.partidas.reduce(function(s,x){ return s + (Number(x.cantidad)||0)*(Number(x.precio)||0); }, 0);
-      var ivaPct = Number(p.ivaPct)||0;
-      var cuota = subtotal * ivaPct/100;
+      var porTipo = {};
+      p.partidas.forEach(function(x){
+        var pct = x.iva===undefined ? (Number(p.ivaPct)||0) : Number(x.iva);
+        var base = (Number(x.cantidad)||0)*(Number(x.precio)||0);
+        porTipo[pct] = (porTipo[pct]||0) + base;
+      });
+      var ivaDesglose = Object.keys(porTipo).map(Number).sort(function(a,b){ return b-a; }).map(function(pct){
+        return {pct: pct, base: Math.round(porTipo[pct]*100)/100, cuota: Math.round(porTipo[pct]*pct)/100};
+      });
+      var cuota = ivaDesglose.reduce(function(s,d){ return s + d.cuota; }, 0);
       var irpfPct = Number(p.irpfPct)||0;
       var irpfImporte = p.irpfAplica ? subtotal * irpfPct/100 : 0;
       var total = subtotal + cuota - irpfImporte;
       p.base = Math.round(subtotal*100)/100;
+      p.ivaDesglose = ivaDesglose;
       p.cuota = Math.round(cuota*100)/100;
       p.irpfImporte = Math.round(irpfImporte*100)/100;
       p.total = Math.round(total*100)/100;

@@ -674,8 +674,8 @@
   .pp-mini-btn.bad{border-color:#f0bcbc; color:#a12626;}
   .pp-mini-btn:hover{border-color:var(--ink); color:var(--ink);}
 
-  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2.2fr 0.8fr 0.8fr 1fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
-  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:2fr 0.6fr 0.7fr 0.85fr 0.85fr 0.85fr 0.3fr;}
+  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2fr 0.7fr 0.7fr 0.9fr 0.65fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
+  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:1.8fr 0.55fr 0.6fr 0.8fr 0.6fr 0.8fr 0.85fr 0.3fr;}
   #pp-partidas-table .pp-coste-cell{display:none;}
   #pp-partidas-table.has-coste .pp-coste-cell{display:block;}
   .pp-partidas-head{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:2px;}
@@ -3645,8 +3645,13 @@ function abrirPresupuestoPDF(id){
       <td style="text-align:center;">${escapeHtml(x.unidad)}</td>
       <td style="text-align:right;">${x.cantidad}</td>
       <td style="text-align:right;">${formatEUR(x.precio)}</td>
+      <td style="text-align:right;">${x.iva===undefined ? (p.ivaPct||0) : x.iva}%</td>
       <td style="text-align:right;">${formatEUR(x.cantidad*x.precio)}</td>
     </tr>`).join('');
+
+  // Presupuestos antiguos guardaban un único ivaPct/cuota; los nuevos traen el
+  // desglose por tipo de IVA ya calculado en ivaDesglose.
+  const ivaDesglose = p.ivaDesglose || [{pct: p.ivaPct||0, base: p.base, cuota: p.cuota}];
 
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>Presupuesto ${escapeHtml(p.numero)}</title>
@@ -3720,13 +3725,13 @@ function abrirPresupuestoPDF(id){
   </div>
 
   <table>
-    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">Importe</th></tr></thead>
+    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">IVA</th><th style="text-align:right;">Importe</th></tr></thead>
     <tbody>${filasHTML}</tbody>
   </table>
 
   <div class="totales">
     <div><span>Subtotal</span><span>${formatEUR(p.base)}</span></div>
-    <div><span>IVA (${p.ivaPct}%)</span><span>${formatEUR(p.cuota)}</span></div>
+    ${ivaDesglose.map(d=>`<div><span>IVA (${d.pct}%)${ivaDesglose.length>1?' — base '+formatEUR(d.base):''}</span><span>${formatEUR(d.cuota)}</span></div>`).join('')}
     ${p.irpfAplica ? `<div><span>Retención IRPF (${p.irpfPct}%)</span><span>−${formatEUR(p.irpfImporte)}</span></div>` : ''}
     <div class="total"><span>TOTAL</span><span>${formatEUR(p.total)}</span></div>
   </div>
@@ -3807,12 +3812,15 @@ function abrirResumenGastosPDF(gastos){
   win.document.close();
 }
 
+const IVA_OPCIONES = [21, 10, 4, 0];
 function ppPartidaRowHTML(idx, p){
+  const iva = p.iva===undefined ? 21 : p.iva;
   return `<div class="pp-partidas-row" data-pidx="${idx}">
     <input type="text" class="pp-desc" value="${escapeHtml(p.descripcion)}" placeholder="Ej. Sustitución de grifería">
     <select class="pp-unidad">${UNIDADES_PRESUPUESTO.map(u=>`<option value="${escapeHtml(u)}" ${p.unidad===u?'selected':''}>${escapeHtml(u)}</option>`).join('')}</select>
     <input type="number" class="pp-cantidad" min="0" step="0.01" value="${p.cantidad}">
     <input type="number" class="pp-precio" min="0" step="0.01" value="${p.precio}">
+    <select class="pp-iva" title="IVA de esta línea">${IVA_OPCIONES.map(v=>`<option value="${v}" ${Number(iva)===v?'selected':''}>${v}%</option>`).join('')}</select>
     <input type="number" class="pp-coste pp-coste-cell" min="0" step="0.01" value="${p.coste||0}">
     <span class="pp-importe-cell">${formatEUR((Number(p.cantidad)||0)*(Number(p.precio)||0))}</span>
     <button type="button" class="pp-row-remove" data-remove-idx="${idx}" title="Quitar línea">×</button>
@@ -4215,7 +4223,7 @@ async function renderNegocio(){
           <label>Partidas</label>
           <div id="pp-partidas-table">
             <div class="pp-partidas-row pp-partidas-head">
-              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
+              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span>IVA</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
             </div>
             <div id="pp-partidas-rows"></div>
           </div>
@@ -4236,12 +4244,12 @@ async function renderNegocio(){
 
           <div class="field-row" style="margin-top:6px;">
             <div class="field">
-              <label>IVA</label>
+              <label>IVA por defecto <small>(para líneas nuevas — cada línea puede tener el suyo)</small></label>
               <select id="ng-pre-iva">
-                <option value="21" ${(!presupuestoEditando || presupuestoEditando.ivaPct===21) ? 'selected':''}>21% (general)</option>
-                <option value="10" ${presupuestoEditando?.ivaPct===10 ? 'selected':''}>10% (reforma vivienda particular, +2 años)</option>
-                <option value="4" ${presupuestoEditando?.ivaPct===4 ? 'selected':''}>4%</option>
-                <option value="0" ${presupuestoEditando?.ivaPct===0 ? 'selected':''}>0% / exento</option>
+                <option value="21" selected>21% (general)</option>
+                <option value="10">10% (reforma vivienda particular, +2 años)</option>
+                <option value="4">4%</option>
+                <option value="0">0% / exento</option>
               </select>
             </div>
             <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="${presupuestoEditando?.validezDias||30}"></div>
@@ -4859,9 +4867,11 @@ function bindPresupuestoForm(){
 
   const editando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
 
+  // Los presupuestos antiguos tenían un único IVA global (editando.ivaPct) en vez de
+  // uno por línea: si una partida no trae "iva" propio, se hereda de ahí al editar.
   let ppPartidas = editando
-    ? editando.partidas.map(p=>({...p}))
-    : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
+    ? editando.partidas.map(p=>({...p, iva: p.iva===undefined ? (editando.ivaPct===undefined?21:editando.ivaPct) : p.iva}))
+    : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:21}];
 
   let ppFotos = editando ? (editando.fotos||[]).slice() : [];
   const FOTOS_MAX = 3;
@@ -4906,14 +4916,25 @@ function bindPresupuestoForm(){
     recalcTotales();
   }
 
+  function ivaDesgloseDe(partidas){
+    const grupos = {};
+    partidas.forEach(p=>{
+      const pct = p.iva===undefined ? 21 : Number(p.iva);
+      const base = (Number(p.cantidad)||0)*(Number(p.precio)||0);
+      if(!grupos[pct]) grupos[pct] = 0;
+      grupos[pct] += base;
+    });
+    return Object.keys(grupos).map(Number).sort((a,b)=>b-a).map(pct=>({pct, base: grupos[pct], cuota: grupos[pct]*pct/100}));
+  }
+
   function recalcTotales(){
     const subtotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.precio)||0), 0);
     const costeTotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.coste)||0), 0);
-    const ivaPct = Number(document.getElementById('ng-pre-iva')?.value || 21);
+    const desglose = ivaDesgloseDe(ppPartidas);
+    const cuota = desglose.reduce((s,d)=> s + d.cuota, 0);
     const irpfToggle = document.getElementById('pp-irpf-toggle');
     const irpfAplica = irpfToggle ? irpfToggle.checked : false;
     const irpfPct = Number(document.getElementById('ng-pre-irpf-pct')?.value || 15);
-    const cuota = subtotal * ivaPct/100;
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
     const margen = subtotal - costeTotal;
@@ -4933,7 +4954,7 @@ function bindPresupuestoForm(){
     if(totalesEl){
       totalesEl.innerHTML = `
         <div class="pp-totales-row"><span>Subtotal</span><span>${formatEUR(subtotal)}</span></div>
-        <div class="pp-totales-row"><span>IVA (${ivaPct}%)</span><span>${formatEUR(cuota)}</span></div>
+        ${desglose.map(d=>`<div class="pp-totales-row"><span>IVA (${d.pct}%)${desglose.length>1?' — base '+formatEUR(d.base):''}</span><span>${formatEUR(d.cuota)}</span></div>`).join('')}
         ${irpfAplica ? `<div class="pp-totales-row"><span>Retención IRPF (${irpfPct}%)</span><span>−${formatEUR(irpfImporte)}</span></div>` : ''}
         <div class="pp-totales-row total"><span>TOTAL</span><span>${formatEUR(total)}</span></div>
         ${hasCoste ? `<div class="pp-totales-row" style="margin-top:8px; opacity:0.75;"><span>Margen estimado</span><span>${formatEUR(margen)} (${margenPct.toFixed(1)}%)</span></div>` : ''}
@@ -4941,8 +4962,10 @@ function bindPresupuestoForm(){
     }
   }
 
+  function ivaPorDefecto(){ return Number(document.getElementById('ng-pre-iva')?.value || 21); }
+
   document.getElementById('pp-add-partida').onclick = ()=>{
-    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0});
+    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:ivaPorDefecto()});
     renderRows();
   };
 
@@ -4959,7 +4982,7 @@ function bindPresupuestoForm(){
       const m = materialesFavoritos.find(x=>x.id===item.dataset.favId);
       if(!m) return;
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
-      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0};
+      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0, iva:ivaPorDefecto()};
       if(soloVacia) ppPartidas = [nueva]; else ppPartidas.push(nueva);
       favMenu.style.display = 'none';
       renderRows();
@@ -4977,6 +5000,7 @@ function bindPresupuestoForm(){
     else if(e.target.classList.contains('pp-cantidad')) p.cantidad = e.target.value;
     else if(e.target.classList.contains('pp-precio')) p.precio = e.target.value;
     else if(e.target.classList.contains('pp-coste')) p.coste = e.target.value;
+    else if(e.target.classList.contains('pp-iva')) p.iva = Number(e.target.value);
     recalcTotales();
   });
 
@@ -5018,7 +5042,7 @@ function bindPresupuestoForm(){
     draftUseBtn.onclick = ()=>{
       const draft = getPresupuestoDraft(account.email);
       if(!draft.length) return;
-      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0}));
+      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0, iva:ivaPorDefecto()}));
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
       ppPartidas = soloVacia ? nuevas : ppPartidas.concat(nuevas);
       clearPresupuestoDraft(account.email);
@@ -5046,7 +5070,7 @@ function bindPresupuestoForm(){
       return;
     }
     const partidasValidas = ppPartidas
-      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0}))
+      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0, iva:Number(p.iva===undefined?21:p.iva)}))
       .filter(p=>p.descripcion && p.cantidad>0 && p.precio>=0);
     if(!partidasValidas.length){
       msgBox.innerHTML = '<div class="msg err">Añade al menos una línea con descripción, cantidad y precio.</div>';
@@ -5054,14 +5078,14 @@ function bindPresupuestoForm(){
     }
     const concepto = document.getElementById('ng-pre-concepto').value.trim();
     const direccionObra = document.getElementById('ng-pre-direccion-obra').value.trim();
-    const ivaPct = Number(document.getElementById('ng-pre-iva').value);
     const validezDias = Number(document.getElementById('ng-pre-validez').value) || 30;
     const formaPago = document.getElementById('ng-pre-pago').value.trim() || 'Transferencia bancaria';
     const irpfAplica = document.getElementById('pp-irpf-toggle').checked;
     const irpfPct = Number(document.getElementById('ng-pre-irpf-pct').value);
 
     const subtotal = partidasValidas.reduce((s,p)=> s + p.cantidad*p.precio, 0);
-    const cuota = subtotal * ivaPct/100;
+    const ivaDesglose = ivaDesgloseDe(partidasValidas).map(d=>({pct:d.pct, base:Math.round(d.base*100)/100, cuota:Math.round(d.cuota*100)/100}));
+    const cuota = ivaDesglose.reduce((s,d)=> s + d.cuota, 0);
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
 
@@ -5073,7 +5097,7 @@ function bindPresupuestoForm(){
       clienteDireccion: clienteObj ? (clienteObj.direccion||'') : '',
       clienteTelefono: clienteObj ? (clienteObj.telefono||'') : '',
       concepto, direccionObra, partidas: partidasValidas, fotos: ppFotos.slice(),
-      base: Math.round(subtotal*100)/100, ivaPct, cuota: Math.round(cuota*100)/100,
+      base: Math.round(subtotal*100)/100, ivaDesglose, cuota: Math.round(cuota*100)/100,
       irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
       total: Math.round(total*100)/100, validezDias, formaPago
     };
