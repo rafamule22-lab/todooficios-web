@@ -324,6 +324,7 @@
   .drawer-primary-item .m-ic{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .drawer-primary-item .m-ic svg{width:16px; height:16px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
   .drawer-primary-item span{font-size:12px; font-weight:600;}
+  .drawer-primary-item.hide{display:none;}
   .drawer-group{border-bottom:1px solid var(--line);}
   .drawer-group:last-child{border-bottom:none;}
   .drawer-group-head{display:flex; align-items:center; gap:10px; padding:12px 2px; cursor:pointer;}
@@ -1128,7 +1129,7 @@
         <div class="m-ic" style="background:#141412;"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/></svg></div>
         <span>Inicio</span>
       </a>
-      <a class="drawer-primary-item" href="javascript:void(0)" data-view="pro">
+      <a class="drawer-primary-item" href="javascript:void(0)" data-view="pro" id="drawerProTile">
         <div class="m-ic" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
         <span>Soy profesional</span>
       </a>
@@ -1136,7 +1137,7 @@
         <div class="m-ic" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></div>
         <span>Buscar</span>
       </a>
-      <a class="drawer-primary-item" href="javascript:void(0)" data-view="client">
+      <a class="drawer-primary-item" href="javascript:void(0)" data-view="client" id="drawerClientTile">
         <div class="m-ic" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
         <span>Soy cliente</span>
       </a>
@@ -2517,6 +2518,12 @@ function renderNavAccountChips(){
       tbChip.innerHTML = '';
     }
   }
+
+  const hasAnySession = (session && account) || (clientSession && clientAccount);
+  const drawerProTile = document.getElementById('drawerProTile');
+  const drawerClientTile = document.getElementById('drawerClientTile');
+  if(drawerProTile) drawerProTile.classList.toggle('hide', hasAnySession);
+  if(drawerClientTile) drawerClientTile.classList.toggle('hide', hasAnySession);
 
   const quickGroup = document.getElementById('drawerQuickGroup');
   if(quickGroup){
