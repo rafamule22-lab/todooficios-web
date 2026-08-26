@@ -687,6 +687,12 @@
   .pp-totales-row{display:flex; justify-content:space-between; padding:3px 0;}
   .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
 
+  .pp-stale-banner{background:rgba(192,90,58,0.08); border:1.5px solid rgba(192,90,58,0.3); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13.5px;}
+  .pp-stale-banner strong{display:block; margin-bottom:8px; color:#C05A3A;}
+  .pp-stale-list{display:flex; flex-direction:column; gap:6px;}
+  .pp-stale-list span{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .pp-filtro-input{width:100%; padding:10px 14px; border-radius:9px; border:1px solid var(--line); font-size:14px; font-family:inherit; background:#fff; margin-bottom:12px;}
+  .pp-filtro-input:focus{outline:2px solid var(--amber);}
   .pp-draft-banner{display:flex; align-items:center; gap:12px; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
   .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .pp-draft-banner .pp-draft-ic svg{width:17px; height:17px; stroke:var(--c-presupuestos); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
@@ -2173,6 +2179,7 @@ let account = null;       // cuenta del profesional logueado
 let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
 let materialesFavoritos = null; // lista de materiales guardados del profesional (clave propia: se comparte también con calculadoras.html)
 let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
+let negocioEditPresupuestoId = null; // id del presupuesto que se está editando (null = se está creando uno nuevo)
 let dashboardMode = 'ficha'; // 'ficha' muestra el perfil público del profesional; 'editar' abre el formulario
 let clientSession = null;  // {email} cliente
 let clientAccount = null;  // cuenta del cliente
@@ -2565,6 +2572,7 @@ function playMasonAnimation(){
 }
 
 async function showView(name){
+  if(name !== 'negocio') negocioEditPresupuestoId = null;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const target = document.getElementById('view-'+name);
   target.classList.add('active');
@@ -3594,7 +3602,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -3644,8 +3652,9 @@ function abrirPresupuestoPDF(id){
   body{font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
   .doc-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
   .doc-brand{display:flex; align-items:center; gap:12px;}
-  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;}
   .doc-brand .ic svg{width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .doc-brand .ic img{width:100%; height:100%; object-fit:cover;}
   .doc-head h1{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 3px;}
   .doc-head .meta{font-size:12px; color:#666; line-height:1.55;}
   .doc-num{text-align:right; font-family:'IBM Plex Mono',monospace;}
@@ -3670,7 +3679,7 @@ function abrirPresupuestoPDF(id){
 </style></head><body>
   <div class="doc-head">
     <div class="doc-brand">
-      <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <div class="ic">${account.photo ? `<img src="${account.photo}" alt="">` : `<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>`}</div>
       <div>
         <h1>${escapeHtml(emisorNombre)}</h1>
         <div class="meta">
@@ -3892,6 +3901,8 @@ async function renderNegocio(){
 
   const presupuestosPendientes = negocio.presupuestos.filter(p => p.estado === 'Pendiente' || !p.estado);
   const totalPresupuestosPendientes = presupuestosPendientes.reduce((s,p)=> s + (Number(p.total)||0), 0);
+  const diasSinRespuesta = (fecha)=> Math.floor((new Date(hoy+'T00:00:00') - new Date((fecha||hoy)+'T00:00:00')) / 86400000);
+  const presupuestosSinRespuesta = presupuestosPendientes.filter(p => diasSinRespuesta(p.fecha) >= 5).sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
 
   const citasProximas = negocio.agenda
     .filter(c => c.fecha >= hoy)
@@ -3938,6 +3949,7 @@ async function renderNegocio(){
   const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
   const materialesLimitReached = !premium && materialesFavoritos.length >= FREE_LIMITS.materiales;
   const presupuestoDraft = getPresupuestoDraft(account.email);
+  const presupuestoEditando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
 
   function premiumLockHTML(mensaje, bullets){
     return `
@@ -4129,6 +4141,14 @@ async function renderNegocio(){
   <div class="ng-tab-panel ${negocioTab==='presupuestos'?'active':''}" data-tab="presupuestos">
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('presupuestos')} Presupuestos</div>
+      ${presupuestosSinRespuesta.length ? `
+      <div class="pp-stale-banner">
+        <strong>${presupuestosSinRespuesta.length} presupuesto${presupuestosSinRespuesta.length>1?'s':''} sin respuesta desde hace 5 días o más</strong>
+        <div class="pp-stale-list">
+          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Reenviar PDF</button></span>`).join('')}
+        </div>
+      </div>` : ''}
+      ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
       <div id="negocio-presupuestos-list">${negocio.presupuestos.length ? negocio.presupuestos.slice().reverse().map(presupuestoRowHTML).join('') : '<div class="empty-state">Todavía no registraste presupuestos.</div>'}</div>
 
       <details class="ng-add">
@@ -4148,8 +4168,8 @@ async function renderNegocio(){
         </div>
       </details>
 
-      ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
-      ${presupuestoDraft.length ? `
+      ${(presupuestosLimitReached && !presupuestoEditando) ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
+      ${(presupuestoDraft.length && !presupuestoEditando) ? `
       <div class="pp-draft-banner">
         <div class="pp-draft-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
         <div class="pp-draft-txt">
@@ -4160,21 +4180,22 @@ async function renderNegocio(){
         <button type="button" class="pp-draft-dismiss" id="pp-draft-dismiss" title="Descartar" aria-label="Descartar partidas guardadas">✕</button>
       </div>` : ''}
       <details class="ng-add" open>
-        <summary>Crear presupuesto</summary>
+        <summary>${presupuestoEditando ? `Editando presupuesto ${escapeHtml(presupuestoEditando.numero)}` : 'Crear presupuesto'}</summary>
         <div class="ng-add-body">
+          ${presupuestoEditando ? `<div class="msg" style="margin-bottom:12px;">Editando <strong>${escapeHtml(presupuestoEditando.numero)}</strong> — ${escapeHtml(presupuestoEditando.cliente)}. <button type="button" class="pp-mini-btn" id="ng-pre-cancel-edit">Cancelar edición</button></div>` : ''}
           <div class="field-row">
             <div class="field">
               <label>Cliente</label>
               <select id="ng-pre-cliente-select">
                 <option value="">— Cliente nuevo (escribe abajo) —</option>
-                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)}</option>`).join('')}
+                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}" ${presupuestoEditando && presupuestoEditando.clienteId===c.id ? 'selected':''}>${escapeHtml(c.nombre)}</option>`).join('')}
               </select>
             </div>
-            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa"></div>
+            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa" value="${presupuestoEditando && !presupuestoEditando.clienteId ? escapeHtml(presupuestoEditando.cliente) : ''}"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño"></div>
-            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente"></div>
+            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño" value="${escapeHtml(presupuestoEditando?.concepto||'')}"></div>
+            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente" value="${escapeHtml(presupuestoEditando?.direccionObra||'')}"></div>
           </div>
 
           <label>Partidas</label>
@@ -4196,34 +4217,34 @@ async function renderNegocio(){
           </div>
 
           <div class="field" style="margin-top:16px;">
-            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle"> Calcular margen (añade una columna de coste por línea)</label>
+            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle" ${presupuestoEditando && presupuestoEditando.partidas.some(p=>Number(p.coste)>0) ? 'checked':''}> Calcular margen (añade una columna de coste por línea)</label>
           </div>
 
           <div class="field-row" style="margin-top:6px;">
             <div class="field">
               <label>IVA</label>
               <select id="ng-pre-iva">
-                <option value="21">21% (general)</option>
-                <option value="10">10% (reforma vivienda particular, +2 años)</option>
-                <option value="4">4%</option>
-                <option value="0">0% / exento</option>
+                <option value="21" ${(!presupuestoEditando || presupuestoEditando.ivaPct===21) ? 'selected':''}>21% (general)</option>
+                <option value="10" ${presupuestoEditando?.ivaPct===10 ? 'selected':''}>10% (reforma vivienda particular, +2 años)</option>
+                <option value="4" ${presupuestoEditando?.ivaPct===4 ? 'selected':''}>4%</option>
+                <option value="0" ${presupuestoEditando?.ivaPct===0 ? 'selected':''}>0% / exento</option>
               </select>
             </div>
-            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="30"></div>
+            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="${presupuestoEditando?.validezDias||30}"></div>
           </div>
 
           <div class="field" id="pp-irpf-field">
-            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle"> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
+            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle" ${presupuestoEditando?.irpfAplica ? 'checked':''}> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
             <div class="field-row" style="margin-top:8px;">
-              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15">15% (general)</option><option value="7">7% (nuevos autónomos, 1º-3º año)</option></select></div>
+              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15" ${(!presupuestoEditando || presupuestoEditando.irpfPct!==7) ? 'selected':''}>15% (general)</option><option value="7" ${presupuestoEditando?.irpfPct===7 ? 'selected':''}>7% (nuevos autónomos, 1º-3º año)</option></select></div>
             </div>
           </div>
 
-          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="Transferencia bancaria"></div>
+          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="${escapeHtml(presupuestoEditando?.formaPago||'Transferencia bancaria')}"></div>
 
           <div id="pp-totales" class="pp-totales"></div>
 
-          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">Crear presupuesto</button>
+          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">${presupuestoEditando ? 'Guardar cambios' : 'Crear presupuesto'}</button>
           <div id="ng-pre-msg"></div>
         </div>
       </details>`}
@@ -4405,6 +4426,7 @@ function updateNegocioBackLink(){
 }
 
 function activateNegocioTab(tab){
+  if(tab !== 'presupuestos') negocioEditPresupuestoId = null;
   negocioTab = tab;
   document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
   const overview = document.getElementById('ng-overview');
@@ -4596,7 +4618,37 @@ function bindNegocio(){
       if(saved){ showToast(`Presupuesto ${numero} creado a partir de ${orig.numero}.`); showView('negocio'); }
       return;
     }
+    const editBtn = e.target.closest('[data-edit-presupuesto]');
+    if(editBtn){
+      negocioEditPresupuestoId = editBtn.dataset.editPresupuesto;
+      activateNegocioTab('presupuestos');
+      showView('negocio');
+      return;
+    }
   });
+
+  const ppStaleBanner = document.querySelector('.pp-stale-banner');
+  if(ppStaleBanner){
+    ppStaleBanner.addEventListener('click', (e)=>{
+      const pdfBtn = e.target.closest('[data-pdf-id]');
+      if(pdfBtn) abrirPresupuestoPDF(pdfBtn.dataset.pdfId);
+    });
+  }
+
+  const ppFiltroInput = document.getElementById('pp-filtro');
+  if(ppFiltroInput){
+    ppFiltroInput.oninput = ()=>{
+      const q = ppFiltroInput.value.trim().toLowerCase();
+      const listEl = document.getElementById('negocio-presupuestos-list');
+      const filtradas = !q ? negocio.presupuestos.slice().reverse() : negocio.presupuestos.slice().reverse().filter(p=>
+        (p.numero||'').toLowerCase().includes(q) ||
+        (p.cliente||'').toLowerCase().includes(q) ||
+        (p.estado||'Pendiente').toLowerCase().includes(q) ||
+        (p.concepto||'').toLowerCase().includes(q)
+      );
+      listEl.innerHTML = filtradas.length ? filtradas.map(presupuestoRowHTML).join('') : '<div class="empty-state">Ningún presupuesto coincide con la búsqueda.</div>';
+    };
+  }
 
   document.getElementById('negocio-clientes-list').addEventListener('click', async (e)=>{
     const delBtn = e.target.closest('[data-del-cliente]');
@@ -4785,7 +4837,16 @@ function bindPresupuestoForm(){
   // a su límite mensual (ver premiumLockHTML en renderNegocio) — sin form, nada que enlazar.
   if(!document.getElementById('ng-pre-add')) return;
 
-  let ppPartidas = [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
+  const editando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
+
+  let ppPartidas = editando
+    ? editando.partidas.map(p=>({...p}))
+    : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
+
+  const cancelEditBtn = document.getElementById('ng-pre-cancel-edit');
+  if(cancelEditBtn){
+    cancelEditBtn.onclick = ()=>{ negocioEditPresupuestoId = null; showView('negocio'); };
+  }
 
   function renderRows(){
     const rowsEl = document.getElementById('pp-partidas-rows');
@@ -4953,11 +5014,7 @@ function bindPresupuestoForm(){
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
 
-    negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
-    const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
-
-    negocio.presupuestos.push({
-      id:'p'+Date.now(), numero, fecha: todayISO(),
+    const datosComunes = {
       clienteId: clienteObj ? clienteObj.id : null,
       cliente: clienteObj ? clienteObj.nombre : clienteNombreNuevo,
       clienteTipo: clienteObj ? (clienteObj.tipo||'Particular') : 'Particular',
@@ -4967,12 +5024,22 @@ function bindPresupuestoForm(){
       concepto, direccionObra, partidas: partidasValidas,
       base: Math.round(subtotal*100)/100, ivaPct, cuota: Math.round(cuota*100)/100,
       irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
-      total: Math.round(total*100)/100, validezDias, formaPago,
-      estado:'Pendiente', createdAt: Date.now()
-    });
+      total: Math.round(total*100)/100, validezDias, formaPago
+    };
+
+    let numero;
+    if(editando){
+      numero = editando.numero;
+      Object.assign(editando, datosComunes);
+    } else {
+      negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+      numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+      negocio.presupuestos.push({ id:'p'+Date.now(), numero, fecha: todayISO(), ...datosComunes, estado:'Pendiente', createdAt: Date.now() });
+    }
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el presupuesto. Inténtalo de nuevo.</div>'; return; }
-    showToast(`Presupuesto ${numero} creado — ${formatEUR(total)}.`);
+    negocioEditPresupuestoId = null;
+    showToast(editando ? `Presupuesto ${numero} actualizado — ${formatEUR(total)}.` : `Presupuesto ${numero} creado — ${formatEUR(total)}.`);
     showView('negocio');
   };
 }
