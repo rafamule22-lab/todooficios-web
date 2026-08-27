@@ -2797,7 +2797,7 @@
     elHero = document.getElementById('cecHero');
     renderHome();
     showView('home');
-    elSearch.addEventListener('input', function(){ renderBusqueda(elSearch.value); });
+    if(elSearch) elSearch.addEventListener('input', function(){ renderBusqueda(elSearch.value); });
     var gateClose = document.getElementById('cecGateClose');
     if(gateClose) gateClose.addEventListener('click', hideRegisterGate);
     if(elGate) elGate.addEventListener('click', function(e){ if(e.target === elGate) hideRegisterGate(); });
