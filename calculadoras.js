@@ -100,6 +100,37 @@
     {id:'reformas', grupo:'reformas', nombre:'Reformas', icon:'house', desc:'Estimación de materiales completa para una estancia'},
     {id:'geometria', grupo:'geometria', nombre:'Geometría y conversores', icon:'ruler', desc:'Áreas, volúmenes, escaleras, pendientes y conversión de unidades'}
   ];
+  /* Taxonomía por oficio: agrupa categorías técnicas tal y como las
+     piensa un profesional (no por rama de física/materiales). Solo
+     Electricista tiene suficiente volumen para justificar pestañas
+     por modo de uso; el resto muestra sus calculadoras en una lista
+     única. Las categorías que no encajan en ningún oficio concreto
+     (electrónica avanzada, geometría) siguen accesibles como
+     "categorías técnicas" en la portada. */
+  var OFICIOS = [
+    {id:'electricista', nombre:'Electricista', icon:'rayo', color:'#C77C1E', cats:['fundamentales','instalacion'],
+      desc:'Sección de cable, caídas de tensión, protecciones y cuadros REBT.'},
+    {id:'fontanero', nombre:'Fontanero', icon:'wrench', color:'#2E6FA6', cats:['fontaneria'],
+      desc:'Tuberías, puntos de agua, pendientes y depósitos.'},
+    {id:'albanil', nombre:'Albañil', icon:'bricks', color:'#7458C2', cats:['materiales','suelos'],
+      desc:'Ladrillos, mortero, cemento, hormigón, suelos y revestimientos.'},
+    {id:'reformista', nombre:'Reformista', icon:'house', color:'#2E8F6E', cats:['reformas','pintura'],
+      desc:'Pintura, estimación de materiales y reforma completa de una estancia.'}
+  ];
+  function catsDeOficio(of){ return CATEGORIAS.filter(function(c){ return of.cats.indexOf(c.id) !== -1; }); }
+  function oficioDeCategoria(catId){ return OFICIOS.filter(function(of){ return of.cats.indexOf(catId) !== -1; })[0]; }
+
+  /* Pestañas por modo de uso, solo para Electricista: separan las
+     calculadoras de uso diario en obra de las de cálculo normativo
+     avanzado y de las puramente teóricas, para no mezclarlas en una
+     única lista de 30+ resultados. */
+  var TABS_ELECTRICISTA = [
+    {id:'diario', nombre:'Uso diario', calcs:['dimensionamiento_conductores','instalacion_completa','caida_tension','longitud_max_dv','capacidad_corriente_aislados','dimensionamiento_protecciones','cuadro_mando_general','corriente_empleo','corriente']},
+    {id:'normativo', nombre:'Cálculo normativo', calcs:['dimensionamiento_conductores_protecciones','longitud_max_icc','capacidad_corriente_barras','dimensionamiento_conductos_bandejas','proteccion_cortocircuito','energia_especifica_cable','temperatura_cable','perdidas_potencia_cables','corriente_neutro','caida_tension_cargas_distribuidas','dimensionamiento_cargas_distribuidas','puesta_tierra','cortocircuito_minimo','cortocircuito_punto_especifico','cortocircuito_subestacion','riesgo_sobretension','proteccion_alumbrado_emergencia']},
+    {id:'teoria', nombre:'Teoría y fórmulas', calcs:['ohm','tension','resistencia','potencia_activa','potencia_aparente','potencia_reactiva','factor_potencia','impedancia','reactancia']}
+  ];
+  function tabsDeOficio(ofId){ return ofId === 'electricista' ? TABS_ELECTRICISTA : null; }
+
   function grupoDe(cat){ return GRUPOS.filter(function(g){ return g.id === cat.grupo; })[0]; }
   function catIconHTML(cat, size){
     var g = grupoDe(cat);
@@ -429,6 +460,57 @@
         return [
           {label:'Sección mínima calculada', value: fmt(S,2), unit:'mm²'},
           {label:'Sección normalizada recomendada', value: fmt(Snorm,2), unit:'mm²'}
+        ];
+      }
+    },
+    {
+      id:'instalacion_completa', cat:'instalacion', icono:'⚡⏚', titulo:'Instalación completa (sección + caída + protección)',
+      destacada:true,
+      info:'Asistente que encadena tres cálculos a partir de los datos de tu instalación: corriente de empleo, sección de cable recomendada, caída de tensión resultante y protección normalizada.',
+      fields:[
+        {key:'P', label:'Potencia', unit:'W', type:'number'},
+        {key:'V', label:'Tensión', unit:'V', type:'number', def:230},
+        {key:'L', label:'Longitud del cable (un sentido)', unit:'m', type:'number'},
+        {key:'cosphi', label:'Factor de potencia (cosφ)', unit:'', type:'number', def:1},
+        {key:'tipo', label:'Tipo de suministro', type:'select', options:[
+          {value:'monofasico', label:'Monofásico'}, {value:'trifasico', label:'Trifásico'}
+        ], def:'monofasico'},
+        {key:'material', label:'Material del conductor', type:'select', options:[{value:'cobre',label:'Cobre'},{value:'aluminio',label:'Aluminio'}], def:'cobre'},
+        {key:'metodo', label:'Método de instalación', type:'select', options:[
+          {value:'enterrado', label:'Enterrado / bajo tubo empotrado'},
+          {value:'bandeja', label:'Al aire / bandeja perforada'},
+          {value:'tubo_superficie', label:'Bajo tubo en superficie'}
+        ], def:'bandeja'}
+      ],
+      compute:function(v){
+        var corrienteCalc = CALCULADORAS.filter(function(c){ return c.id === 'corriente'; })[0];
+        var seccionCalc = CALCULADORAS.filter(function(c){ return c.id === 'dimensionamiento_conductores'; })[0];
+        var caidaCalc = CALCULADORAS.filter(function(c){ return c.id === 'caida_tension'; })[0];
+        var proteccionCalc = CALCULADORAS.filter(function(c){ return c.id === 'dimensionamiento_protecciones'; })[0];
+
+        var resCorriente = corrienteCalc.compute(v);
+        var Ib = gn(resCorriente[0], 'value');
+
+        var resSeccion = seccionCalc.compute({Ib: Ib, material: v.material, metodo: v.metodo});
+        var Snorm = gn(resSeccion[1], 'value');
+
+        var resCaida = caidaCalc.compute({L: v.L, I: Ib, S: Snorm, V: v.V, cosphi: v.cosphi, material: v.material, tipo: v.tipo});
+        var dUp = gn(resCaida[1], 'value');
+
+        // Iz estimada con la misma densidad de corriente orientativa que usa
+        // "Dimensionamiento de conductores" — no sustituye las tablas de ampacidad
+        // oficiales de tu normativa (ver aviso en esa calculadora).
+        var densidad = { enterrado: 5, tubo_superficie: 6, bandeja: 8 }[v.metodo || 'bandeja'];
+        if((v.material || 'cobre') === 'aluminio') densidad *= 0.78;
+        var IzEstimada = Snorm * densidad;
+        var resProteccion = proteccionCalc.compute({Ib: Ib, Iz: IzEstimada});
+
+        return [
+          {label:'Corriente de empleo (Ib)', value: fmt(Ib,2), unit:'A'},
+          {label:'Sección de cable recomendada', value: fmt(Snorm,2), unit:'mm²'},
+          {label:'Caída de tensión', value: fmt(dUp,2), unit:'%'},
+          {label:'¿Cumple caída máxima admitida (3%)?', value: dUp <= 3 ? 'Sí' : 'No — revisa sección o longitud', unit:''},
+          {label:'Protección recomendada', value: resProteccion[0].value, unit:'A'}
         ];
       }
     },
@@ -1954,7 +2036,7 @@
   /* ============================================================
      MOTOR: renderizado y navegación
      ============================================================ */
-  var elHome, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate, elHero;
+  var elHome, elOfc, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate, elHero;
 
   function isRegistered(){
     // La cuenta (account:/client:) puede vivir solo en Supabase cuando el sitio
@@ -2185,8 +2267,6 @@
 
   function botonAnadirPresupuestoHTML(calc, res){
     if(!isProfessionalLoggedIn()) return '';
-    var cat = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0];
-    if(cat && cat.grupo === 'electricidad' && !calc.contieneMaterial) return '';
     var relevantes = res.filter(function(r){ return !r.link; });
     if(!relevantes.length) return '';
     return '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">➕ Añadir a un presupuesto</button>' +
@@ -2320,25 +2400,35 @@
           }).join('') + '</div></div>';
       }
     }
-    GRUPOS.forEach(function(g){
-      var cats = CATEGORIAS.filter(function(c){ return c.grupo === g.id; });
-      if(cats.length === 0) return;
-      var gridHTML = '<div class="cec-grid">';
-      cats.forEach(function(c){
-        var n = CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length;
-        gridHTML += '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
-          '<div class="cec-card-icon">' + catIconHTML(c, 40) + '</div>' +
-          '<div class="cec-card-title">' + c.nombre + '</div>' +
-          '<div class="cec-card-sub">' + c.desc + ' · ' + n + ' calculadoras</div></div>';
-      });
-      gridHTML += '</div>';
-      if(g.colapsado){
-        html += '<details class="cec-group cec-group-advanced"><summary class="cec-group-title">' + grupoIconHTML(g) + g.nombre + '</summary>' + gridHTML + '</details>';
-      } else {
-        html += '<div class="cec-group"><h2 class="cec-group-title">' + grupoIconHTML(g) + g.nombre + '</h2>' + gridHTML + '</div>';
-      }
-    });
+
+    html += '<h2 class="cec-section-title">Elige tu oficio</h2>' +
+      '<p class="cec-section-sub">Cada oficio agrupa sus calculadoras por cómo las usas, no por rama técnica.</p>' +
+      '<div class="cec-oficio-grid">' + OFICIOS.map(function(of){
+        var n = catsDeOficio(of).reduce(function(sum, c){ return sum + CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length; }, 0);
+        return '<div class="cec-oficio-card" data-oficio="' + of.id + '" tabindex="0" role="button">' +
+          '<span class="cec-oficio-icon" style="background:' + of.color + ';"><svg viewBox="0 0 24 24">' + ICONS[of.icon] + '</svg></span>' +
+          '<div class="cec-oficio-title">' + of.nombre + '</div>' +
+          '<div class="cec-oficio-desc">' + of.desc + '</div>' +
+          '<span class="cec-oficio-count">' + n + ' calculadoras</span></div>';
+      }).join('') + '</div>';
+
+    var catsTecnicas = CATEGORIAS.filter(function(c){ return !oficioDeCategoria(c.id); });
+    if(catsTecnicas.length){
+      html += '<details class="cec-group cec-group-advanced"><summary class="cec-group-title">' + catIconHTML(catsTecnicas[0], 22) + 'Categorías técnicas (geometría, conversores, electrónica…)</summary><div class="cec-grid">' +
+        catsTecnicas.map(function(c){
+          var n = CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length;
+          return '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
+            '<div class="cec-card-icon">' + catIconHTML(c, 40) + '</div>' +
+            '<div class="cec-card-title">' + c.nombre + '</div>' +
+            '<div class="cec-card-sub">' + c.desc + ' · ' + n + ' calculadoras</div></div>';
+        }).join('') + '</div></details>';
+    }
+
     elHome.innerHTML = html;
+    Array.prototype.forEach.call(elHome.querySelectorAll('[data-oficio]'), function(node){
+      node.addEventListener('click', function(){ goToOficio(node.getAttribute('data-oficio')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToOficio(node.getAttribute('data-oficio')); });
+    });
     Array.prototype.forEach.call(elHome.querySelectorAll('[data-cat]'), function(node){
       node.addEventListener('click', function(){ goToCategory(node.getAttribute('data-cat')); });
       node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCategory(node.getAttribute('data-cat')); });
@@ -2348,6 +2438,86 @@
       node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
     });
     attachFavStarHandlers(elHome, renderHome);
+  }
+
+  var oficioActualId = null, oficioActualTab = null;
+
+  function renderBreadcrumb(target, parts){
+    target.innerHTML = parts.map(function(p, i){
+      var isLast = i === parts.length - 1;
+      if(isLast || !p.onClick) return '<span class="cec-crumb-current">' + p.label + '</span>';
+      return '<button type="button" class="cec-crumb-link" data-crumb-i="' + i + '">' + p.label + '</button>';
+    }).join('<span class="cec-crumb-sep">›</span>');
+    Array.prototype.forEach.call(target.querySelectorAll('[data-crumb-i]'), function(btn){
+      var p = parts[Number(btn.getAttribute('data-crumb-i'))];
+      btn.addEventListener('click', p.onClick);
+    });
+  }
+
+  function renderOficioCalcCard(c){
+    var destacada = c.destacada ? ' cec-card-featured' : '';
+    return '<div class="cec-card' + destacada + '" data-calc="' + c.id + '" tabindex="0" role="button">' +
+      (isProfessionalLoggedIn() ? favoritaStarHTML(c.id) : '') +
+      (c.destacada ? '<span class="cec-card-badge">Recomendado</span>' : '') +
+      '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>';
+  }
+
+  function renderOficio(oficioId, tabId){
+    var of = OFICIOS.filter(function(x){ return x.id === oficioId; })[0];
+    if(!of) return;
+    var tabs = tabsDeOficio(oficioId);
+    oficioActualId = oficioId;
+    oficioActualTab = tabs ? (tabId || tabs[0].id) : null;
+
+    var lista;
+    if(tabs){
+      var tab = tabs.filter(function(t){ return t.id === oficioActualTab; })[0] || tabs[0];
+      lista = tab.calcs.map(function(id){ return CALCULADORAS.filter(function(c){ return c.id === id; })[0]; }).filter(Boolean);
+    } else {
+      var catIds = of.cats;
+      lista = CALCULADORAS.filter(function(c){ return catIds.indexOf(c.cat) !== -1; });
+    }
+    // destacadas primero
+    lista = lista.filter(function(c){ return c.destacada; }).concat(lista.filter(function(c){ return !c.destacada; }));
+
+    var html = '<div class="cec-crumb" id="cecOfcCrumb"></div>' +
+      '<div class="cec-ofc-head"><span class="cec-ofc-head-icon" style="background:' + of.color + ';"><svg viewBox="0 0 24 24">' + ICONS[of.icon] + '</svg></span>' +
+      '<div><h1>' + of.nombre + '</h1><p>' + of.desc + '</p></div></div>';
+
+    if(tabs){
+      html += '<div class="cec-tabs">' + tabs.map(function(t){
+        var n = t.calcs.length;
+        var active = t.id === oficioActualTab ? ' active' : '';
+        return '<div class="cec-tab' + active + '" data-tab="' + t.id + '">' + t.nombre + ' <span class="cec-tab-count">' + n + '</span></div>';
+      }).join('') + '</div>';
+    }
+
+    html += '<div class="cec-grid">' + lista.map(renderOficioCalcCard).join('') + '</div>';
+
+    elOfc.innerHTML = html;
+
+    renderBreadcrumb(document.getElementById('cecOfcCrumb'), [
+      {label:'Calculadoras', onClick:function(){ showView('home'); history.replaceState(null,'','#'); }},
+      {label: of.nombre}
+    ]);
+
+    if(tabs){
+      Array.prototype.forEach.call(elOfc.querySelectorAll('[data-tab]'), function(node){
+        node.addEventListener('click', function(){ goToOficio(oficioId, node.getAttribute('data-tab')); });
+      });
+    }
+    Array.prototype.forEach.call(elOfc.querySelectorAll('[data-calc]'), function(node){
+      node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+    });
+    attachFavStarHandlers(elOfc, function(){ renderOficio(oficioId, oficioActualTab); });
+  }
+
+  function goToOficio(oficioId, tabId){
+    if(!isRegistered()){ showRegisterGate(); return; }
+    renderOficio(oficioId, tabId);
+    showView('ofc');
+    history.replaceState(null, '', '#of-' + oficioId + (tabId ? '-' + tabId : ''));
   }
 
   function renderCategoria(catId){
@@ -2401,11 +2571,26 @@
     var calc = CALCULADORAS.filter(function(c){ return c.id === calcId; })[0];
     if(!calc) return;
     calcActualId = calc.id;
-    var html = '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + (isProfessionalLoggedIn() ? favoritaStarHTML(calc.id) : '') + '</h2>' +
+    var html = '<div class="cec-crumb" id="cecCalcCrumb"></div>' +
+      '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + (isProfessionalLoggedIn() ? favoritaStarHTML(calc.id) : '') + '</h2>' +
       (calc.info ? '<p class="cec-info">' + calc.info + '</p>' : '') +
       '<div class="cec-form">' + calc.fields.map(fieldHTML).join('') + '</div>' +
       '<div class="cec-result" id="cecResult"></div>';
     elCalc.innerHTML = html;
+
+    var ofBread = oficioDeCategoria(calc.cat);
+    var crumbParts = [{label:'Calculadoras', onClick:function(){ showView('home'); history.replaceState(null,'','#'); }}];
+    if(ofBread){
+      var tabsBread = tabsDeOficio(ofBread.id);
+      var tabBread = tabsBread ? tabsBread.filter(function(t){ return t.calcs.indexOf(calc.id) !== -1; })[0] : null;
+      crumbParts.push({label: ofBread.nombre, onClick:function(){ goToOficio(ofBread.id, tabBread ? tabBread.id : null); }});
+      if(tabBread) crumbParts.push({label: tabBread.nombre, onClick:function(){ goToOficio(ofBread.id, tabBread.id); }});
+    } else {
+      var catBread = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0];
+      crumbParts.push({label: catBread.nombre, onClick:function(){ goToCategory(calc.cat); }});
+    }
+    crumbParts.push({label: calc.titulo});
+    renderBreadcrumb(document.getElementById('cecCalcCrumb'), crumbParts);
     var favStarBtn = elCalc.querySelector('[data-fav-calc]');
     if(favStarBtn){
       favStarBtn.addEventListener('click', function(e){
@@ -2519,16 +2704,15 @@
     });
     recalcular();
     showView('calc');
-    elBackLabel.textContent = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0].nombre;
-    elBack.onclick = function(){ goToCategory(calc.cat); };
     history.replaceState(null, '', '#calc-' + calc.id);
   }
 
   function showView(name){
     elHome.style.display = name === 'home' ? '' : 'none';
+    elOfc.style.display = name === 'ofc' ? '' : 'none';
     elCat.style.display = name === 'cat' ? '' : 'none';
     elCalc.style.display = name === 'calc' ? '' : 'none';
-    elBack.style.display = name === 'home' ? 'none' : '';
+    elBack.style.display = name === 'cat' ? '' : 'none';
     if(elHero) elHero.style.display = name === 'home' ? '' : 'none';
     window.scrollTo(0,0);
   }
@@ -2553,6 +2737,7 @@
 
   function init(){
     elHome = document.getElementById('cecHome');
+    elOfc = document.getElementById('cecOfc');
     elCat = document.getElementById('cecCat');
     elCalc = document.getElementById('cecCalc');
     elSearch = document.getElementById('cecSearch');
@@ -2568,9 +2753,38 @@
     if(gateClose) gateClose.addEventListener('click', hideRegisterGate);
     if(elGate) elGate.addEventListener('click', function(e){ if(e.target === elGate) hideRegisterGate(); });
 
+    var darkToggle = document.getElementById('cecDarkToggle');
+    if(darkToggle){
+      var darkOn = false;
+      try { darkOn = localStorage.getItem('cec-modo-obra') === '1'; } catch(e){}
+      function aplicarModoObra(on){
+        document.body.classList.toggle('cec-dark', on);
+        darkToggle.classList.toggle('on', on);
+        try { localStorage.setItem('cec-modo-obra', on ? '1' : '0'); } catch(e){}
+      }
+      aplicarModoObra(darkOn);
+      darkToggle.addEventListener('click', function(){ aplicarModoObra(!document.body.classList.contains('cec-dark')); });
+    }
+
     var hash = location.hash.replace('#','');
-    if(hash.indexOf('calc-') === 0) goToCalculadora(hash.slice(5));
-    else if(hash) { var c = CATEGORIAS.filter(function(x){return x.id===hash;})[0]; if(c) goToCategory(hash); }
+    if(hash.indexOf('calc-') === 0){
+      goToCalculadora(hash.slice(5));
+    } else if(hash.indexOf('of-') === 0){
+      var rest = hash.slice(3);
+      var ofHash = OFICIOS.filter(function(x){ return rest === x.id || rest.indexOf(x.id + '-') === 0; })[0];
+      if(ofHash){
+        var tabHash = rest.length > ofHash.id.length ? rest.slice(ofHash.id.length + 1) : null;
+        goToOficio(ofHash.id, tabHash);
+      }
+    } else if(hash){
+      // Compatibilidad con enlaces antiguos a categorías (p.ej. #fundamentales,
+      // #materiales) que ahora viven dentro de la vista de un oficio.
+      var c = CATEGORIAS.filter(function(x){ return x.id === hash; })[0];
+      if(c){
+        var ofLegacy = oficioDeCategoria(hash);
+        if(ofLegacy) goToOficio(ofLegacy.id); else goToCategory(hash);
+      }
+    }
 
     if(isProfessionalLoggedIn()){
       cargarMaterialesFavoritos().then(function(lista){
