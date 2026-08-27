@@ -2290,6 +2290,10 @@ const CATEGORIAS_GASTO = ['Fontanería','Electricidad','Albañilería','Pintura 
 const TIPOS_TRABAJO_AGENDA = ['Visita para presupuestar','Instalación','Reparación/avería','Revisión/mantenimiento','Entrega de obra'];
 const UNIDADES_PRESUPUESTO = ['ud','m','m²','m³','ml','kg','L','h','pa'];
 const UNIDADES_MATERIAL = ['ud','m','m²','m³','kg','L'];
+const DIAS_SEMANA = [
+  {key:'lunes', label:'Lunes'}, {key:'martes', label:'Martes'}, {key:'miercoles', label:'Miércoles'},
+  {key:'jueves', label:'Jueves'}, {key:'viernes', label:'Viernes'}, {key:'sabado', label:'Sábado'}, {key:'domingo', label:'Domingo'}
+];
 
 // Límites del plan gratuito en el Panel de negocio. Premium (featuredUntil vigente) no tiene límite.
 // Mismo patrón que las fotos de perfil (3 gratis / 10 Premium): se puede usar la herramienta,
@@ -2309,7 +2313,7 @@ function defaultNegocio(){
     gastos: [],
     presupuestos: [],
     agenda: [],
-    asesor: { tipoAlta:'autonomo', epigrafeCode:null, epigrafeConfianza:'', epigrafeConfirmado:false, gestorEmail:'', diaEnvio:'lunes', ultimoEnvioSemana:'' }
+    asesor: { tipoAlta:'autonomo', epigrafeCode:null, epigrafeConfianza:'', epigrafeConfirmado:false, gestorEmail:'', diaEnvio:'lunes', horaEnvio:'09:00', ultimoEnvioSemana:'' }
   };
 }
 async function getNegocio(email){
@@ -3922,6 +3926,7 @@ function epigrafeResultCardHTML(code, confidence, why, confirmed){
       <span class="txt" id="epi-confirm-txt">${confirmed ? 'Confirmado con tu gestor.' : 'Pendiente de confirmar con tu gestor antes del alta.'}</span>
       <button type="button" class="pp-mini-btn ${confirmed?'ok':''}" id="epi-confirm-btn" data-confirmed="${confirmed}">${confirmed?'✓ Confirmado':'Marcar como confirmado'}</button>
       <button type="button" class="pp-mini-btn" data-ng-tab="envio">Enviar a mi gestor</button>
+      <button type="button" class="pp-mini-btn" id="epi-remove-btn">Quitar epígrafe</button>
     </div>`;
 }
 function epigrafeClarifyCardHTML(entry){
@@ -4441,10 +4446,10 @@ async function renderNegocio(){
         <div class="field"><label>Email de tu gestor/gestoría</label><input type="email" id="asesor-gestor-email" value="${escapeHtml(asesor.gestorEmail||'')}" placeholder="gestoria@ejemplo.com"></div>
         <div class="field"><label>Día preferido de envío</label>
           <select id="asesor-dia-envio">
-            <option value="lunes" ${asesor.diaEnvio==='lunes'?'selected':''}>Lunes</option>
-            <option value="viernes" ${asesor.diaEnvio==='viernes'?'selected':''}>Viernes</option>
+            ${DIAS_SEMANA.map(d=>`<option value="${d.key}" ${asesor.diaEnvio===d.key?'selected':''}>${d.label}</option>`).join('')}
           </select>
         </div>
+        <div class="field"><label>Hora preferida</label><input type="time" id="asesor-hora-envio" value="${escapeHtml(asesor.horaEnvio||'09:00')}"></div>
       </div>
       <button class="btn btn-outline btn-sm" id="asesor-config-save" style="margin-top:10px;">Guardar configuración</button>
       <div id="asesor-config-msg"></div>
@@ -4920,6 +4925,19 @@ function wireEpigrafeCard(){
     });
   };
 
+  const removeBtn = document.getElementById('epi-remove-btn');
+  if(removeBtn) removeBtn.onclick = async ()=>{
+    negocio.asesor.epigrafeCode = null;
+    negocio.asesor.epigrafeConfianza = '';
+    negocio.asesor.epigrafeConfirmado = false;
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved) return;
+    const oficioEntry = OFICIO_EPIGRAFE[account.oficio] || null;
+    card.className = '';
+    card.innerHTML = epigrafeSuggestCardHTML(negocio.asesor, oficioEntry);
+    wireEpigrafeCard();
+  };
+
   const confirmBtn = document.getElementById('epi-confirm-btn');
   if(confirmBtn) confirmBtn.onclick = async ()=>{
     const confirmed = confirmBtn.dataset.confirmed === 'true';
@@ -4949,6 +4967,7 @@ function bindAsesorFinanciero(){
     msgBox.innerHTML = '';
     negocio.asesor.gestorEmail = document.getElementById('asesor-gestor-email').value.trim();
     negocio.asesor.diaEnvio = document.getElementById('asesor-dia-envio').value;
+    negocio.asesor.horaEnvio = document.getElementById('asesor-hora-envio').value || '09:00';
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar. Inténtalo de nuevo.</div>'; return; }
     showToast('Configuración guardada.');
