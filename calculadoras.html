@@ -155,9 +155,11 @@
   .cec-tab-count{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;background:rgba(20,20,18,0.08);color:var(--ink-soft);padding:2px 6px;border-radius:999px;}
   .cec-tab.active .cec-tab-count{background:rgba(217,164,0,0.15);color:var(--amber-deep);}
 
-  .cec-card-featured{grid-column:1 / -1;display:flex;align-items:center;gap:14px;text-align:left;background:linear-gradient(0deg,#fff,#fff), var(--paper-light);border-color:var(--amber);}
+  .cec-card-body{display:contents;}
+  .cec-card-featured{grid-column:1 / -1;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;background:linear-gradient(0deg,#fff,#fff), var(--paper-light);border-color:var(--amber);}
+  .cec-card-featured .cec-card-body{display:flex;align-items:center;gap:14px;}
   .cec-card-featured .cec-card-icon{margin-bottom:0;}
-  .cec-card-badge{position:absolute;top:6px;left:6px;font-size:10px;font-weight:700;color:var(--amber-deep);background:rgba(217,164,0,0.12);padding:3px 8px;border-radius:999px;}
+  .cec-card-badge{position:static;font-size:10px;font-weight:700;color:var(--amber-deep);background:rgba(217,164,0,0.12);padding:3px 8px;border-radius:999px;}
 
   body.cec-dark{background:var(--ink);color:var(--paper-light);}
   body.cec-dark .cec-wrap :is(h1,h2){color:var(--paper-light);}
