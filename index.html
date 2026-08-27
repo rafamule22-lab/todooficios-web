@@ -596,11 +596,21 @@
   .stat-sub{font-size:13px; color:var(--ink-soft);}
   @media (max-width:560px){.stat-value{font-size:19px;}}
 
-  .ng-pendientes-callout{margin-bottom:18px; max-width:900px;}
+  .ng-hero{
+    background:var(--paper-light); border:1.5px solid var(--line); border-left:4px solid var(--amber-deep);
+    border-radius:11px; padding:20px 22px; margin-bottom:18px; max-width:900px;
+  }
+  .ng-hero-head{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .ng-hero-head h3{font-size:17px; font-weight:700;}
+  .ng-hero-head .ng-icon{width:32px; height:32px;}
+  .ng-hero-head .ng-icon svg{width:17px; height:17px;}
+  .ng-hero .pend-list{margin-top:2px;}
 
-  .ng-tools-divider{display:flex; align-items:center; gap:10px; margin:18px 0 12px; max-width:900px;}
-  .ng-tools-divider .ln{flex:1; height:1px; background:var(--line);}
-  .ng-tools-divider span{font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap;}
+  .ng-split{display:grid; grid-template-columns:1.25fr 1fr; gap:16px; margin-bottom:18px; max-width:900px;}
+  @media (max-width:720px){.ng-split{grid-template-columns:1fr;}}
+  .ng-box{border:1.5px solid var(--line); border-radius:11px; padding:16px;}
+  .ng-box-label{font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:12px;}
+  .ng-box .nav-list{margin-bottom:0; max-width:none;}
 
   .ng-tab-panel{display:none;}
   .ng-tab-panel.active{display:block;}
@@ -4031,6 +4041,18 @@ async function renderNegocio(){
     ...citasProximas.slice(0,5).map(c => ({ fecha: c.fecha, texto: `${formatDateES(c.fecha)}${c.horaInicio?', '+c.horaInicio:''} — ${escapeHtml(c.tipoTrabajo||'Cita')} con ${escapeHtml(c.cliente||'cliente')}` }))
   ].sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
 
+  const heroBits = [];
+  if(presupuestosPendientes.length) heroBits.push(`${presupuestosPendientes.length} presupuesto${presupuestosPendientes.length===1?'':'s'} por responder`);
+  if(proximaCita) heroBits.push(`próxima cita ${formatDateES(proximaCita.fecha)}${proximaCita.horaInicio?', '+proximaCita.horaInicio:''}`);
+  const heroHeadline = heroBits.length ? heroBits.join(' · ') : 'Tienes pendientes en tu negocio';
+
+  function toolSubtext(key){
+    if(key==='fiscal') return nextDeadline ? `${escapeHtml(nextDeadline.label)} · ${daysToNext} día${daysToNext===1?'':'s'}` : 'Sin vencimientos próximos';
+    if(key==='envio') return envioPendiente ? `Pendiente esta semana (${gastosSemana.length})` : 'Al día esta semana';
+    if(key==='agente') return `Estimado trimestre: ${formatEUR(estimacionTrimestre)}`;
+    return '';
+  }
+
   const negocioTabsDatos = [
     {key:'pendientes', label:'Pendientes'},
     {key:'clientes', label:`Clientes (${negocio.clientes.length})`},
@@ -4058,68 +4080,77 @@ async function renderNegocio(){
     </div>
 
     ${pendientesList.length ? `
-    <div class="panel panel-wide ng-pendientes-callout">
-      <div class="section-label">${ngIconHTML('pendientes')} Pendientes</div>
+    <div class="ng-hero">
+      <div class="ng-hero-head">${ngIconHTML('pendientes')}<h3>${escapeHtml(heroHeadline)}</h3></div>
       <div class="pend-list">${pendientesList.map(i=>`<div class="pend-item">${i.texto}</div>`).join('')}</div>
     </div>` : ''}
 
-    <div class="nav-list">
-      <div class="nav-card" data-ng-tab="gastos">
-        ${ngIconHTML('gastos')}
-        <div class="nc-body">
-          <span class="stat-label">Gastos este mes</span>
-          <span class="stat-value">${formatEUR(totalGastosMes)}</span>
-          <span class="stat-sub">${gastosMes.length} apunte${gastosMes.length===1?'':'s'}</span>
+    <div class="ng-split">
+      <div class="ng-box">
+        <div class="ng-box-label">Tus números</div>
+        <div class="nav-list">
+          <div class="nav-card" data-ng-tab="gastos">
+            ${ngIconHTML('gastos')}
+            <div class="nc-body">
+              <span class="stat-label">Gastos este mes</span>
+              <span class="stat-value">${formatEUR(totalGastosMes)}</span>
+              <span class="stat-sub">${gastosMes.length} apunte${gastosMes.length===1?'':'s'}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="presupuestos">
+            ${ngIconHTML('presupuestos')}
+            <div class="nc-body">
+              <span class="stat-label">Presupuestos pendientes</span>
+              <span class="stat-value">${presupuestosPendientes.length}</span>
+              <span class="stat-sub">${formatEUR(totalPresupuestosPendientes)}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="agenda">
+            ${ngIconHTML('agenda')}
+            <div class="nc-body">
+              <span class="stat-label">Próxima cita</span>
+              <span class="stat-value" style="font-size:18px;">${proximaCita ? formatDateES(proximaCita.fecha) : 'Sin citas'}</span>
+              <span class="stat-sub">${proximaCita ? escapeHtml(proximaCita.tipoTrabajo||'') : 'Agenda vacía'}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="clientes">
+            ${ngIconHTML('clientes')}
+            <div class="nc-body">
+              <span class="stat-label">Clientes</span>
+              <span class="stat-value">${negocio.clientes.length}</span>
+              <span class="stat-sub">${negocio.clientes.filter(c=>c.favorito).length} habitual${negocio.clientes.filter(c=>c.favorito).length===1?'':'es'}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="materiales">
+            ${ngIconHTML('materiales')}
+            <div class="nc-body">
+              <span class="stat-label">Materiales favoritos</span>
+              <span class="stat-value">${materialesFavoritos.length}</span>
+              <span class="stat-sub">guardados</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
         </div>
-        <span class="chev">›</span>
       </div>
-      <div class="nav-card" data-ng-tab="presupuestos">
-        ${ngIconHTML('presupuestos')}
-        <div class="nc-body">
-          <span class="stat-label">Presupuestos pendientes</span>
-          <span class="stat-value">${presupuestosPendientes.length}</span>
-          <span class="stat-sub">${formatEUR(totalPresupuestosPendientes)}</span>
-        </div>
-        <span class="chev">›</span>
-      </div>
-      <div class="nav-card" data-ng-tab="agenda">
-        ${ngIconHTML('agenda')}
-        <div class="nc-body">
-          <span class="stat-label">Próxima cita</span>
-          <span class="stat-value" style="font-size:18px;">${proximaCita ? formatDateES(proximaCita.fecha) : 'Sin citas'}</span>
-          <span class="stat-sub">${proximaCita ? escapeHtml(proximaCita.tipoTrabajo||'') : 'Agenda vacía'}</span>
-        </div>
-        <span class="chev">›</span>
-      </div>
-      <div class="nav-card" data-ng-tab="clientes">
-        ${ngIconHTML('clientes')}
-        <div class="nc-body">
-          <span class="stat-label">Clientes</span>
-          <span class="stat-value">${negocio.clientes.length}</span>
-          <span class="stat-sub">${negocio.clientes.filter(c=>c.favorito).length} habitual${negocio.clientes.filter(c=>c.favorito).length===1?'':'es'}</span>
-        </div>
-        <span class="chev">›</span>
-      </div>
-      <div class="nav-card" data-ng-tab="materiales">
-        ${ngIconHTML('materiales')}
-        <div class="nc-body">
-          <span class="stat-label">Materiales favoritos</span>
-          <span class="stat-value">${materialesFavoritos.length}</span>
-          <span class="stat-sub">guardados</span>
-        </div>
-        <span class="chev">›</span>
-      </div>
-    </div>
 
-    <div class="ng-tools-divider"><div class="ln"></div><span>Herramientas</span><div class="ln"></div></div>
-
-    <div class="nav-list">
-      ${negocioTabsHerramientas.map(t=>`
-      <div class="nav-card tool" data-ng-tab="${t.key}">
-        ${ngIconHTML(t.key)}
-        <div class="nc-body"><span class="stat-value">${t.label}</span></div>
-        <span class="chev">›</span>
-      </div>`).join('')}
+      <div class="ng-box">
+        <div class="ng-box-label">Herramientas</div>
+        <div class="nav-list">
+          ${negocioTabsHerramientas.map(t=>`
+          <div class="nav-card tool" data-ng-tab="${t.key}">
+            ${ngIconHTML(t.key)}
+            <div class="nc-body">
+              <span class="stat-value">${t.label}</span>
+              <span class="stat-sub">${toolSubtext(t.key)}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>`).join('')}
+        </div>
+      </div>
     </div>
   </div>
 
