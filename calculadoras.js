@@ -2508,7 +2508,7 @@
     return '<div class="cec-card' + destacada + '" data-calc="' + c.id + '" tabindex="0" role="button">' +
       (isProfessionalLoggedIn() ? favoritaStarHTML(c.id) : '') +
       (c.destacada ? '<span class="cec-card-badge">Recomendado</span>' : '') +
-      '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>';
+      '<div class="cec-card-body"><div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div></div>';
   }
 
   function renderOficio(oficioId, tabId){
