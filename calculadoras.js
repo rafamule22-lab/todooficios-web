@@ -478,7 +478,7 @@
       }
     },
     {
-      id:'instalacion_completa', cat:'instalacion', icono:'⚡⏚', titulo:'Instalación completa (sección + caída + protección)',
+      id:'instalacion_completa', cat:'instalacion', titulo:'Instalación completa (sección + caída + protección)',
       destacada:true,
       info:'Asistente que encadena tres cálculos a partir de los datos de tu instalación: corriente de empleo, sección de cable recomendada, caída de tensión resultante y protección normalizada.',
       fields:[
