@@ -129,7 +129,21 @@
     {id:'normativo', nombre:'Cálculo normativo', calcs:['dimensionamiento_conductores_protecciones','longitud_max_icc','capacidad_corriente_barras','dimensionamiento_conductos_bandejas','proteccion_cortocircuito','energia_especifica_cable','temperatura_cable','perdidas_potencia_cables','corriente_neutro','caida_tension_cargas_distribuidas','dimensionamiento_cargas_distribuidas','puesta_tierra','cortocircuito_minimo','cortocircuito_punto_especifico','cortocircuito_subestacion','riesgo_sobretension','proteccion_alumbrado_emergencia']},
     {id:'teoria', nombre:'Teoría y fórmulas', calcs:['ohm','tension','resistencia','potencia_activa','potencia_aparente','potencia_reactiva','factor_potencia','impedancia','reactancia']}
   ];
-  function tabsDeOficio(ofId){ return ofId === 'electricista' ? TABS_ELECTRICISTA : null; }
+  /* Albañil tiene volumen suficiente (13 calculadoras) para separar
+     materiales de obra de suelos y revestimientos. Fontanero (6) y
+     Reformista (4, con la estimación combinada ya destacada) se quedan
+     con una lista única: dividirlas en pestañas no aportaría nada con
+     tan pocas calculadoras. */
+  var TABS_ALBANIL = [
+    {id:'materiales', nombre:'Materiales de obra', calcs:['tabique_completo','ladrillos_bloques','mortero_albanileria','cemento_arena','hormigon','grava_arido','yeso_enlucido','pladur','aislamiento']},
+    {id:'suelos', nombre:'Suelos y revestimientos', calcs:['baldosas_azulejos','tarima_parquet','rodapie','mortero_cola','juntas_alicatado']}
+  ];
+
+  function tabsDeOficio(ofId){
+    if(ofId === 'electricista') return TABS_ELECTRICISTA;
+    if(ofId === 'albanil') return TABS_ALBANIL;
+    return null;
+  }
 
   function grupoDe(cat){ return GRUPOS.filter(function(g){ return g.id === cat.grupo; })[0]; }
   function catIconHTML(cat, size){
@@ -1403,6 +1417,40 @@
      ============================================================ */
   var MATERIALES = [
     {
+      id:'tabique_completo', cat:'materiales', titulo:'Tabique completo (ladrillos + mortero + enlucido)',
+      destacada:true,
+      info:'Asistente que encadena tres cálculos a partir de la superficie del tabique: piezas necesarias, mortero de asiento y yeso de enlucido.',
+      fields:[
+        {key:'area', label:'Superficie del tabique', unit:'m²', type:'number'},
+        {key:'tipo', label:'Tipo de pieza', type:'select', options:[
+          {value:'50', label:'Ladrillo hueco doble (≈50 uds/m²)'},
+          {value:'27', label:'Ladrillo perforado/tochana (≈27 uds/m²)'},
+          {value:'12.5', label:'Bloque de hormigón 40×20×20 (≈12.5 uds/m²)'},
+          {value:'9', label:'Bloque termoarcilla (≈9 uds/m²)'}
+        ], def:'50'},
+        {key:'espesor_mortero', label:'Espesor de la capa de mortero de asiento', unit:'cm', type:'number', def:1.5},
+        {key:'espesor_yeso', label:'Espesor de la capa de yeso de enlucido', unit:'mm', type:'number', def:15},
+        {key:'merma', label:'Merma general', unit:'%', type:'number', def:10}
+      ],
+      compute:function(v){
+        var ladrillosCalc = CALCULADORAS.filter(function(c){ return c.id === 'ladrillos_bloques'; })[0];
+        var morteroCalc = CALCULADORAS.filter(function(c){ return c.id === 'mortero_albanileria'; })[0];
+        var yesoCalc = CALCULADORAS.filter(function(c){ return c.id === 'yeso_enlucido'; })[0];
+
+        var resLadrillos = ladrillosCalc.compute({area: v.area, tipo: v.tipo, merma: v.merma});
+        var resMortero = morteroCalc.compute({area: v.area, espesor: v.espesor_mortero, merma: v.merma});
+        var resYeso = yesoCalc.compute({area: v.area, espesor: v.espesor_yeso, merma: v.merma});
+
+        return [
+          {label:'Piezas necesarias', value: resLadrillos[0].value, unit:'uds'},
+          {label:'Mortero de asiento', value: resMortero[0].value, unit:'kg'},
+          {label:'Sacos de mortero (25 kg)', value: resMortero[1].value, unit:'sacos'},
+          {label:'Yeso de enlucido', value: resYeso[0].value, unit:'kg'},
+          {label:'Sacos de yeso (25 kg)', value: resYeso[1].value, unit:'sacos'}
+        ];
+      }
+    },
+    {
       id:'ladrillos_bloques', cat:'materiales', titulo:'Ladrillos / bloques necesarios',
       info:'Unidades = superficie de pared × piezas por m² × (1 + merma). Piezas/m² orientativas según tipo de fábrica.',
       fields:[
@@ -1796,6 +1844,7 @@
   var REFORMAS = [
     {
       id:'estimacion_reforma', cat:'reformas', titulo:'Calcula cuánto material necesitas para tu reforma',
+      destacada:true,
       info:'Estimación orientativa de materiales para una estancia completa: suelo, paredes, adhesivo, juntas, pintura y rodapié, con un 10% de desperdicio.',
       fields:[
         {key:'estancia', label:'Tipo de estancia', type:'select', options:[
