@@ -736,9 +736,9 @@
   @media (max-width:640px){.mat-add-form{grid-template-columns:1fr 1fr;}}
 
   .pp-add-row{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; position:relative;}
-  .fav-dropdown{position:relative;}
+  .fav-dropdown{position:static;}
   .fav-dropdown-btn{border-color:rgba(107,99,85,0.4); color:var(--c-materiales); background:rgba(107,99,85,0.07);}
-  .fav-dropdown-menu{position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.12); min-width:240px; max-height:260px; overflow-y:auto; padding:6px; z-index:5;}
+  .fav-dropdown-menu{position:absolute; top:calc(100% + 6px); right:0; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.12); min-width:240px; max-width:calc(100vw - 32px); max-height:260px; overflow-y:auto; padding:6px; z-index:5;}
   .fav-dropdown-item{padding:9px 10px; border-radius:6px; font-size:13px; display:flex; justify-content:space-between; gap:10px; cursor:pointer;}
   .fav-dropdown-item:hover{background:var(--paper-light);}
   .fav-dropdown-item .fav-price{font-family:'IBM Plex Mono'; font-weight:600; color:var(--c-materiales);}
@@ -3748,8 +3748,10 @@ function abrirPresupuestoPDF(id){
   .doc-fotos h3{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#7458C2; margin:0 0 8px; font-weight:700;}
   .doc-fotos-grid{display:flex; gap:10px; flex-wrap:wrap;}
   .doc-fotos-grid img{width:140px; height:105px; object-fit:cover; border-radius:8px; border:1px solid #eee;}
-  .firma{margin-top:50px; display:flex; justify-content:space-between;}
-  .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
+  .firma-digital{margin-top:36px; border-radius:10px; padding:12px 16px; font-size:12.5px;}
+  .firma-digital.ok{background:rgba(46,143,110,0.1); border:1px solid rgba(46,143,110,0.35); color:#1f6b52;}
+  .firma-digital.bad{background:rgba(192,90,58,0.08); border:1px solid rgba(192,90,58,0.3); color:#a1442b;}
+  .firma-digital.pend{border-left:3px solid #7458C2; color:#4a4842; padding-left:12px;}
   .watermark{margin-top:36px; text-align:center;}
   .watermark span{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#9a958c; letter-spacing:0.02em; background:#f3f3f1; padding:5px 14px; border-radius:999px;}
   @media print{ body{padding:14mm;} }
@@ -3811,10 +3813,9 @@ function abrirPresupuestoPDF(id){
     <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}">`).join('')}</div>
   </div>` : ''}
 
-  <div class="firma">
-    <div>Firma del profesional</div>
-    <div>Firma y aceptación del cliente</div>
-  </div>
+  ${p.estado === 'Aceptado' ? `<div class="firma-digital ok">✓ Presupuesto aceptado digitalmente${p.firmaNombre?` por ${escapeHtml(p.firmaNombre)}`:''}${p.firmaFecha?` el ${formatDateES(p.firmaFecha)}`:''}.</div>`
+    : p.estado === 'Rechazado' ? `<div class="firma-digital bad">✕ Presupuesto rechazado digitalmente${p.firmaNombre?` por ${escapeHtml(p.firmaNombre)}`:''}${p.firmaFecha?` el ${formatDateES(p.firmaFecha)}`:''}.</div>`
+    : `<div class="firma-digital pend">Este presupuesto se acepta digitalmente a través del enlace enviado al cliente — no requiere firma en papel.</div>`}
 
   ${isPremiumActive ? '' : '<div class="watermark"><span>Presupuesto generado con TodoOficios.es</span></div>'}
 
