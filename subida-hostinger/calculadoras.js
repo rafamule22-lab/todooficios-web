@@ -1878,7 +1878,9 @@
         {key:'puntos_agua', label:'Puntos de agua a instalar', unit:'uds', type:'number', def:2,
           showIf:function(v){ return !!v.scope_fontaneria; }},
         {key:'head_electricidad', type:'heading', label:'Electricidad', showIf:function(v){ return !!v.scope_electricidad; }},
-        {key:'puntos_luz', label:'Puntos de luz/enchufe a instalar', unit:'uds', type:'number', def:4,
+        {key:'puntos_luz', label:'Puntos de luz a instalar', unit:'uds', type:'number', def:3,
+          showIf:function(v){ return !!v.scope_electricidad; }},
+        {key:'enchufes', label:'Enchufes a instalar', unit:'uds', type:'number', def:4,
           showIf:function(v){ return !!v.scope_electricidad; }},
         {key:'head_carpinteria', type:'heading', label:'Carpintería', showIf:function(v){ return !!v.scope_carpinteria; }},
         {key:'num_puertas_ventanas', label:'Puertas/ventanas a reformar', unit:'uds', type:'number', def:1,
@@ -1946,11 +1948,13 @@
         }
 
         if(scopeElectricidad){
-          var puntosLuz = gnOpt(v,'puntos_luz',4);
-          var cableElectricidad = puntosLuz*6*(1+merma);
-          res.push({label:'Puntos de luz/enchufe a instalar', value: fmt(puntosLuz,0), unit:'uds'});
+          var puntosLuz = gnOpt(v,'puntos_luz',3), enchufes = gnOpt(v,'enchufes',4);
+          var totalPuntosElec = puntosLuz + enchufes;
+          var cableElectricidad = totalPuntosElec*6*(1+merma);
+          res.push({label:'Puntos de luz a instalar', value: fmt(puntosLuz,0), unit:'uds'});
+          res.push({label:'Enchufes a instalar', value: fmt(enchufes,0), unit:'uds'});
           res.push({label:'Cable estimado', value: fmt(cableElectricidad,1), unit:'m'});
-          res.push({label:'Cajas de mecanismo empotrar', value: fmt(puntosLuz,0), unit:'uds'});
+          res.push({label:'Cajas de mecanismo empotrar', value: fmt(totalPuntosElec,0), unit:'uds'});
         }
 
         if(scopeCarpinteria){
@@ -2318,12 +2322,14 @@
     } catch(e){ return []; }
   }
 
-  function guardarEnBorradorPresupuesto(concepto, importe){
+  function guardarEnBorradorPresupuesto(lineas){
     try {
       var proEmail = localStorage.getItem('session-email');
-      if(!proEmail) return 0;
+      if(!proEmail || !lineas.length) return 0;
       var lista = leerBorradorPresupuesto();
-      lista.push({id:'cd'+Date.now(), concepto:concepto, importe:importe||0});
+      lineas.forEach(function(l, i){
+        lista.push({id:'cd'+Date.now()+'-'+i, descripcion:l.descripcion, unidad:l.unidad||'ud', cantidad:l.cantidad||0, precio:l.precio||0});
+      });
       localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
       return lista.length;
     } catch(e){ return 0; }
@@ -2523,14 +2529,36 @@
       '</div>';
   }
 
+  var UNIDADES_PARTIDA_MAP = {
+    'uds':'ud', 'ud':'ud', 'm²':'m²', 'm³':'m³', 'm':'m', 'kg':'kg', 'L':'L', 'h':'h',
+    'cajas':'caja', 'caja':'caja', 'sacos de 25 kg':'saco', 'saco':'saco'
+  };
+  function mapUnidadPartida(unit){
+    return UNIDADES_PARTIDA_MAP[unit] || 'ud';
+  }
+  function numeroDe(value){
+    var n = parseFloat(String(value).replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  }
+  /* Convierte el resultado de una calculadora en líneas de presupuesto
+     independientes (una por cantidad calculada), en vez de un único
+     texto con todo junto. La primera fila sin cantidad numérica (p.ej.
+     "Estancia: Baño") se usa como prefijo de contexto y se descarta
+     como línea; si no hay ninguna, se usa el título de la calculadora. */
   function resumenPartida(calc, res){
     var relevantes = res.filter(function(r){ return !r.link; });
-    var resumen = relevantes.map(function(r){ return r.label + ': ' + r.value + (r.unit ? ' ' + r.unit : ''); }).join(', ');
-    var euroRow = relevantes.filter(function(r){ return r.unit === '€'; })[0];
-    return {
-      concepto: calc.titulo + ' — ' + resumen,
-      importe: euroRow ? parseFloat(String(euroRow.value).replace(',', '.')) || 0 : 0
-    };
+    var filaContexto = relevantes.filter(function(r){ return numeroDe(r.value) === null; })[0];
+    var contexto = filaContexto ? filaContexto.value : calc.titulo;
+    return relevantes.filter(function(r){
+      if(r === filaContexto) return false;
+      if(r.unit === '%') return false;
+      return numeroDe(r.value) !== null;
+    }).map(function(r){
+      if(r.unit === '€'){
+        return {descripcion: contexto + ' — ' + r.label, unidad:'ud', cantidad:1, precio: numeroDe(r.value) || 0};
+      }
+      return {descripcion: contexto + ' — ' + r.label, unidad: mapUnidadPartida(r.unit), cantidad: numeroDe(r.value)};
+    });
   }
 
   function cargarNegocioCompleto(){
@@ -2569,14 +2597,16 @@
     return mejor===null ? 21 : mejor;
   }
 
-  function anadirPartidaAPresupuestoExistente(presupuestoId, concepto, importe){
+  function anadirPartidaAPresupuestoExistente(presupuestoId, lineas){
     return cargarNegocioCompleto().then(function(negocio){
       if(!negocio || !Array.isArray(negocio.presupuestos)) return null;
       var p = negocio.presupuestos.filter(function(x){ return x.id === presupuestoId; })[0];
       if(!p) return null;
       if(!Array.isArray(p.partidas)) p.partidas = [];
       var ivaLinea = ivaMasFrecuente(p.partidas, Number(p.ivaPct));
-      p.partidas.push({descripcion: concepto, unidad:'ud', cantidad:1, precio: importe||0, coste:0, iva: ivaLinea});
+      lineas.forEach(function(l){
+        p.partidas.push({descripcion: l.descripcion, unidad: l.unidad||'ud', cantidad: l.cantidad||0, precio: l.precio||0, coste:0, iva: ivaLinea});
+      });
       var subtotal = p.partidas.reduce(function(s,x){ return s + (Number(x.cantidad)||0)*(Number(x.precio)||0); }, 0);
       var porTipo = {};
       p.partidas.forEach(function(x){
@@ -2943,12 +2973,14 @@
         var draftBtn = document.getElementById('cecAddDraftBtn');
         if(draftBtn){
           draftBtn.addEventListener('click', function(){
-            var partida = resumenPartida(calc, ultimoResultado);
-            var n = guardarEnBorradorPresupuesto(partida.concepto, partida.importe);
+            var lineas = resumenPartida(calc, ultimoResultado);
+            var n = guardarEnBorradorPresupuesto(lineas);
             var toast = document.getElementById('cecAddToast');
-            if(toast && n > 0){
+            if(toast){
               toast.style.display = '';
-              toast.textContent = 'Añadido — llevas ' + n + (n === 1 ? ' partida guardada' : ' partidas guardadas') + ' para tu próximo presupuesto';
+              toast.textContent = n > 0
+                ? 'Añadido — llevas ' + n + (n === 1 ? ' partida guardada' : ' partidas guardadas') + ' para tu próximo presupuesto'
+                : 'Este resultado no tiene cantidades que añadir a un presupuesto.';
             }
             if(picker) picker.style.display = 'none';
             renderDraftIndicator();
@@ -2959,9 +2991,17 @@
             var opt = e.target.closest('.cec-pp-opt');
             if(!opt) return;
             var pid = opt.getAttribute('data-pid');
+            var lineas = resumenPartida(calc, ultimoResultado);
+            var toastVacio = document.getElementById('cecAddToast');
+            if(!lineas.length){
+              if(toastVacio){
+                toastVacio.style.display = '';
+                toastVacio.textContent = 'Este resultado no tiene cantidades que añadir a un presupuesto.';
+              }
+              return;
+            }
             opt.disabled = true;
-            var partida = resumenPartida(calc, ultimoResultado);
-            anadirPartidaAPresupuestoExistente(pid, partida.concepto, partida.importe).then(function(p){
+            anadirPartidaAPresupuestoExistente(pid, lineas).then(function(p){
               var toast = document.getElementById('cecAddToast');
               if(!toast) return;
               if(p){
