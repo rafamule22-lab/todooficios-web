@@ -679,6 +679,7 @@
 
   .drow-row-actions{margin-top:8px;}
   .pp-mini-btn{font-family:'IBM Plex Mono'; font-size:11.5px; text-transform:uppercase; letter-spacing:0.02em; padding:5px 10px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); margin-right:6px; cursor:pointer;}
+  .pp-mini-btn svg{width:12px; height:12px; vertical-align:-1px; margin-right:2px;}
   .pp-mini-btn.ok{border-color:#bfe3c5; color:#1e6b2e;}
   .pp-mini-btn.bad{border-color:#f0bcbc; color:#a12626;}
   .pp-mini-btn:hover{border-color:var(--ink); color:var(--ink);}
@@ -2356,7 +2357,7 @@ function presupuestoPublicoSnapshot(p, datosNegocio, cuentaProfesional){
   return {
     numero: p.numero, fecha: p.fecha, validezDias: p.validezDias||30,
     concepto: p.concepto||'', direccionObra: p.direccionObra||'',
-    cliente: p.cliente||'', clienteNif: p.clienteNif||'', clienteDireccion: p.clienteDireccion||'', clienteTelefono: p.clienteTelefono||'',
+    cliente: p.cliente||'', clienteNif: p.clienteNif||'', clienteDireccion: p.clienteDireccion||'', clienteTelefono: p.clienteTelefono||'', clienteEmail: p.clienteEmail||'',
     partidas: p.partidas||[], base: p.base, ivaDesglose: p.ivaDesglose || [{pct:p.ivaPct||0, base:p.base, cuota:p.cuota}],
     cuota: p.cuota, irpfAplica: !!p.irpfAplica, irpfPct: p.irpfPct||0, irpfImporte: p.irpfImporte||0, total: p.total,
     formaPago: p.formaPago||'Transferencia bancaria', fotos: p.fotos||[],
@@ -2381,6 +2382,29 @@ async function comprobarRespuestaPublica(p){
   const raw = await safeGet('presupuesto-publico:'+p.shareId, true);
   if(!raw) return null;
   try { return JSON.parse(raw); } catch(e){ return null; }
+}
+
+/* Envío rápido del presupuesto al cliente: genera (o reutiliza) el enlace público
+   con el PDF y lo manda por email (mailto) o WhatsApp (wa.me), sin backend propio. */
+async function enviarPresupuesto(id, via){
+  const p = negocio.presupuestos.find(x=>x.id===id);
+  if(!p) return;
+  if(via==='email' && !p.clienteEmail){ showToast('Añade el email del cliente en el presupuesto para poder enviarlo.'); return; }
+  if(via==='whatsapp' && !p.clienteTelefono){ showToast('Añade el teléfono del cliente en el presupuesto para poder enviarlo.'); return; }
+  const shareId = await publicarPresupuesto(p);
+  if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
+  await saveNegocio(account.email, negocio);
+  const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
+  const emisorNombre = (negocio.datos && negocio.datos.nombreFiscal) || account.name || '';
+  if(via==='email'){
+    const subject = `Presupuesto ${p.numero}${emisorNombre?' — '+emisorNombre:''}`;
+    const body = `Hola ${p.cliente||''},\n\nAquí tienes tu presupuesto ${p.numero} por ${formatEUR(p.total)}.\nPuedes verlo y descargarlo en PDF en este enlace:\n${url}\n\nUn saludo${emisorNombre?',\n'+emisorNombre:''}`;
+    window.location.href = `mailto:${p.clienteEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  } else {
+    const digits = (p.clienteTelefono||'').replace(/\D/g,'');
+    const msg = `Hola ${p.cliente||''}, te envío tu presupuesto ${p.numero} por ${formatEUR(p.total)}. Puedes verlo y descargarlo en PDF aquí: ${url}`;
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
 }
 /* Materiales favoritos: clave propia (no dentro de negocio:<email>) para que calculadoras.html
    pueda leerla/escribirla sin tocar el resto de los datos de negocio del profesional. */
@@ -3613,7 +3637,7 @@ function bindPro(){
 /* ======================= VISTA: PANEL DE NEGOCIO ======================= */
 function clienteRowHTML(c){
   return `<div class="data-row">
-    <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}</span></div>
+    <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}${c.email?' · '+escapeHtml(c.email):''}</span></div>
     <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">🗑</button>
   </div>`;
 }
@@ -3671,7 +3695,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button><button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button>${p.clienteEmail?`<button type="button" class="pp-mini-btn" data-email-presupuesto="${p.id}">📧 Enviar por email</button>`:''}${p.clienteTelefono?`<button type="button" class="pp-mini-btn" data-whatsapp-presupuesto="${p.id}">${WA_ICON} Enviar por WhatsApp</button>`:''}<button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -3783,6 +3807,7 @@ function abrirPresupuestoPDF(id){
       ${p.clienteNif?`<div>NIF/DNI: ${escapeHtml(p.clienteNif)}</div>`:''}
       ${p.clienteDireccion?`<div>${escapeHtml(p.clienteDireccion)}</div>`:''}
       ${p.clienteTelefono?`<div>${escapeHtml(p.clienteTelefono)}</div>`:''}
+      ${p.clienteEmail?`<div>${escapeHtml(p.clienteEmail)}</div>`:''}
     </div>
     ${(p.direccionObra || p.concepto) ? `<div class="box">
       <h3>Trabajo</h3>
@@ -4180,10 +4205,13 @@ async function renderNegocio(){
             <div class="field"><label>Tipo</label><select id="ng-cli-tipo"><option value="Particular">Particular</option><option value="Empresa">Empresa</option></select></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Teléfono</label><input type="tel" id="ng-cli-telefono" placeholder="600 123 456"></div>
-            <div class="field"><label>NIF/DNI <small>(opcional)</small></label><input type="text" id="ng-cli-nif" placeholder="Solo si lo tienes"></div>
+            <div class="field"><label>Teléfono <small>(para enviar por WhatsApp)</small></label><input type="tel" id="ng-cli-telefono" placeholder="600 123 456"></div>
+            <div class="field"><label>Email <small>(para enviar presupuestos)</small></label><input type="email" id="ng-cli-email" placeholder="cliente@email.com"></div>
           </div>
-          <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="ng-cli-direccion" placeholder="Calle, número, ciudad"></div>
+          <div class="field-row">
+            <div class="field"><label>NIF/DNI <small>(opcional)</small></label><input type="text" id="ng-cli-nif" placeholder="Solo si lo tienes"></div>
+            <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="ng-cli-direccion" placeholder="Calle, número, ciudad"></div>
+          </div>
           <button class="btn btn-outline btn-block" id="ng-cli-add">Añadir cliente</button>
           <div id="ng-cli-msg"></div>
         </div>
@@ -4303,6 +4331,10 @@ async function renderNegocio(){
               </select>
             </div>
             <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa" value="${presupuestoEditando && !presupuestoEditando.clienteId ? escapeHtml(presupuestoEditando.cliente) : ''}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Teléfono del cliente <small>(para enviarlo por WhatsApp)</small></label><input type="tel" id="ng-pre-cliente-tel" placeholder="600 123 456" value="${escapeHtml((presupuestoEditando && (presupuestoEditando.clienteTelefono || negocio.clientes.find(c=>c.id===presupuestoEditando.clienteId)?.telefono)) || '')}"></div>
+            <div class="field"><label>Email del cliente <small>(para enviarlo por email)</small></label><input type="email" id="ng-pre-cliente-email" placeholder="cliente@email.com" value="${escapeHtml((presupuestoEditando && (presupuestoEditando.clienteEmail || negocio.clientes.find(c=>c.id===presupuestoEditando.clienteId)?.email)) || '')}"></div>
           </div>
           <div class="field-row">
             <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño" value="${escapeHtml(presupuestoEditando?.concepto||'')}"></div>
@@ -4567,6 +4599,7 @@ function bindNegocio(){
     const nombre = document.getElementById('ng-cli-nombre').value.trim();
     const tipo = document.getElementById('ng-cli-tipo').value;
     const telefono = document.getElementById('ng-cli-telefono').value.trim();
+    const email = document.getElementById('ng-cli-email').value.trim();
     const nif = document.getElementById('ng-cli-nif').value.trim();
     const direccion = document.getElementById('ng-cli-direccion').value.trim();
     if(!nombre){
@@ -4578,7 +4611,7 @@ function bindNegocio(){
       msgBox.innerHTML = `<div class="msg err">Ya tienes un cliente registrado como ${escapeHtml(dup.nombre)}${dup.telefono?' ('+escapeHtml(dup.telefono)+')':''}.</div>`;
       return;
     }
-    negocio.clientes.push({ id:'cl'+Date.now(), nombre, tipo, telefono, nif, direccion, favorito:false, createdAt: Date.now() });
+    negocio.clientes.push({ id:'cl'+Date.now(), nombre, tipo, telefono, email, nif, direccion, favorito:false, createdAt: Date.now() });
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el cliente. Inténtalo de nuevo.</div>'; return; }
     showToast('Cliente añadido.');
@@ -4760,6 +4793,10 @@ function bindNegocio(){
       catch(e){ showToast('Copia este enlace para tu cliente: ' + url); }
       return;
     }
+    const emailBtn = e.target.closest('[data-email-presupuesto]');
+    if(emailBtn){ enviarPresupuesto(emailBtn.dataset.emailPresupuesto, 'email'); return; }
+    const waBtn = e.target.closest('[data-whatsapp-presupuesto]');
+    if(waBtn){ enviarPresupuesto(waBtn.dataset.whatsappPresupuesto, 'whatsapp'); return; }
   });
 
   const checkRespuestasBtn = document.getElementById('pp-check-respuestas');
@@ -5174,7 +5211,15 @@ function bindPresupuestoForm(){
       document.getElementById('pp-irpf-toggle').checked = true;
     }
   }
-  clienteSelect.onchange = ()=>{ syncClienteState(); recalcTotales(); };
+  clienteSelect.onchange = ()=>{
+    syncClienteState();
+    const cliente = negocio.clientes.find(c=>c.id===clienteSelect.value);
+    if(cliente){
+      document.getElementById('ng-pre-cliente-tel').value = cliente.telefono||'';
+      document.getElementById('ng-pre-cliente-email').value = cliente.email||'';
+    }
+    recalcTotales();
+  };
   document.getElementById('pp-irpf-toggle').onchange = recalcTotales;
   document.getElementById('ng-pre-irpf-pct').onchange = recalcTotales;
   document.getElementById('ng-pre-iva').onchange = recalcTotales;
@@ -5223,6 +5268,8 @@ function bindPresupuestoForm(){
     }
     const concepto = document.getElementById('ng-pre-concepto').value.trim();
     const direccionObra = document.getElementById('ng-pre-direccion-obra').value.trim();
+    const clienteTelefono = document.getElementById('ng-pre-cliente-tel').value.trim();
+    const clienteEmail = document.getElementById('ng-pre-cliente-email').value.trim();
     const validezDias = Number(document.getElementById('ng-pre-validez').value) || 30;
     const formaPago = document.getElementById('ng-pre-pago').value.trim() || 'Transferencia bancaria';
     const irpfAplica = document.getElementById('pp-irpf-toggle').checked;
@@ -5234,34 +5281,57 @@ function bindPresupuestoForm(){
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
 
+    if(clienteObj){
+      clienteObj.telefono = clienteTelefono;
+      clienteObj.email = clienteEmail;
+    }
+
     const datosComunes = {
       clienteId: clienteObj ? clienteObj.id : null,
       cliente: clienteObj ? clienteObj.nombre : clienteNombreNuevo,
       clienteTipo: clienteObj ? (clienteObj.tipo||'Particular') : 'Particular',
       clienteNif: clienteObj ? (clienteObj.nif||'') : '',
       clienteDireccion: clienteObj ? (clienteObj.direccion||'') : '',
-      clienteTelefono: clienteObj ? (clienteObj.telefono||'') : '',
+      clienteTelefono, clienteEmail,
       concepto, direccionObra, partidas: partidasValidas, fotos: ppFotos.slice(),
       base: Math.round(subtotal*100)/100, ivaDesglose, cuota: Math.round(cuota*100)/100,
       irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
       total: Math.round(total*100)/100, validezDias, formaPago
     };
 
-    let numero;
+    let numero, presupuestoFinal;
     if(editando){
       numero = editando.numero;
       Object.assign(editando, datosComunes);
+      presupuestoFinal = editando;
     } else {
       negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
       numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
-      negocio.presupuestos.push({ id:'p'+Date.now(), numero, fecha: todayISO(), ...datosComunes, estado:'Pendiente', createdAt: Date.now() });
+      presupuestoFinal = { id:'p'+Date.now(), numero, fecha: todayISO(), ...datosComunes, estado:'Pendiente', createdAt: Date.now() };
+      negocio.presupuestos.push(presupuestoFinal);
     }
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el presupuesto. Inténtalo de nuevo.</div>'; return; }
-    if(editando && editando.shareId) publicarPresupuesto(editando); // refresca el enlace ya compartido, sin bloquear el guardado
+    if(presupuestoFinal.shareId) publicarPresupuesto(presupuestoFinal); // refresca el enlace ya compartido, sin bloquear el guardado
     negocioEditPresupuestoId = null;
-    showToast(editando ? `Presupuesto ${numero} actualizado — ${formatEUR(total)}.` : `Presupuesto ${numero} creado — ${formatEUR(total)}.`);
-    showView('negocio');
+
+    const accionesEnvio = [
+      clienteEmail ? `<button type="button" class="pp-mini-btn" data-quick-email="${presupuestoFinal.id}">📧 Enviar por email</button>` : '',
+      clienteTelefono ? `<button type="button" class="pp-mini-btn" data-quick-wa="${presupuestoFinal.id}">${WA_ICON} Enviar por WhatsApp</button>` : ''
+    ].filter(Boolean).join('');
+    msgBox.innerHTML = `<div class="msg ok">
+      ✅ Presupuesto ${escapeHtml(numero)} ${editando?'actualizado':'creado'} — ${formatEUR(total)}.
+      <div class="drow-row-actions" style="margin-top:10px;">
+        ${accionesEnvio}
+        <button type="button" class="pp-mini-btn" id="ng-pre-ir-lista">Ir a mis presupuestos →</button>
+      </div>
+    </div>`;
+    const irListaBtn = document.getElementById('ng-pre-ir-lista');
+    if(irListaBtn) irListaBtn.onclick = ()=> showView('negocio');
+    const quickEmailBtn = msgBox.querySelector('[data-quick-email]');
+    if(quickEmailBtn) quickEmailBtn.onclick = ()=> enviarPresupuesto(presupuestoFinal.id, 'email');
+    const quickWaBtn = msgBox.querySelector('[data-quick-wa]');
+    if(quickWaBtn) quickWaBtn.onclick = ()=> enviarPresupuesto(presupuestoFinal.id, 'whatsapp');
   };
 }
 
