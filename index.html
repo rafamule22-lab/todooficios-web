@@ -2314,7 +2314,7 @@ async function setMyClientName(name){
 /* ======================= PANEL DE NEGOCIO (gastos, clientes, presupuestos, agenda) ======================= */
 const CATEGORIAS_GASTO = ['Fontanería','Electricidad','Albañilería','Pintura y acabados','Climatización','Cerrajería','Herramientas y maquinaria','Alquiler de equipos','Transporte / desplazamientos','Otros'];
 const TIPOS_TRABAJO_AGENDA = ['Visita para presupuestar','Instalación','Reparación/avería','Revisión/mantenimiento','Entrega de obra'];
-const UNIDADES_PRESUPUESTO = ['ud','m','m²','m³','ml','kg','L','h','pa'];
+const UNIDADES_PRESUPUESTO = ['ud','m','m²','m³','ml','kg','L','h','pa','caja','saco'];
 const UNIDADES_MATERIAL = ['ud','m','m²','m³','kg','L'];
 const DIAS_SEMANA = [
   {key:'lunes', label:'Lunes'}, {key:'martes', label:'Martes'}, {key:'miercoles', label:'Miércoles'},
@@ -5250,7 +5250,14 @@ function bindPresupuestoForm(){
     draftUseBtn.onclick = ()=>{
       const draft = getPresupuestoDraft(account.email);
       if(!draft.length) return;
-      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0, iva:ivaPorDefecto()}));
+      const nuevas = draft.map(d=>({
+        descripcion: d.descripcion || d.concepto || '',
+        unidad: UNIDADES_PRESUPUESTO.includes(d.unidad) ? d.unidad : 'ud',
+        cantidad: d.descripcion !== undefined ? (Number(d.cantidad)||0) : 1,
+        precio: Number(d.precio ?? d.importe) || 0,
+        coste: 0,
+        iva: ivaPorDefecto()
+      }));
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
       ppPartidas = soloVacia ? nuevas : ppPartidas.concat(nuevas);
       clearPresupuestoDraft(account.email);
