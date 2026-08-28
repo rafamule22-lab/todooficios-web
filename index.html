@@ -4306,24 +4306,12 @@ async function renderNegocio(){
         <summary>Ver cerrados (${presupuestosCerrados.length})</summary>
         <div class="ng-add-body" id="negocio-presupuestos-cerrados">${presupuestosCerrados.slice().reverse().map(presupuestoRowHTML).join('')}</div>
       </details>` : ''}
+    </div>
+  </div>
 
-      <details class="ng-add">
-        <summary>Datos de tu negocio (para el membrete del PDF)</summary>
-        <div class="ng-add-body">
-          <div class="field-row">
-            <div class="field"><label>Nombre fiscal / Razón social</label><input type="text" id="ng-datos-nombre" value="${escapeHtml(negocio.datos.nombreFiscal||'')}" placeholder="${escapeHtml(account.name||'')}"></div>
-            <div class="field"><label>NIF</label><input type="text" id="ng-datos-nif" value="${escapeHtml(negocio.datos.nif||'')}" placeholder="Tu NIF"></div>
-          </div>
-          <div class="field-row">
-            <div class="field"><label>Dirección fiscal</label><input type="text" id="ng-datos-direccion" value="${escapeHtml(negocio.datos.direccion||'')}" placeholder="Calle, número, ciudad"></div>
-            <div class="field"><label>Teléfono</label><input type="text" id="ng-datos-telefono" value="${escapeHtml(negocio.datos.telefono||account.phone||'')}"></div>
-          </div>
-          <div class="field"><label>Email de contacto</label><input type="email" id="ng-datos-email" value="${escapeHtml(negocio.datos.email||account.email||'')}"></div>
-          <button class="btn btn-outline btn-block" id="ng-datos-save">Guardar datos del negocio</button>
-          <div id="ng-datos-msg"></div>
-        </div>
-      </details>
-
+  <div class="ng-tab-panel ${negocioTab==='presupuestos'?'active':''}" data-tab="presupuestos">
+    <div class="panel panel-wide">
+      <div class="section-label">${ngIconHTML('presupuestos')} Crear presupuesto</div>
       ${(presupuestosLimitReached && !presupuestoEditando) ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
       ${(presupuestoDraft.length && !presupuestoEditando) ? `
       <div class="pp-draft-banner">
@@ -4339,6 +4327,22 @@ async function renderNegocio(){
         <summary>${presupuestoEditando ? `Editando presupuesto ${escapeHtml(presupuestoEditando.numero)}` : '+ Nuevo presupuesto'}</summary>
         <div class="ng-add-body">
           ${presupuestoEditando ? `<div class="msg" style="margin-bottom:12px;">Editando <strong>${escapeHtml(presupuestoEditando.numero)}</strong> — ${escapeHtml(presupuestoEditando.cliente)}. <button type="button" class="pp-mini-btn" id="ng-pre-cancel-edit">Cancelar edición</button></div>` : ''}
+          <details class="ng-add">
+            <summary>Datos de tu negocio (para el membrete del PDF)</summary>
+            <div class="ng-add-body">
+              <div class="field-row">
+                <div class="field"><label>Nombre fiscal / Razón social</label><input type="text" id="ng-datos-nombre" value="${escapeHtml(negocio.datos.nombreFiscal||'')}" placeholder="${escapeHtml(account.name||'')}"></div>
+                <div class="field"><label>NIF</label><input type="text" id="ng-datos-nif" value="${escapeHtml(negocio.datos.nif||'')}" placeholder="Tu NIF"></div>
+              </div>
+              <div class="field-row">
+                <div class="field"><label>Dirección fiscal</label><input type="text" id="ng-datos-direccion" value="${escapeHtml(negocio.datos.direccion||'')}" placeholder="Calle, número, ciudad"></div>
+                <div class="field"><label>Teléfono</label><input type="text" id="ng-datos-telefono" value="${escapeHtml(negocio.datos.telefono||account.phone||'')}"></div>
+              </div>
+              <div class="field"><label>Email de contacto</label><input type="email" id="ng-datos-email" value="${escapeHtml(negocio.datos.email||account.email||'')}"></div>
+              <button class="btn btn-outline btn-block" id="ng-datos-save">Guardar datos del negocio</button>
+              <div id="ng-datos-msg"></div>
+            </div>
+          </details>
           <div class="field-row">
             <div class="field">
               <label>Cliente</label>
