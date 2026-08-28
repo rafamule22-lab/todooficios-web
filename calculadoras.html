@@ -68,6 +68,10 @@
   .cec-field{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600;min-width:0;}
   .cec-field input, .cec-field select{font-family:'IBM Plex Mono',monospace;padding:8px 9px;border-radius:8px;border:1px solid var(--line);font-size:13px;background:var(--paper-light);width:100%;min-width:0;max-width:100%;}
   .cec-field input:focus, .cec-field select:focus{outline:2px solid var(--amber);background:#fff;}
+  .cec-field-checkbox{flex-direction:row;align-items:center;gap:8px;}
+  .cec-field-checkbox input{width:auto;flex:0 0 auto;accent-color:var(--amber-deep);}
+  .cec-form-heading{grid-column:1/-1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:12px;margin-top:2px;}
+  .cec-form-heading:first-child{border-top:none;padding-top:0;margin-top:0;}
   .cec-result{margin-top:16px;background:var(--ink);border-radius:12px;padding:16px 18px;}
   .cec-result-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(247,245,240,0.12);font-family:'IBM Plex Mono',monospace;color:var(--paper-light);font-size:14.5px;}
   .cec-result-row:last-child{border-bottom:none;}
@@ -169,6 +173,7 @@
   body.cec-dark .cec-card-title{color:var(--paper-light);}
   body.cec-dark .cec-field input, body.cec-dark .cec-field select{background:#141210;border-color:rgba(247,245,240,0.2);color:var(--paper-light);}
   body.cec-dark .cec-info{background:#211F1B;color:#B7B2A6;}
+  body.cec-dark .cec-form-heading{color:#B7B2A6;border-color:rgba(247,245,240,0.16);}
   body.cec-dark .cec-result{border:1px solid rgba(242,183,5,0.25);}
   body.cec-dark .cec-tabs{border-bottom-color:rgba(247,245,240,0.16);}
 
@@ -182,6 +187,10 @@
 <body>
   <div class="cec-top">
     <span class="cec-brand"><span class="mic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></span>Calculadoras TodoOficios</span>
+    <div id="cecObraWrap" class="cec-draft-wrap" style="display:none;">
+      <button type="button" class="cec-draft-pill" id="cecObraPill"></button>
+      <div class="cec-draft-menu" id="cecObraMenu" style="display:none;"></div>
+    </div>
     <div id="cecDraftWrap" class="cec-draft-wrap" style="display:none;">
       <button type="button" class="cec-draft-pill" id="cecDraftPill"></button>
       <div class="cec-draft-menu" id="cecDraftMenu" style="display:none;"></div>
