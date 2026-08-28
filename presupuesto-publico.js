@@ -126,6 +126,7 @@
           (p.clienteNif ? '<div>NIF/DNI: ' + escapeHtml(p.clienteNif) + '</div>' : '') +
           (p.clienteDireccion ? '<div>' + escapeHtml(p.clienteDireccion) + '</div>' : '') +
           (p.clienteTelefono ? '<div>' + escapeHtml(p.clienteTelefono) + '</div>' : '') +
+          (p.clienteEmail ? '<div>' + escapeHtml(p.clienteEmail) + '</div>' : '') +
         '</div>' +
         ((p.direccionObra || p.concepto) ? '<div class="box"><h3>Trabajo</h3>' +
           (p.concepto ? '<div><strong>' + escapeHtml(p.concepto) + '</strong></div>' : '') +
