@@ -713,16 +713,17 @@
   .pp-stale-list span{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
   .pp-filtro-input{width:100%; padding:10px 14px; border-radius:9px; border:1px solid var(--line); font-size:14px; font-family:inherit; background:#fff; margin-bottom:12px;}
   .pp-filtro-input:focus{outline:2px solid var(--amber);}
-  .pp-draft-banner{display:flex; align-items:center; gap:12px; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
+  .pp-draft-banner{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
   .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .pp-draft-banner .pp-draft-ic svg{width:17px; height:17px; stroke:var(--c-presupuestos); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
-  .pp-draft-banner .pp-draft-txt{flex:1; min-width:0; font-size:13px;}
+  .pp-draft-banner .pp-draft-txt{flex:1; min-width:180px; font-size:13px;}
   .pp-draft-banner .pp-draft-txt strong{font-family:'Space Grotesk'; display:block; font-size:14px; margin-bottom:2px;}
   .pp-draft-banner .pp-draft-txt span{color:var(--ink-soft); display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-  .pp-draft-banner button.btn{flex-shrink:0; background:var(--c-presupuestos); color:#fff; border:none;}
+  .pp-draft-banner button.btn{flex-shrink:0; background:var(--c-presupuestos); color:#fff; border:none; white-space:nowrap;}
   .pp-draft-banner button.btn:hover{opacity:0.9;}
-  .pp-draft-dismiss{flex-shrink:0; background:transparent; border:none; color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px;}
+  .pp-draft-dismiss{flex-shrink:0; background:transparent; border:none; color:var(--ink-soft); font-size:16px; cursor:pointer; padding:4px; margin-left:auto;}
   .pp-draft-dismiss:hover{color:var(--ink);}
+  @media (max-width:480px){.pp-draft-banner button.btn{flex:1 1 100%; order:3; margin-top:2px;}}
 
   .mat-row{display:flex; align-items:flex-start; gap:14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:9px;}
   .mat-row .mat-ic{width:34px; height:34px; border-radius:9px; background:rgba(107,99,85,0.14); color:var(--c-materiales); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
