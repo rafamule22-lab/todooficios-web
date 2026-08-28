@@ -42,9 +42,10 @@
 <meta name="apple-mobile-web-app-title" content="TodoOficios">
 <meta name="application-name" content="TodoOficios.es">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="assets/logo.png" type="image/png" sizes="192x192">
-<link rel="shortcut icon" href="assets/logo.png" type="image/png">
-<link rel="apple-touch-icon" href="assets/logo.png">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="icon" href="assets/icon-512.png" type="image/png" sizes="512x512">
+<link rel="shortcut icon" href="assets/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/icon-512.png">
 <link rel="canonical" href="https://todooficios.es/">
 <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1">
 <meta name="description" content="Encuentra fontaneros, electricistas, albañiles y más profesionales verificados cerca de ti en TodoOficios.es.">
@@ -155,7 +156,10 @@
     position:sticky; top:0; z-index:20;
     box-shadow:0 2px 18px rgba(0,0,0,0.12);
   }
-  .brand{display:flex; align-items:center; gap:16px; flex:1; min-width:0;}
+  .brand{
+    display:flex; align-items:center; gap:16px; flex:1; min-width:0;
+    background:transparent; border:none; padding:0; color:inherit; text-align:left; cursor:pointer; font:inherit;
+  }
   .brand-mark{height:96px; width:auto; flex-shrink:0; filter:invert(1);}
   .brand-tag{font-size:17px; opacity:0.98; letter-spacing:0.04em; text-transform:none; font-family:'IBM Plex Sans'; font-weight:700;}
   .nav-links{display:flex; gap:6px; margin-left:auto;}
@@ -182,6 +186,9 @@
     background:transparent; border:1px solid rgba(247,245,240,0.25); color:var(--paper-light);
     padding:9px 14px; border-radius:7px; font-size:13.5px; font-weight:600;
   }
+
+  .tb-row1{display:contents;}
+  .tb-account-chip{display:none; background:transparent; border:none; padding:0; cursor:pointer; flex-shrink:0; color:var(--paper-light); font:inherit;}
   .mason-mascot{
     display:inline-block; flex-shrink:0;
     width:155px; height:56px; margin-left:8px;
@@ -317,6 +324,7 @@
   .drawer-primary-item .m-ic{width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .drawer-primary-item .m-ic svg{width:16px; height:16px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
   .drawer-primary-item span{font-size:12px; font-weight:600;}
+  .drawer-primary-item.hide{display:none;}
   .drawer-group{border-bottom:1px solid var(--line);}
   .drawer-group:last-child{border-bottom:none;}
   .drawer-group-head{display:flex; align-items:center; gap:10px; padding:12px 2px; cursor:pointer;}
@@ -333,6 +341,17 @@
   .drawer-sub{margin:2px 0 0 0; padding-left:10px; border-left:1px solid var(--line); display:grid; gap:6px;}
   .drawer-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:70; opacity:0; pointer-events:none; transition:opacity .25s ease;}
   .drawer-backdrop.show{opacity:1; pointer-events:auto;}
+  .quick-group{display:none; flex-direction:column; gap:7px; padding:2px 2px 16px; border-bottom:1px solid var(--line); margin-bottom:2px;}
+  .quick-group.show{display:flex;}
+  .quick-group-title{font-family:'IBM Plex Mono', monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); padding:0 2px 2px;}
+  .quick-item{display:flex; align-items:center; gap:10px; padding:10px 9px; border-radius:11px; background:var(--paper-light); cursor:pointer;}
+  .quick-item .m-ic{width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .quick-item .m-ic svg{width:12px; height:12px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .quick-item .qi-text{flex:1; min-width:0; display:flex; flex-direction:column;}
+  .quick-item .qi-label{font-size:13px; font-weight:600;}
+  .quick-item .qi-sub{font-size:11px; color:var(--ink-soft); font-weight:500;}
+  .quick-item .count-badge{font-family:'IBM Plex Mono', monospace; font-size:10px; font-weight:700; background:rgba(217,164,0,0.18); color:var(--amber-deep); padding:2px 7px; border-radius:5px; flex-shrink:0;}
+  .quick-item .chev{font-family:'IBM Plex Mono', monospace; font-size:14px; color:var(--ink-soft); flex-shrink:0;}
   .featured-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:120; display:none; align-items:center; justify-content:center; padding:18px;}
   .featured-modal-backdrop.show{display:flex;}
   .featured-modal{width:min(520px,100%); background:#fff; border-radius:18px; padding:24px; box-shadow:0 24px 60px rgba(0,0,0,0.18); position:relative;}
@@ -432,11 +451,46 @@
 
   .how-grid-ic{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:10px;}
   @media (max-width:640px){.how-grid-ic{grid-template-columns:1fr;}}
-  .how-card-ic{background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:22px; display:flex; flex-direction:column; gap:12px; align-items:flex-start;}
+  .how-card-ic{
+    background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:22px;
+    display:flex; flex-direction:column; gap:12px; align-items:flex-start;
+    width:100%; text-align:left; font-family:inherit; cursor:pointer; transition:transform .15s, box-shadow .15s;
+  }
+  .how-card-ic:hover{transform:translateY(-2px); box-shadow:0 10px 26px rgba(20,20,18,0.1);}
+  .how-card-ic:hover .how-cta{color:var(--ink);}
   .how-card-ic .ic-circle{width:56px; height:56px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .how-card-ic .ic-circle svg{width:24px; height:24px; stroke:#fff; color:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
   .how-card-ic h3{font-size:16px; margin:0;}
   .how-card-ic p{font-size:13.5px; opacity:0.8; line-height:1.5; margin:0; color:var(--ink-soft);}
+  .how-cta{font-size:12px; font-weight:700; color:var(--ink-soft); display:flex; align-items:center; gap:5px;}
+  .how-cta svg{width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+
+  /* ---------- "Cómo funciona" info modals ---------- */
+  .info-modal-backdrop{position:fixed; inset:0; background:rgba(0,0,0,0.52); z-index:140; display:none; align-items:center; justify-content:center; padding:18px;}
+  .info-modal-backdrop.show{display:flex;}
+  .info-modal{width:min(560px,100%); max-height:85vh; overflow-y:auto; background:#fff; color:var(--ink); border-radius:16px; padding:28px; position:relative; box-shadow:0 22px 64px rgba(0,0,0,0.28);}
+  .info-modal-close{position:absolute; top:16px; right:16px; background:transparent; border:none; font-size:24px; line-height:1; cursor:pointer; color:#333;}
+  .info-modal-head{display:flex; align-items:center; gap:14px; margin-bottom:6px;}
+  .info-modal-head .ic-circle{width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .info-modal-head .ic-circle svg{width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round;}
+  .info-modal h2{font-size:20px; margin:0;}
+  .info-modal .eyebrow{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft); margin-bottom:2px; display:block;}
+  .info-modal-body{margin-top:18px; font-size:14px; line-height:1.62; color:#332f2a;}
+  .info-modal-body h5{font-family:'Space Grotesk'; font-size:14px; font-weight:700; margin:20px 0 8px; color:var(--ink);}
+  .info-modal-body h5:first-child{margin-top:0;}
+  .info-modal-body ul{margin:0 0 4px; padding-left:20px;}
+  .info-modal-body li{margin-bottom:6px;}
+  .info-modal-body li strong{color:var(--ink);}
+  .info-price-row{display:flex; gap:10px; margin:12px 0 16px; flex-wrap:wrap;}
+  .info-price-card{flex:1; min-width:140px; background:var(--paper-light); border:1px solid var(--line); border-radius:10px; padding:12px 14px;}
+  .info-price-card .amt{font-family:'Space Grotesk'; font-size:19px; font-weight:700;}
+  .info-price-card .lbl{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+  .info-compare{border-collapse:collapse; width:100%; font-size:12.5px; margin-top:6px;}
+  .info-compare th, .info-compare td{text-align:left; padding:7px 10px; border-bottom:1px solid var(--line);}
+  .info-compare th{font-family:'IBM Plex Mono'; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); font-weight:600;}
+  .info-compare td.yes{color:#2E8F6E; font-weight:700;}
+  .info-compare td.limit{color:var(--ink-soft);}
+  .info-fine-print{margin-top:16px; padding-top:14px; border-top:1px solid var(--line); font-size:12px; color:var(--ink-soft); line-height:1.55;}
 
   .profiles-grid{display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:14px; margin-top:8px; max-width:960px; margin-left:auto; margin-right:auto;}
   .profile-card{background:var(--paper-light); border:1px solid var(--line); border-radius:12px; padding:18px; display:flex; flex-direction:column; gap:10px; align-items:flex-start;}
@@ -516,45 +570,51 @@
   .ng-icon.c-agente{background:rgba(199,124,30,0.14); color:var(--c-agente);}
   .ng-icon.c-materiales{background:rgba(107,99,85,0.14); color:var(--c-materiales);}
 
-  .negocio-stats{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; margin-bottom:18px; max-width:900px;}
-  .stat-card{background:var(--paper-light); color:var(--ink); border-radius:12px; padding:14px 16px; display:flex; flex-direction:column; gap:3px; cursor:pointer; transition:.15s; border:1.5px solid var(--line); border-left:3px solid var(--tab-accent, var(--amber-deep));}
-  .stat-card:hover{border-color:var(--amber); transform:translateY(-2px);}
-  .stat-card[data-ng-tab="gastos"]{--tab-accent:var(--c-gastos);}
-  .stat-card[data-ng-tab="presupuestos"]{--tab-accent:var(--c-presupuestos);}
-  .stat-card[data-ng-tab="clientes"]{--tab-accent:var(--c-clientes);}
-  .stat-card[data-ng-tab="agenda"]{--tab-accent:var(--c-agenda);}
-  .stat-card .ng-icon{width:28px; height:28px; margin-bottom:6px;}
-  .stat-card .ng-icon svg{width:15px; height:15px;}
+  .ng-overview{display:none;}
+  .ng-overview.active{display:block;}
+  a.ng-back-link{display:inline-flex; align-items:center; margin-bottom:22px;}
+
+  .nav-list{display:flex; flex-direction:column; gap:9px; margin-bottom:18px; max-width:900px;}
+  .nav-card{display:flex; align-items:center; gap:13px; background:var(--paper-light); color:var(--ink); border-radius:11px; padding:13px 15px; cursor:pointer; transition:.15s; border:1.5px solid var(--line); border-left:3px solid var(--tab-accent, var(--amber-deep));}
+  .nav-card:hover{border-color:var(--amber); transform:translateY(-1px);}
+  .nav-card .ng-icon{width:34px; height:34px;}
+  .nav-card .ng-icon svg{width:18px; height:18px;}
+  .nav-card .nc-body{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .nav-card .chev{color:var(--ink-soft); font-size:18px; flex-shrink:0;}
+  .nav-card.tool{padding:11px 15px;}
+  .nav-card.tool .stat-value{font-size:16px; font-weight:700;}
+  .nav-card[data-ng-tab="gastos"]{--tab-accent:var(--c-gastos);}
+  .nav-card[data-ng-tab="presupuestos"]{--tab-accent:var(--c-presupuestos);}
+  .nav-card[data-ng-tab="clientes"]{--tab-accent:var(--c-clientes);}
+  .nav-card[data-ng-tab="agenda"]{--tab-accent:var(--c-agenda);}
+  .nav-card[data-ng-tab="materiales"]{--tab-accent:var(--c-materiales);}
+  .nav-card[data-ng-tab="fiscal"]{--tab-accent:var(--c-fiscal);}
+  .nav-card[data-ng-tab="envio"]{--tab-accent:var(--c-envio);}
+  .nav-card[data-ng-tab="agente"]{--tab-accent:var(--c-agente);}
   .stat-label{font-family:'IBM Plex Mono'; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-soft);}
   .stat-value{font-family:'Space Grotesk'; font-size:22px; font-weight:600; color:var(--ink);}
   .stat-sub{font-size:13px; color:var(--ink-soft);}
-  @media (max-width:820px){.negocio-stats{grid-template-columns:1fr 1fr;}}
-  @media (max-width:560px){.negocio-stats{grid-template-columns:1fr;}}
+  @media (max-width:560px){.stat-value{font-size:19px;}}
 
-  .ng-tools-divider{display:flex; align-items:center; gap:10px; margin:18px 0 12px; max-width:900px;}
-  .ng-tools-divider .ln{flex:1; height:1px; background:var(--line);}
-  .ng-tools-divider span{font-family:'IBM Plex Mono'; font-size:10.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink-soft); white-space:nowrap;}
+  .ng-hero{
+    background:var(--paper-light); border:1.5px solid var(--line); border-left:4px solid var(--amber-deep);
+    border-radius:11px; padding:20px 22px; margin-bottom:18px; max-width:900px;
+  }
+  .ng-hero-head{display:flex; align-items:center; gap:12px; margin-bottom:10px;}
+  .ng-hero-head h3{font-size:17px; font-weight:700;}
+  .ng-hero-head .ng-icon{width:32px; height:32px;}
+  .ng-hero-head .ng-icon svg{width:17px; height:17px;}
+  .ng-hero .pend-list{margin-top:2px;}
 
-  .ng-tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; max-width:900px;}
-  .ng-tab-btn{background:#fff; border:1.5px solid var(--line); border-left:3px solid var(--tab-accent, var(--amber-deep)); border-radius:10px; padding:9px 14px 9px 10px; font-size:14.5px; font-weight:600; color:var(--ink-soft); white-space:nowrap; display:inline-flex; align-items:center; gap:8px;}
-  .ng-tab-btn .ng-icon{width:22px; height:22px;}
-  .ng-tab-btn .ng-icon svg{width:12.5px; height:12.5px;}
-  .ng-tab-btn:hover{border-color:var(--ink); color:var(--ink);}
-  .ng-tab-btn.active{background:var(--ink); border-color:var(--ink); color:#fff;}
-  .ng-tab-btn.active .ng-icon{background:rgba(255,255,255,0.16); color:#fff;}
-  .ng-tab-btn[data-ng-tab="pendientes"]{--tab-accent:var(--c-pendientes);}
-  .ng-tab-btn[data-ng-tab="clientes"]{--tab-accent:var(--c-clientes);}
-  .ng-tab-btn[data-ng-tab="gastos"]{--tab-accent:var(--c-gastos);}
-  .ng-tab-btn[data-ng-tab="agenda"]{--tab-accent:var(--c-agenda);}
-  .ng-tab-btn[data-ng-tab="presupuestos"]{--tab-accent:var(--c-presupuestos);}
-  .ng-tab-btn[data-ng-tab="materiales"]{--tab-accent:var(--c-materiales);}
-  .ng-tab-btn[data-ng-tab="fiscal"]{--tab-accent:var(--c-fiscal);}
-  .ng-tab-btn[data-ng-tab="envio"]{--tab-accent:var(--c-envio);}
-  .ng-tab-btn[data-ng-tab="agente"]{--tab-accent:var(--c-agente);}
+  .ng-split{display:grid; grid-template-columns:1.25fr 1fr; gap:16px; margin-bottom:18px; max-width:900px;}
+  @media (max-width:720px){.ng-split{grid-template-columns:1fr;}}
+  .ng-box{border:1.5px solid var(--line); border-radius:11px; padding:16px;}
+  .ng-box-label{font-family:'IBM Plex Mono'; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:12px;}
+  .ng-box .nav-list{margin-bottom:0; max-width:none;}
+
   .ng-tab-panel{display:none;}
   .ng-tab-panel.active{display:block;}
   .ng-tab-panel .panel-wide{border-left:4px solid var(--tab-accent, var(--amber-deep));}
-  .ng-tab-panel[data-tab="pendientes"] .panel-wide{--tab-accent:var(--c-pendientes);}
   .ng-tab-panel[data-tab="clientes"] .panel-wide{--tab-accent:var(--c-clientes);}
   .ng-tab-panel[data-tab="gastos"] .panel-wide{--tab-accent:var(--c-gastos);}
   .ng-tab-panel[data-tab="agenda"] .panel-wide{--tab-accent:var(--c-agenda);}
@@ -619,16 +679,24 @@
 
   .drow-row-actions{margin-top:8px;}
   .pp-mini-btn{font-family:'IBM Plex Mono'; font-size:11.5px; text-transform:uppercase; letter-spacing:0.02em; padding:5px 10px; border-radius:6px; border:1px solid var(--line); background:#fff; color:var(--ink-soft); margin-right:6px; cursor:pointer;}
+  .pp-mini-btn svg{width:12px; height:12px; vertical-align:-1px; margin-right:2px;}
   .pp-mini-btn.ok{border-color:#bfe3c5; color:#1e6b2e;}
   .pp-mini-btn.bad{border-color:#f0bcbc; color:#a12626;}
   .pp-mini-btn:hover{border-color:var(--ink); color:var(--ink);}
 
-  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2.2fr 0.8fr 0.8fr 1fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
-  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:2fr 0.6fr 0.7fr 0.85fr 0.85fr 0.85fr 0.3fr;}
+  #pp-partidas-table .pp-partidas-row{display:grid; grid-template-columns:2fr 0.7fr 0.7fr 0.9fr 0.65fr 1fr 0.3fr; gap:8px; align-items:center; margin-bottom:8px;}
+  #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:1.8fr 0.55fr 0.6fr 0.8fr 0.6fr 0.8fr 0.85fr 0.3fr;}
   #pp-partidas-table .pp-coste-cell{display:none;}
   #pp-partidas-table.has-coste .pp-coste-cell{display:block;}
   .pp-partidas-head{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:2px;}
-  .pp-partidas-row input, .pp-partidas-row select{padding:8px 9px; font-size:13.5px;}
+  .pp-partidas-row input, .pp-partidas-row select{padding:8px 9px; font-size:13.5px; width:100%; min-width:0; box-sizing:border-box;}
+  @media (max-width:640px){
+    #pp-partidas-table .pp-partidas-row{grid-template-columns:repeat(3, 1fr); row-gap:6px;}
+    #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:repeat(3, 1fr);}
+    #pp-partidas-table .pp-partidas-row .pp-desc{grid-column:1 / -1;}
+    #pp-partidas-table .pp-partidas-head{display:none;}
+    #pp-partidas-table .pp-row-remove{justify-self:end;}
+  }
   .pp-importe-cell{font-weight:700; font-size:13.5px;}
   .pp-row-remove{background:transparent; border:none; color:var(--c-gastos); font-weight:700; font-size:17px; cursor:pointer; padding:4px; line-height:1;}
   .pp-check-label{display:flex; align-items:center; gap:8px; text-transform:none; font-size:13.5px; opacity:1; font-weight:500;}
@@ -636,6 +704,16 @@
   .pp-totales-row{display:flex; justify-content:space-between; padding:3px 0;}
   .pp-totales-row.total{font-weight:700; font-size:18px; border-top:1px solid var(--line); margin-top:6px; padding-top:8px;}
 
+  .pp-fotos-preview{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;}
+  .pp-foto-thumb{position:relative; width:70px; height:70px; border-radius:8px; overflow:hidden; border:1px solid var(--line);}
+  .pp-foto-thumb img{width:100%; height:100%; object-fit:cover; display:block;}
+  .pp-foto-thumb button{position:absolute; top:2px; right:2px; background:rgba(20,20,18,0.65); color:#fff; border:none; border-radius:50%; width:18px; height:18px; font-size:11px; line-height:1; cursor:pointer;}
+  .pp-stale-banner{background:rgba(192,90,58,0.08); border:1.5px solid rgba(192,90,58,0.3); border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:13.5px;}
+  .pp-stale-banner strong{display:block; margin-bottom:8px; color:#C05A3A;}
+  .pp-stale-list{display:flex; flex-direction:column; gap:6px;}
+  .pp-stale-list span{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .pp-filtro-input{width:100%; padding:10px 14px; border-radius:9px; border:1px solid var(--line); font-size:14px; font-family:inherit; background:#fff; margin-bottom:12px;}
+  .pp-filtro-input:focus{outline:2px solid var(--amber);}
   .pp-draft-banner{display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:rgba(116,88,194,0.09); border:1.5px solid rgba(116,88,194,0.35); border-radius:10px; padding:13px 16px; margin:20px 0 4px;}
   .pp-draft-banner .pp-draft-ic{width:34px; height:34px; border-radius:9px; background:rgba(116,88,194,0.16); color:var(--c-presupuestos); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .pp-draft-banner .pp-draft-ic svg{width:17px; height:17px; stroke:var(--c-presupuestos); fill:none; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round;}
@@ -648,20 +726,21 @@
   .pp-draft-dismiss:hover{color:var(--ink);}
   @media (max-width:480px){.pp-draft-banner button.btn{flex:1 1 100%; order:3; margin-top:2px;}}
 
-  .mat-row{display:flex; align-items:center; gap:14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:9px;}
+  .mat-row{display:flex; align-items:flex-start; gap:14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:9px;}
   .mat-row .mat-ic{width:34px; height:34px; border-radius:9px; background:rgba(107,99,85,0.14); color:var(--c-materiales); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
   .mat-row .mat-info{flex:1; min-width:0;}
-  .mat-row .mat-info strong{font-family:'Space Grotesk'; font-size:14.5px; display:block;}
-  .mat-row .mat-info span{color:var(--ink-soft); font-size:12.5px; font-family:'IBM Plex Mono';}
-  .mat-row .mat-price{font-family:'IBM Plex Mono'; font-weight:700; font-size:15px; white-space:nowrap;}
+  .mat-row .mat-info strong{font-family:'Space Grotesk'; font-size:14.5px; display:block; overflow-wrap:anywhere;}
+  .mat-row .mat-info span{color:var(--ink-soft); font-size:12.5px; font-family:'IBM Plex Mono'; display:block;}
+  .mat-row .mat-price{font-family:'IBM Plex Mono'; font-weight:700; font-size:15px; white-space:nowrap; flex-shrink:0;}
   .mat-add-form{display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-top:16px; align-items:end;}
   .mat-add-form label{display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; font-family:'IBM Plex Mono'; text-transform:uppercase; letter-spacing:0.03em;}
+  .mat-add-form input, .mat-add-form select{width:100%; min-width:0; box-sizing:border-box;}
   @media (max-width:640px){.mat-add-form{grid-template-columns:1fr 1fr;}}
 
   .pp-add-row{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; position:relative;}
-  .fav-dropdown{position:relative;}
+  .fav-dropdown{position:static;}
   .fav-dropdown-btn{border-color:rgba(107,99,85,0.4); color:var(--c-materiales); background:rgba(107,99,85,0.07);}
-  .fav-dropdown-menu{position:absolute; top:calc(100% + 6px); left:0; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.12); min-width:240px; max-height:260px; overflow-y:auto; padding:6px; z-index:5;}
+  .fav-dropdown-menu{position:absolute; top:calc(100% + 6px); right:0; background:#fff; border:1px solid var(--line); border-radius:10px; box-shadow:0 12px 30px rgba(0,0,0,0.12); min-width:240px; max-width:calc(100vw - 32px); max-height:260px; overflow-y:auto; padding:6px; z-index:5;}
   .fav-dropdown-item{padding:9px 10px; border-radius:6px; font-size:13px; display:flex; justify-content:space-between; gap:10px; cursor:pointer;}
   .fav-dropdown-item:hover{background:var(--paper-light);}
   .fav-dropdown-item .fav-price{font-family:'IBM Plex Mono'; font-weight:600; color:var(--c-materiales);}
@@ -1018,10 +1097,12 @@
 
   @media (max-width:768px){
     .topbar{padding:16px 14px; flex-direction:column; align-items:flex-start; gap:10px;}
-    .brand{width:100%;}
+    .tb-row1{display:flex; align-items:center; justify-content:space-between; width:100%; gap:10px;}
+    .brand{width:auto; flex:1; min-width:0;}
     .brand-mark{height:72px;}
     .brand-tag{font-size:14px;}
     .nav-links{display:none;}
+    .tb-account-chip.show{display:inline-flex;}
     .nav-menu-toggle{width:100%; justify-content:center; padding:12px 8px; font-size:14px;}
     .wrap{padding:20px 14px 72px;}
     .hero{padding:28px 16px 24px; border-radius:16px;}
@@ -1076,7 +1157,7 @@
         <div class="m-ic" style="background:#141412;"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/></svg></div>
         <span>Inicio</span>
       </a>
-      <a class="drawer-primary-item" href="javascript:void(0)" data-view="pro">
+      <a class="drawer-primary-item" href="javascript:void(0)" data-view="pro" id="drawerProTile">
         <div class="m-ic" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
         <span>Soy profesional</span>
       </a>
@@ -1084,11 +1165,13 @@
         <div class="m-ic" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></div>
         <span>Buscar</span>
       </a>
-      <a class="drawer-primary-item" href="javascript:void(0)" data-view="client">
+      <a class="drawer-primary-item" href="javascript:void(0)" data-view="client" id="drawerClientTile">
         <div class="m-ic" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
         <span>Soy cliente</span>
       </a>
     </div>
+
+    <div class="quick-group" id="drawerQuickGroup"></div>
 
     <a class="drawer-group-head" href="javascript:void(0)" data-view="app" style="text-decoration:none; color:inherit;">
       <div class="m-ic" style="background:#7458C2;"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 18h8"/></svg></div>
@@ -1134,12 +1217,10 @@
       <div class="drawer-group-body">
         <a href="calculadoras.html">Ver todas las calculadoras</a>
         <div class="drawer-sub">
-          <a href="calculadoras.html#fundamentales">Electricidad</a>
-          <a href="calculadoras.html#materiales">Materiales de obra</a>
-          <a href="calculadoras.html#pintura">Pintura</a>
-          <a href="calculadoras.html#suelos">Suelos y revestimientos</a>
-          <a href="calculadoras.html#fontaneria">Fontanería</a>
-          <a href="calculadoras.html#reformas">Reformas</a>
+          <a href="calculadoras.html#of-electricista">Electricidad</a>
+          <a href="calculadoras.html#of-fontanero">Fontanería</a>
+          <a href="calculadoras.html#of-albanil">Albañilería y materiales</a>
+          <a href="calculadoras.html#of-reformista">Pintura y reformas</a>
           <a href="calculadoras.html#geometria">Geometría</a>
         </div>
       </div>
@@ -1170,9 +1251,12 @@
   </div>
 </div>
 <div class="topbar">
-  <div class="brand">
-    <img class="brand-mark" src="assets/logo.png" alt="TodoOficios.es">
-    <div class="brand-tag">TodoOficios.es</div>
+  <div class="tb-row1">
+    <button class="brand" type="button" id="brandHomeBtn" aria-label="Ir a inicio">
+      <img class="brand-mark" src="assets/logo.png" alt="">
+      <div class="brand-tag">TodoOficios.es</div>
+    </button>
+    <button class="tb-account-chip" id="tbAccountChip" type="button" data-view="pro"></button>
   </div>
   <div class="nav-links">
     <button class="nav-btn" data-view="home">Inicio</button>
@@ -1185,6 +1269,129 @@
 
 <div class="legal-alert" id="legalPendingAlert">Aviso de configuración: faltan datos legales obligatorios en legal-config.js (razón social, NIF/CIF o domicilio).</div>
 <div class="legal-alert" id="storageModeAlert">Aviso técnico: este sitio funciona en modo local sin backend compartido. Configura Supabase (supabaseUrl y supabaseAnonKey) para compartir registros y mensajes entre dispositivos.</div>
+
+<div class="info-modal-backdrop" id="m-como-pro">
+  <div class="info-modal">
+    <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
+    <div class="info-modal-head">
+      <div class="ic-circle" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
+      <div><span class="eyebrow">Para profesionales</span><h2>Todo lo que ganas al darte de alta</h2></div>
+    </div>
+    <div class="info-modal-body">
+      <h5>Tu ficha, siempre gratis</h5>
+      <p>Publica tu oficio, tu zona de trabajo y tu experiencia en unos minutos. Sin coste de entrada, sin permanencia. Los clientes cercanos que buscan tu oficio te encuentran solos, ordenados por cercanía y valoración.</p>
+
+      <h5>El Panel de negocio, con tu ficha</h5>
+      <ul>
+        <li><strong>Clientes</strong> — guarda tus clientes habituales con teléfono, NIF y dirección, y marca los favoritos. <em>Gratis hasta 5 clientes.</em></li>
+        <li><strong>Agenda</strong> — organiza tus citas por tipo de trabajo y te avisa si dos se solapan. <em>Gratis hasta 5 citas activas a la vez.</em></li>
+        <li><strong>Gastos</strong> — registra gastos por categoría de oficio con el IVA calculado automáticamente. <em>Gratis hasta 5 gastos al mes.</em></li>
+        <li><strong>Presupuestos</strong> — crea presupuestos con líneas, IVA y retención de IRPF, y genera el PDF listo para enviar. <em>Gratis hasta 3 presupuestos al mes.</em></li>
+        <li><strong>Materiales</strong> — guarda tus precios favoritos y reutilízalos en presupuestos y en las calculadoras. <em>Gratis hasta 5 materiales guardados.</em></li>
+        <li><strong>Fiscal</strong> — en el plan gratis ves solo tu próximo vencimiento; con Premium, el calendario fiscal completo y la estimación trimestral a pagar.</li>
+        <li><strong>Envío al gestor</strong> — en el plan gratis ves cuántas facturas tienes pendientes de esta semana; con Premium, generas el PDF y el correo a tu gestoría ya rellenos con un clic.</li>
+        <li><strong>Agente financiero</strong> — combina Fiscal, Envío y tus Gastos/Presupuestos en avisos automáticos cada semana. <em>Exclusivo Premium.</em></li>
+      </ul>
+
+      <h5>Premium: el precio sube poco a poco, nunca de golpe</h5>
+      <div class="info-price-row">
+        <div class="info-price-card"><div class="amt">4,99&nbsp;€/mes</div><div class="lbl">año 1</div></div>
+        <div class="info-price-card"><div class="amt">6,99&nbsp;€/mes</div><div class="lbl">año 2</div></div>
+        <div class="info-price-card"><div class="amt">8,99&nbsp;€/mes</div><div class="lbl">año 3</div></div>
+        <div class="info-price-card"><div class="amt">9,99&nbsp;€/mes</div><div class="lbl">año 4 en adelante (techo)</div></div>
+      </div>
+      <p>Quien entra en la promo de lanzamiento (los primeros 300 profesionales registrados) paga 4,99&nbsp;€/mes durante
+      <strong>24 meses</strong> en vez de 12 antes de pasar al año 2 — el "precio fundador".</p>
+      <div style="overflow-x:auto;">
+        <table class="info-compare">
+          <tr><th></th><th>Gratis</th><th>Premium</th></tr>
+          <tr><td>Clientes / gastos / presupuestos / citas / materiales</td><td class="limit">con límite</td><td class="yes">sin límite</td></tr>
+          <tr><td>Fotos de trabajos en tu ficha</td><td class="limit">hasta 3</td><td class="yes">hasta 10</td></tr>
+          <tr><td>Posición en resultados de búsqueda</td><td class="limit">estándar</td><td class="yes">apareces primero (★ Destacado)</td></tr>
+          <tr><td>PDF de presupuesto</td><td class="limit">con marca de agua</td><td class="yes">sin marca de agua</td></tr>
+          <tr><td>Fiscal / Envío al gestor</td><td class="limit">vista básica</td><td class="yes">completo</td></tr>
+          <tr><td>Agente financiero</td><td class="limit">no incluido</td><td class="yes">incluido</td></tr>
+        </table>
+      </div>
+      <div class="info-fine-print">
+        <strong>Nota:</strong> el cobro de Premium todavía no está activo en la web (se está terminando de configurar la
+        pasarela de pago). La etiqueta "Verificado" que ves en algunos perfiles de ejemplo tampoco tiene hoy un proceso
+        real detrás.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="info-modal-backdrop" id="m-como-loc">
+  <div class="info-modal">
+    <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
+    <div class="info-modal-head">
+      <div class="ic-circle" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
+      <div><span class="eyebrow">Ubicación real</span><h2>Por qué te mostramos primero a quien tienes cerca</h2></div>
+    </div>
+    <div class="info-modal-body">
+      <h5>Para quien busca un profesional</h5>
+      <p>Si compartes tu ubicación (pulsando "Ordenar por cercanía"), calculamos la distancia real a cada profesional y te mostramos primero a los más cercanos. Compartirla es voluntario y puedes revocar el permiso cuando quieras desde la configuración de tu navegador.</p>
+      <h5>Para el profesional</h5>
+      <p>Cuantos más clientes cerca de tu zona busquen tu oficio, más opciones tienes de aparecer entre los primeros resultados (junto con tu valoración y si tienes el perfil destacado).</p>
+      <h5>Lo que nunca hacemos</h5>
+      <ul>
+        <li>No mostramos la dirección exacta de nadie a otros usuarios.</li>
+        <li>Tu ubicación se usa solo para calcular distancias, nunca se vende ni se comparte con terceros.</li>
+        <li>Sin tu permiso explícito del navegador, esta función simplemente no se activa.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="info-modal-backdrop" id="m-como-rate">
+  <div class="info-modal">
+    <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
+    <div class="info-modal-head">
+      <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
+      <div><span class="eyebrow">Valoraciones honestas</span><h2>Qué se valora exactamente</h2></div>
+    </div>
+    <div class="info-modal-body">
+      <p>Cada reseña puntúa (de 1 a 5 estrellas) cinco aspectos concretos del trabajo, no una nota genérica:</p>
+      <ul>
+        <li><strong>Puntualidad y seriedad</strong></li>
+        <li><strong>Calidad del trabajo</strong></li>
+        <li><strong>Limpieza y orden</strong></li>
+        <li><strong>Trato y atención</strong></li>
+        <li><strong>Relación calidad-precio</strong></li>
+      </ul>
+      <p>La nota media que ves en cada ficha es el promedio real de esos 5 criterios. Además, cada cliente responde
+      "¿Volverías a contratarlo?" — ese porcentaje de "repetiría" se muestra junto a la nota.</p>
+      <h5>Quién puede opinar</h5>
+      <p>Solo puede dejar una reseña quien la escribe con su propia cuenta de cliente, y esa misma persona puede
+      borrarla cuando quiera. En la ficha del profesional se ve el desglose de los 5 criterios de cada reseña, no solo
+      el número final.</p>
+    </div>
+  </div>
+</div>
+
+<div class="info-modal-backdrop" id="m-como-contact">
+  <div class="info-modal">
+    <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
+    <div class="info-modal-head">
+      <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
+      <div><span class="eyebrow">Contacto directo</span><h2>Así hablas con el profesional</h2></div>
+    </div>
+    <div class="info-modal-body">
+      <p>En cuanto tienes una cuenta de cliente (gratis), puedes contactar de tres formas, sin que nadie se quede en medio:</p>
+      <ul>
+        <li><strong>Llamada directa</strong> al teléfono del profesional.</li>
+        <li><strong>WhatsApp</strong>, con un enlace que abre la conversación directamente.</li>
+        <li><strong>Mensaje a través de la web</strong>, si prefieres escribir antes de llamar.</li>
+      </ul>
+      <h5>Sin comisiones</h5>
+      <p>TodoOficios.es no cobra nada por poneros en contacto ni por el trabajo que acordéis entre vosotros. El
+      profesional paga (si quiere) una suscripción para más visibilidad — nunca un porcentaje de lo que factura.</p>
+      <h5>Por qué pedimos una cuenta para contactar</h5>
+      <p>Es gratis y rápido, y así evitamos spam tanto a los profesionales como al resto de usuarios.</p>
+    </div>
+  </div>
+</div>
 
 <div class="wrap">
 
@@ -1244,26 +1451,30 @@
 
     <div class="section-heading">Cómo funciona</div>
     <div class="how-grid-ic">
-      <div class="how-card-ic">
+      <button type="button" class="how-card-ic" data-modal="m-como-pro">
         <div class="ic-circle" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
         <h3>Para profesionales</h3>
         <p>Crea tu ficha en un minuto: tu oficio, tu experiencia y tu zona de trabajo. Los clientes cercanos te encuentran solos.</p>
-      </div>
-      <div class="how-card-ic">
+        <span class="how-cta">Ver todo lo que incluye <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <button type="button" class="how-card-ic" data-modal="m-como-loc">
         <div class="ic-circle" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
         <h3>Ubicación real</h3>
         <p>Compartimos tu ubicación aproximada para ordenar los resultados por cercanía — nunca la dirección exacta de nadie.</p>
-      </div>
-      <div class="how-card-ic">
+        <span class="how-cta">Cómo se usa tu ubicación <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <button type="button" class="how-card-ic" data-modal="m-como-rate">
         <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
         <h3>Valoraciones honestas</h3>
         <p>Cada cliente puede valorar el trabajo recibido. La reputación se construye trabajo a trabajo, no con publicidad.</p>
-      </div>
-      <div class="how-card-ic">
+        <span class="how-cta">Qué se valora exactamente <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
+      <button type="button" class="how-card-ic" data-modal="m-como-contact">
         <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
         <h3>Contacto directo</h3>
         <p>Sin intermediarios ni comisiones ocultas: hablas directamente con el profesional para acordar el trabajo.</p>
-      </div>
+        <span class="how-cta">Cómo funciona el contacto <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+      </button>
     </div>
   </section>
 
@@ -1908,9 +2119,9 @@ function haversineKm(a, b){
 /* ======================= CUENTAS (solo profesionales) ======================= */
 async function getAllProfessionals(){
   const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+  const rawAccounts = await Promise.all(index.map(email => safeGet('account:'+email, true)));
   const list = [];
-  for(const email of index){
-    const raw = await safeGet('account:'+email, true);
+  for(const raw of rawAccounts){
     if(!raw) continue;
     const acc = JSON.parse(raw);
     if(acc.type === 'course-provider') continue;
@@ -1990,6 +2201,7 @@ let account = null;       // cuenta del profesional logueado
 let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
 let materialesFavoritos = null; // lista de materiales guardados del profesional (clave propia: se comparte también con calculadoras.html)
 let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
+let negocioEditPresupuestoId = null; // id del presupuesto que se está editando (null = se está creando uno nuevo)
 let dashboardMode = 'ficha'; // 'ficha' muestra el perfil público del profesional; 'editar' abre el formulario
 let clientSession = null;  // {email} cliente
 let clientAccount = null;  // cuenta del cliente
@@ -1998,6 +2210,7 @@ let RATINGS = [];
 let currentDetailEmail = null;
 let pendingFeaturedEmail = null;
 let activeGroupFilter = null;
+let buscarProsCache = [];  // profesionales ya ordenados, cargados una vez al entrar a "Buscar"
 let proAuthMode = 'registro'; // 'registro' | 'login', solo aplica si no hay sesión profesional
 let clientAuthMode = 'registro';
 
@@ -2007,12 +2220,22 @@ const PROMO_FREE_PRO_LIMIT = 300;
 const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
 const PROMO_ACTIVE = PROMO_FREE_PRO_LIMIT > 0;
-const PREMIUM_PRICE_FIRST_YEAR = 4.99; // €/mes de enganche durante los primeros 12 meses pagados
-const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes a partir del mes 13
+const PREMIUM_PRICE_FIRST_YEAR = 4.99; // €/mes de enganche durante el año 1 (o los primeros PREMIUM_FOUNDER_MONTHS si es cuenta fundadora)
+const PREMIUM_PRICE_YEAR2 = 6.99;      // €/mes durante el año 2 del escalonado
+const PREMIUM_PRICE_YEAR3 = 8.99;      // €/mes durante el año 3 del escalonado
+const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes techo, a partir del año 4
+const PREMIUM_FOUNDER_MONTHS = 24;     // cuentas con premiumPromo (primeros PROMO_FREE_PRO_LIMIT profesionales) mantienen el precio de año 1 el doble de meses antes de entrar al escalonado
 const PREMIUM_DURATION_MS = 30*24*60*60*1000; // cada pago cubre 1 mes
 const PREMIUM_TRIAL_DAYS = 14; // prueba gratis de Premium para profesionales recién inscritos que no entran en la promo de lanzamiento
 const PREMIUM_TRIAL_MS = PREMIUM_TRIAL_DAYS*24*60*60*1000;
-function premiumPrice(acc){ return (acc.premiumMonthsPaid||0) < 12 ? PREMIUM_PRICE_FIRST_YEAR : PREMIUM_PRICE_RENEWAL; }
+function premiumPrice(acc){
+  const paid = acc.premiumMonthsPaid || 0;
+  const year1Months = acc.premiumPromo ? PREMIUM_FOUNDER_MONTHS : 12;
+  if(paid < year1Months) return PREMIUM_PRICE_FIRST_YEAR;
+  if(paid < year1Months + 12) return PREMIUM_PRICE_YEAR2;
+  if(paid < year1Months + 24) return PREMIUM_PRICE_YEAR3;
+  return PREMIUM_PRICE_RENEWAL;
+}
 
 // Cuenta como Premium activo mientras featuredUntil no haya vencido (mismo criterio
 // que ya se usaba de forma repetida e inline para fotos/destacado en toda la app).
@@ -2075,6 +2298,10 @@ const CATEGORIAS_GASTO = ['Fontanería','Electricidad','Albañilería','Pintura 
 const TIPOS_TRABAJO_AGENDA = ['Visita para presupuestar','Instalación','Reparación/avería','Revisión/mantenimiento','Entrega de obra'];
 const UNIDADES_PRESUPUESTO = ['ud','m','m²','m³','ml','kg','L','h','pa'];
 const UNIDADES_MATERIAL = ['ud','m','m²','m³','kg','L'];
+const DIAS_SEMANA = [
+  {key:'lunes', label:'Lunes'}, {key:'martes', label:'Martes'}, {key:'miercoles', label:'Miércoles'},
+  {key:'jueves', label:'Jueves'}, {key:'viernes', label:'Viernes'}, {key:'sabado', label:'Sábado'}, {key:'domingo', label:'Domingo'}
+];
 
 // Límites del plan gratuito en el Panel de negocio. Premium (featuredUntil vigente) no tiene límite.
 // Mismo patrón que las fotos de perfil (3 gratis / 10 Premium): se puede usar la herramienta,
@@ -2083,7 +2310,8 @@ const FREE_LIMITS = {
   clientes: 5,            // clientes guardados en total
   gastosPorMes: 5,         // gastos registrados en el mes en curso
   presupuestosPorMes: 3,   // presupuestos creados en el mes en curso
-  citasActivas: 5          // citas futuras en la agenda al mismo tiempo
+  citasActivas: 5,         // citas futuras en la agenda al mismo tiempo
+  materiales: 5            // materiales favoritos guardados en total
 };
 
 function defaultNegocio(){
@@ -2093,7 +2321,7 @@ function defaultNegocio(){
     gastos: [],
     presupuestos: [],
     agenda: [],
-    asesor: { tipoAlta:'autonomo', epigrafeCode:null, epigrafeConfianza:'', epigrafeConfirmado:false, gestorEmail:'', diaEnvio:'lunes', ultimoEnvioSemana:'' }
+    asesor: { tipoAlta:'autonomo', epigrafeCode:null, epigrafeConfianza:'', epigrafeConfirmado:false, gestorEmail:'', diaEnvio:'lunes', horaEnvio:'09:00', ultimoEnvioSemana:'' }
   };
 }
 async function getNegocio(email){
@@ -2110,6 +2338,73 @@ async function getNegocio(email){
 }
 async function saveNegocio(email, data){
   return await safeSet('negocio:'+email, JSON.stringify(data), true);
+}
+
+/* ======================= PRESUPUESTO PÚBLICO (enlace de aceptación para el cliente) =======================
+   Se guarda una copia mínima y aislada del presupuesto bajo una clave propia
+   (presupuesto-publico:<shareId>), nunca el objeto "negocio" completo del profesional,
+   para que quien reciba el enlace solo pueda ver y responder a ese presupuesto concreto. */
+function generarShareId(){
+  try {
+    const bytes = new Uint8Array(12);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes, b=>b.toString(36)).join('').slice(0,16) + Date.now().toString(36);
+  } catch(e){ return 'sp'+Date.now()+Math.random().toString(36).slice(2,10); }
+}
+
+function presupuestoPublicoSnapshot(p, datosNegocio, cuentaProfesional){
+  const d = datosNegocio || {};
+  return {
+    numero: p.numero, fecha: p.fecha, validezDias: p.validezDias||30,
+    concepto: p.concepto||'', direccionObra: p.direccionObra||'',
+    cliente: p.cliente||'', clienteNif: p.clienteNif||'', clienteDireccion: p.clienteDireccion||'', clienteTelefono: p.clienteTelefono||'', clienteEmail: p.clienteEmail||'',
+    partidas: p.partidas||[], base: p.base, ivaDesglose: p.ivaDesglose || [{pct:p.ivaPct||0, base:p.base, cuota:p.cuota}],
+    cuota: p.cuota, irpfAplica: !!p.irpfAplica, irpfPct: p.irpfPct||0, irpfImporte: p.irpfImporte||0, total: p.total,
+    formaPago: p.formaPago||'Transferencia bancaria', fotos: p.fotos||[],
+    emisor: {
+      nombre: d.nombreFiscal || cuentaProfesional?.name || '', nif: d.nif||'', direccion: d.direccion||'',
+      telefono: d.telefono || cuentaProfesional?.phone || '', email: d.email || cuentaProfesional?.email || '',
+      foto: cuentaProfesional?.photo || ''
+    },
+    estado: p.estado || 'Pendiente', firmaNombre: p.firmaNombre||'', firmaFecha: p.firmaFecha||''
+  };
+}
+
+async function publicarPresupuesto(p){
+  if(!p.shareId) p.shareId = generarShareId();
+  const snapshot = presupuestoPublicoSnapshot(p, negocio.datos, account);
+  const ok = await safeSet('presupuesto-publico:'+p.shareId, JSON.stringify(snapshot), true);
+  return ok ? p.shareId : null;
+}
+
+async function comprobarRespuestaPublica(p){
+  if(!p.shareId) return null;
+  const raw = await safeGet('presupuesto-publico:'+p.shareId, true);
+  if(!raw) return null;
+  try { return JSON.parse(raw); } catch(e){ return null; }
+}
+
+/* Envío rápido del presupuesto al cliente: genera (o reutiliza) el enlace público
+   con el PDF y lo manda por email (mailto) o WhatsApp (wa.me), sin backend propio. */
+async function enviarPresupuesto(id, via){
+  const p = negocio.presupuestos.find(x=>x.id===id);
+  if(!p) return;
+  if(via==='email' && !p.clienteEmail){ showToast('Añade el email del cliente en el presupuesto para poder enviarlo.'); return; }
+  if(via==='whatsapp' && !p.clienteTelefono){ showToast('Añade el teléfono del cliente en el presupuesto para poder enviarlo.'); return; }
+  const shareId = await publicarPresupuesto(p);
+  if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
+  await saveNegocio(account.email, negocio);
+  const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
+  const emisorNombre = (negocio.datos && negocio.datos.nombreFiscal) || account.name || '';
+  if(via==='email'){
+    const subject = `Presupuesto ${p.numero}${emisorNombre?' — '+emisorNombre:''}`;
+    const body = `Hola ${p.cliente||''},\n\nAquí tienes tu presupuesto ${p.numero} por ${formatEUR(p.total)}.\nPuedes verlo y descargarlo en PDF en este enlace:\n${url}\n\nUn saludo${emisorNombre?',\n'+emisorNombre:''}`;
+    window.location.href = `mailto:${p.clienteEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  } else {
+    const digits = (p.clienteTelefono||'').replace(/\D/g,'');
+    const msg = `Hola ${p.cliente||''}, te envío tu presupuesto ${p.numero} por ${formatEUR(p.total)}. Puedes verlo y descargarlo en PDF aquí: ${url}`;
+    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`, '_blank');
+  }
 }
 /* Materiales favoritos: clave propia (no dentro de negocio:<email>) para que calculadoras.html
    pueda leerla/escribirla sin tocar el resto de los datos de negocio del profesional. */
@@ -2308,6 +2603,57 @@ function renderNavAccountChips(){
       clientBtn.textContent = 'Soy cliente';
     }
   }
+
+  const tbChip = document.getElementById('tbAccountChip');
+  if(tbChip){
+    const who = (session && account) ? {name:account.name, view:'pro'} : (clientSession && clientAccount) ? {name:clientAccount.name, view:'client'} : null;
+    if(who){
+      tbChip.classList.add('show');
+      tbChip.dataset.view = who.view;
+      tbChip.innerHTML = `<span class="nav-account-chip"><span class="circle">${escapeHtml((who.name||'?').charAt(0).toUpperCase())}</span>${escapeHtml((who.name||'Perfil').split(' ')[0])}</span>`;
+    } else {
+      tbChip.classList.remove('show');
+      tbChip.innerHTML = '';
+    }
+  }
+
+  const hasAnySession = (session && account) || (clientSession && clientAccount);
+  const drawerProTile = document.getElementById('drawerProTile');
+  const drawerClientTile = document.getElementById('drawerClientTile');
+  if(drawerProTile) drawerProTile.classList.toggle('hide', hasAnySession);
+  if(drawerClientTile) drawerClientTile.classList.toggle('hide', hasAnySession);
+
+  const quickGroup = document.getElementById('drawerQuickGroup');
+  if(quickGroup){
+    if(session && account){
+      quickGroup.classList.add('show');
+      quickGroup.innerHTML = `
+        <div class="quick-group-title">Tu cuenta</div>
+        <div class="quick-item" data-view="negocio">
+          <div class="m-ic" style="background:var(--amber-deep);"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="14" rx="2"/><path d="M3.5 8h17M8 14h4"/></svg></div>
+          <div class="qi-text"><span class="qi-label">Panel de negocios</span><span class="qi-sub">Gastos, agenda, clientes…</span></div>
+          <span class="chev">›</span>
+        </div>
+        <div class="quick-item" data-view="pro">
+          <div class="m-ic" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
+          <div class="qi-text"><span class="qi-label">Mi ficha pública</span></div>
+          <span class="chev">›</span>
+        </div>`;
+    } else if(clientSession && clientAccount){
+      const favCount = (clientAccount.favorites || []).length;
+      quickGroup.classList.add('show');
+      quickGroup.innerHTML = `
+        <div class="quick-group-title">Tu cuenta</div>
+        <div class="quick-item" data-view="client">
+          <div class="m-ic" style="background:var(--c-clientes);"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.6 8 2.4 4.5 6 4c2.2-.3 4 1 6 3.3C14 5 15.8 3.7 18 4c3.6.5 5.4 4 4 7.7C19.5 16.4 12 21 12 21z"/></svg></div>
+          <div class="qi-text"><span class="qi-label">Mis favoritos</span></div>
+          ${favCount ? `<span class="count-badge">${favCount}</span>` : '<span class="chev">›</span>'}
+        </div>`;
+    } else {
+      quickGroup.classList.remove('show');
+      quickGroup.innerHTML = '';
+    }
+  }
 }
 
 function playMasonAnimation(){
@@ -2319,6 +2665,7 @@ function playMasonAnimation(){
 }
 
 async function showView(name){
+  if(name !== 'negocio') negocioEditPresupuestoId = null;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   const target = document.getElementById('view-'+name);
   target.classList.add('active');
@@ -2802,7 +3149,7 @@ function renderPremiumPanelBody(account){
   return `
     <div class="premium-banner">
       <span class="premium-banner-ic">★</span>
-      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (${price}/mes durante el primer año, luego ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes) da más visibilidad, hasta 10 fotos y presupuestos en PDF sin marca de agua.</span>
+      <span class="premium-banner-txt"><strong>Plan gratuito activo</strong> — tu ficha es visible sin coste. Premium (desde ${price}/mes, subiendo poco a poco hasta ${formatEUR(PREMIUM_PRICE_RENEWAL)}/mes a partir del año 4) da más visibilidad, hasta 10 fotos y presupuestos en PDF sin marca de agua.</span>
       ${PAYMENTS_ENABLED ? `<button type="button" id="dash-featured-btn">Activar Premium — ${price}/mes</button>` : ''}
     </div>
     ${PAYMENTS_ENABLED ? '' : `<p class="note" style="margin-top:8px;">${account.premiumTrial ? 'Tu prueba gratis de bienvenida ya terminó — ' : ''}Muy pronto podrás activar Premium (${price}/mes durante el primer año) para mayor visibilidad y hasta 10 fotos.</p>`}`;
@@ -3290,7 +3637,7 @@ function bindPro(){
 /* ======================= VISTA: PANEL DE NEGOCIO ======================= */
 function clienteRowHTML(c){
   return `<div class="data-row">
-    <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}</span></div>
+    <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}${c.email?' · '+escapeHtml(c.email):''}</span></div>
     <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">🗑</button>
   </div>`;
 }
@@ -3348,7 +3695,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button>${p.clienteEmail?`<button type="button" class="pp-mini-btn" data-email-presupuesto="${p.id}">📧 Enviar por email</button>`:''}${p.clienteTelefono?`<button type="button" class="pp-mini-btn" data-whatsapp-presupuesto="${p.id}">${WA_ICON} Enviar por WhatsApp</button>`:''}<button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -3387,8 +3734,13 @@ function abrirPresupuestoPDF(id){
       <td style="text-align:center;">${escapeHtml(x.unidad)}</td>
       <td style="text-align:right;">${x.cantidad}</td>
       <td style="text-align:right;">${formatEUR(x.precio)}</td>
+      <td style="text-align:right;">${x.iva===undefined ? (p.ivaPct||0) : x.iva}%</td>
       <td style="text-align:right;">${formatEUR(x.cantidad*x.precio)}</td>
     </tr>`).join('');
+
+  // Presupuestos antiguos guardaban un único ivaPct/cuota; los nuevos traen el
+  // desglose por tipo de IVA ya calculado en ivaDesglose.
+  const ivaDesglose = p.ivaDesglose || [{pct: p.ivaPct||0, base: p.base, cuota: p.cuota}];
 
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
 <title>Presupuesto ${escapeHtml(p.numero)}</title>
@@ -3398,8 +3750,9 @@ function abrirPresupuestoPDF(id){
   body{font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif; color:#141412; margin:0; padding:40px; font-size:13px;}
   .doc-head{display:flex; justify-content:space-between; align-items:flex-start; border-bottom:3px solid #141412; padding-bottom:18px; margin-bottom:24px;}
   .doc-brand{display:flex; align-items:center; gap:12px;}
-  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .doc-brand .ic{width:40px; height:40px; border-radius:10px; background:#7458C2; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden;}
   .doc-brand .ic svg{width:20px; height:20px; stroke:#fff; fill:none; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round;}
+  .doc-brand .ic img{width:100%; height:100%; object-fit:cover;}
   .doc-head h1{font-family:'Space Grotesk',sans-serif; font-size:19px; margin:0 0 3px;}
   .doc-head .meta{font-size:12px; color:#666; line-height:1.55;}
   .doc-num{text-align:right; font-family:'IBM Plex Mono',monospace;}
@@ -3416,15 +3769,21 @@ function abrirPresupuestoPDF(id){
   .totales div{display:flex; justify-content:space-between; padding:4px 0; font-size:13px; font-family:'IBM Plex Mono',monospace; color:#555;}
   .totales .total{font-weight:700; font-size:16px; color:#141412; border-top:2px solid #141412; margin-top:6px; padding:9px 10px 7px; background:#fff8e1; margin-left:-10px; margin-right:-10px;}
   .condiciones{margin-top:26px; font-size:12px; color:#666; line-height:1.6; border-left:3px solid #7458C2; padding-left:12px;}
-  .firma{margin-top:50px; display:flex; justify-content:space-between;}
-  .firma div{width:45%; border-top:1px solid #141412; padding-top:8px; font-size:11.5px; color:#4a4842; text-align:center;}
+  .doc-fotos{margin-top:26px;}
+  .doc-fotos h3{font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#7458C2; margin:0 0 8px; font-weight:700;}
+  .doc-fotos-grid{display:flex; gap:10px; flex-wrap:wrap;}
+  .doc-fotos-grid img{width:140px; height:105px; object-fit:cover; border-radius:8px; border:1px solid #eee;}
+  .firma-digital{margin-top:36px; border-radius:10px; padding:12px 16px; font-size:12.5px;}
+  .firma-digital.ok{background:rgba(46,143,110,0.1); border:1px solid rgba(46,143,110,0.35); color:#1f6b52;}
+  .firma-digital.bad{background:rgba(192,90,58,0.08); border:1px solid rgba(192,90,58,0.3); color:#a1442b;}
+  .firma-digital.pend{border-left:3px solid #7458C2; color:#4a4842; padding-left:12px;}
   .watermark{margin-top:36px; text-align:center;}
   .watermark span{display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; color:#9a958c; letter-spacing:0.02em; background:#f3f3f1; padding:5px 14px; border-radius:999px;}
   @media print{ body{padding:14mm;} }
 </style></head><body>
   <div class="doc-head">
     <div class="doc-brand">
-      <div class="ic"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <div class="ic">${account.photo ? `<img src="${account.photo}" alt="">` : `<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>`}</div>
       <div>
         <h1>${escapeHtml(emisorNombre)}</h1>
         <div class="meta">
@@ -3448,6 +3807,7 @@ function abrirPresupuestoPDF(id){
       ${p.clienteNif?`<div>NIF/DNI: ${escapeHtml(p.clienteNif)}</div>`:''}
       ${p.clienteDireccion?`<div>${escapeHtml(p.clienteDireccion)}</div>`:''}
       ${p.clienteTelefono?`<div>${escapeHtml(p.clienteTelefono)}</div>`:''}
+      ${p.clienteEmail?`<div>${escapeHtml(p.clienteEmail)}</div>`:''}
     </div>
     ${(p.direccionObra || p.concepto) ? `<div class="box">
       <h3>Trabajo</h3>
@@ -3457,13 +3817,13 @@ function abrirPresupuestoPDF(id){
   </div>
 
   <table>
-    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">Importe</th></tr></thead>
+    <thead><tr><th>Descripción</th><th style="text-align:center;">Ud.</th><th style="text-align:right;">Cant.</th><th style="text-align:right;">Precio</th><th style="text-align:right;">IVA</th><th style="text-align:right;">Importe</th></tr></thead>
     <tbody>${filasHTML}</tbody>
   </table>
 
   <div class="totales">
     <div><span>Subtotal</span><span>${formatEUR(p.base)}</span></div>
-    <div><span>IVA (${p.ivaPct}%)</span><span>${formatEUR(p.cuota)}</span></div>
+    ${ivaDesglose.map(d=>`<div><span>IVA (${d.pct}%)${ivaDesglose.length>1?' — base '+formatEUR(d.base):''}</span><span>${formatEUR(d.cuota)}</span></div>`).join('')}
     ${p.irpfAplica ? `<div><span>Retención IRPF (${p.irpfPct}%)</span><span>−${formatEUR(p.irpfImporte)}</span></div>` : ''}
     <div class="total"><span>TOTAL</span><span>${formatEUR(p.total)}</span></div>
   </div>
@@ -3473,10 +3833,15 @@ function abrirPresupuestoPDF(id){
     <div><strong>Validez del presupuesto:</strong> ${p.validezDias||30} días desde la fecha de emisión.</div>
   </div>
 
-  <div class="firma">
-    <div>Firma del profesional</div>
-    <div>Firma y aceptación del cliente</div>
-  </div>
+  ${(p.fotos||[]).length ? `
+  <div class="doc-fotos">
+    <h3>Fotos del trabajo</h3>
+    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}">`).join('')}</div>
+  </div>` : ''}
+
+  ${p.estado === 'Aceptado' ? `<div class="firma-digital ok">✓ Presupuesto aceptado digitalmente${p.firmaNombre?` por ${escapeHtml(p.firmaNombre)}`:''}${p.firmaFecha?` el ${formatDateES(p.firmaFecha)}`:''}.</div>`
+    : p.estado === 'Rechazado' ? `<div class="firma-digital bad">✕ Presupuesto rechazado digitalmente${p.firmaNombre?` por ${escapeHtml(p.firmaNombre)}`:''}${p.firmaFecha?` el ${formatDateES(p.firmaFecha)}`:''}.</div>`
+    : `<div class="firma-digital pend">Este presupuesto se acepta digitalmente a través del enlace enviado al cliente — no requiere firma en papel.</div>`}
 
   ${isPremiumActive ? '' : '<div class="watermark"><span>Presupuesto generado con TodoOficios.es</span></div>'}
 
@@ -3538,12 +3903,15 @@ function abrirResumenGastosPDF(gastos){
   win.document.close();
 }
 
+const IVA_OPCIONES = [21, 10, 4, 0];
 function ppPartidaRowHTML(idx, p){
+  const iva = p.iva===undefined ? 21 : p.iva;
   return `<div class="pp-partidas-row" data-pidx="${idx}">
     <input type="text" class="pp-desc" value="${escapeHtml(p.descripcion)}" placeholder="Ej. Sustitución de grifería">
     <select class="pp-unidad">${UNIDADES_PRESUPUESTO.map(u=>`<option value="${escapeHtml(u)}" ${p.unidad===u?'selected':''}>${escapeHtml(u)}</option>`).join('')}</select>
     <input type="number" class="pp-cantidad" min="0" step="0.01" value="${p.cantidad}">
     <input type="number" class="pp-precio" min="0" step="0.01" value="${p.precio}">
+    <select class="pp-iva" title="IVA de esta línea">${IVA_OPCIONES.map(v=>`<option value="${v}" ${Number(iva)===v?'selected':''}>${v}%</option>`).join('')}</select>
     <input type="number" class="pp-coste pp-coste-cell" min="0" step="0.01" value="${p.coste||0}">
     <span class="pp-importe-cell">${formatEUR((Number(p.cantidad)||0)*(Number(p.precio)||0))}</span>
     <button type="button" class="pp-row-remove" data-remove-idx="${idx}" title="Quitar línea">×</button>
@@ -3591,6 +3959,7 @@ function epigrafeResultCardHTML(code, confidence, why, confirmed){
       <span class="txt" id="epi-confirm-txt">${confirmed ? 'Confirmado con tu gestor.' : 'Pendiente de confirmar con tu gestor antes del alta.'}</span>
       <button type="button" class="pp-mini-btn ${confirmed?'ok':''}" id="epi-confirm-btn" data-confirmed="${confirmed}">${confirmed?'✓ Confirmado':'Marcar como confirmado'}</button>
       <button type="button" class="pp-mini-btn" data-ng-tab="envio">Enviar a mi gestor</button>
+      <button type="button" class="pp-mini-btn" id="epi-remove-btn">Quitar epígrafe</button>
     </div>`;
 }
 function epigrafeClarifyCardHTML(entry){
@@ -3646,6 +4015,8 @@ async function renderNegocio(){
 
   const presupuestosPendientes = negocio.presupuestos.filter(p => p.estado === 'Pendiente' || !p.estado);
   const totalPresupuestosPendientes = presupuestosPendientes.reduce((s,p)=> s + (Number(p.total)||0), 0);
+  const diasSinRespuesta = (fecha)=> Math.floor((new Date(hoy+'T00:00:00') - new Date((fecha||hoy)+'T00:00:00')) / 86400000);
+  const presupuestosSinRespuesta = presupuestosPendientes.filter(p => diasSinRespuesta(p.fecha) >= 5).sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
 
   const citasProximas = negocio.agenda
     .filter(c => c.fecha >= hoy)
@@ -3690,12 +4061,15 @@ async function renderNegocio(){
   const gastosLimitReached = !premium && gastosMes.length >= FREE_LIMITS.gastosPorMes;
   const presupuestosLimitReached = !premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes;
   const citasLimitReached = !premium && citasProximas.length >= FREE_LIMITS.citasActivas;
+  const materialesLimitReached = !premium && materialesFavoritos.length >= FREE_LIMITS.materiales;
   const presupuestoDraft = getPresupuestoDraft(account.email);
+  const presupuestoEditando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
 
-  function premiumLockHTML(mensaje){
+  function premiumLockHTML(mensaje, bullets){
     return `
       <div class="ng-limit-note">
         <p class="note">${mensaje}</p>
+        ${bullets && bullets.length ? `<ul style="margin:0; padding-left:20px; font-size:14px; color:var(--ink-soft); line-height:1.6;">${bullets.map(b=>`<li>${escapeHtml(b)}</li>`).join('')}</ul>` : ''}
         <a class="btn btn-amber btn-sm" href="javascript:void(0)" data-view="pro">Ver plan Premium →</a>
       </div>`;
   }
@@ -3704,6 +4078,18 @@ async function renderNegocio(){
     ...presupuestosPendientes.map(p => ({ fecha: p.fecha || '', texto: `Presupuesto ${escapeHtml(p.numero||'')} — ${escapeHtml(p.cliente)} (${formatEUR(p.total)}) sin respuesta` })),
     ...citasProximas.slice(0,5).map(c => ({ fecha: c.fecha, texto: `${formatDateES(c.fecha)}${c.horaInicio?', '+c.horaInicio:''} — ${escapeHtml(c.tipoTrabajo||'Cita')} con ${escapeHtml(c.cliente||'cliente')}` }))
   ].sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
+
+  const heroBits = [];
+  if(presupuestosPendientes.length) heroBits.push(`${presupuestosPendientes.length} presupuesto${presupuestosPendientes.length===1?'':'s'} por responder`);
+  if(proximaCita) heroBits.push(`próxima cita ${formatDateES(proximaCita.fecha)}${proximaCita.horaInicio?', '+proximaCita.horaInicio:''}`);
+  const heroHeadline = heroBits.length ? heroBits.join(' · ') : 'Tienes pendientes en tu negocio';
+
+  function toolSubtext(key){
+    if(key==='fiscal') return nextDeadline ? `${escapeHtml(nextDeadline.label)} · ${daysToNext} día${daysToNext===1?'':'s'}` : 'Sin vencimientos próximos';
+    if(key==='envio') return envioPendiente ? `Pendiente esta semana (${gastosSemana.length})` : 'Al día esta semana';
+    if(key==='agente') return `Estimado trimestre: ${formatEUR(estimacionTrimestre)}`;
+    return '';
+  }
 
   const negocioTabsDatos = [
     {key:'pendientes', label:'Pendientes'},
@@ -3722,54 +4108,87 @@ async function renderNegocio(){
   if(!negocioTabs.some(t=>t.key===negocioTab)) negocioTab = 'pendientes';
 
   return `
-  <a href="javascript:void(0)" class="back-link" data-view="pro">← Volver a mi ficha</a>
-  <div class="ng-intro">
-    <div class="section-label">${ngIconHTML('pendientes')} De un vistazo</div>
-    <h2>Panel de negocio</h2>
-    <p class="note">Gastos, clientes, presupuestos y agenda de ${escapeHtml(account.name)} — todo en un solo sitio.</p>
-  </div>
+  <a href="javascript:void(0)" class="back-link ng-back-link" id="ng-back-link"></a>
 
-  <div class="negocio-stats">
-    <div class="stat-card" data-ng-tab="gastos">
-      ${ngIconHTML('gastos')}
-      <span class="stat-label">Gastos este mes</span>
-      <span class="stat-value">${formatEUR(totalGastosMes)}</span>
-      <span class="stat-sub">${gastosMes.length} apunte${gastosMes.length===1?'':'s'}</span>
+  <div class="ng-overview ${negocioTab==='pendientes'?'active':''}" id="ng-overview">
+    <div class="ng-intro">
+      <div class="section-label">${ngIconHTML('pendientes')} De un vistazo</div>
+      <h2>Panel de negocio</h2>
+      <p class="note">Gastos, clientes, presupuestos y agenda de ${escapeHtml(account.name)} — todo en un solo sitio.</p>
     </div>
-    <div class="stat-card" data-ng-tab="presupuestos">
-      ${ngIconHTML('presupuestos')}
-      <span class="stat-label">Presupuestos pendientes</span>
-      <span class="stat-value">${presupuestosPendientes.length}</span>
-      <span class="stat-sub">${formatEUR(totalPresupuestosPendientes)}</span>
-    </div>
-    <div class="stat-card" data-ng-tab="agenda">
-      ${ngIconHTML('agenda')}
-      <span class="stat-label">Próxima cita</span>
-      <span class="stat-value" style="font-size:18px;">${proximaCita ? formatDateES(proximaCita.fecha) : 'Sin citas'}</span>
-      <span class="stat-sub">${proximaCita ? escapeHtml(proximaCita.tipoTrabajo||'') : 'Agenda vacía'}</span>
-    </div>
-    <div class="stat-card" data-ng-tab="clientes">
-      ${ngIconHTML('clientes')}
-      <span class="stat-label">Clientes</span>
-      <span class="stat-value">${negocio.clientes.length}</span>
-      <span class="stat-sub">${negocio.clientes.filter(c=>c.favorito).length} habitual${negocio.clientes.filter(c=>c.favorito).length===1?'':'es'}</span>
-    </div>
-  </div>
 
-  <div class="ng-tabs">
-    ${negocioTabsDatos.map(t=>`<button class="ng-tab-btn ${negocioTab===t.key?'active':''}" data-ng-tab="${t.key}">${ngIconHTML(t.key)} ${t.label}</button>`).join('')}
-  </div>
+    ${pendientesList.length ? `
+    <div class="ng-hero">
+      <div class="ng-hero-head">${ngIconHTML('pendientes')}<h3>${escapeHtml(heroHeadline)}</h3></div>
+      <div class="pend-list">${pendientesList.map(i=>`<div class="pend-item">${i.texto}</div>`).join('')}</div>
+    </div>` : ''}
 
-  <div class="ng-tools-divider"><div class="ln"></div><span>Herramientas</span><div class="ln"></div></div>
+    <div class="ng-split">
+      <div class="ng-box">
+        <div class="ng-box-label">Tus números</div>
+        <div class="nav-list">
+          <div class="nav-card" data-ng-tab="gastos">
+            ${ngIconHTML('gastos')}
+            <div class="nc-body">
+              <span class="stat-label">Gastos este mes</span>
+              <span class="stat-value">${formatEUR(totalGastosMes)}</span>
+              <span class="stat-sub">${gastosMes.length} apunte${gastosMes.length===1?'':'s'}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="presupuestos">
+            ${ngIconHTML('presupuestos')}
+            <div class="nc-body">
+              <span class="stat-label">Presupuestos pendientes</span>
+              <span class="stat-value">${presupuestosPendientes.length}</span>
+              <span class="stat-sub">${formatEUR(totalPresupuestosPendientes)}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="agenda">
+            ${ngIconHTML('agenda')}
+            <div class="nc-body">
+              <span class="stat-label">Próxima cita</span>
+              <span class="stat-value" style="font-size:18px;">${proximaCita ? formatDateES(proximaCita.fecha) : 'Sin citas'}</span>
+              <span class="stat-sub">${proximaCita ? escapeHtml(proximaCita.tipoTrabajo||'') : 'Agenda vacía'}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="clientes">
+            ${ngIconHTML('clientes')}
+            <div class="nc-body">
+              <span class="stat-label">Clientes</span>
+              <span class="stat-value">${negocio.clientes.length}</span>
+              <span class="stat-sub">${negocio.clientes.filter(c=>c.favorito).length} habitual${negocio.clientes.filter(c=>c.favorito).length===1?'':'es'}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+          <div class="nav-card" data-ng-tab="materiales">
+            ${ngIconHTML('materiales')}
+            <div class="nc-body">
+              <span class="stat-label">Materiales favoritos</span>
+              <span class="stat-value">${materialesFavoritos.length}</span>
+              <span class="stat-sub">guardados</span>
+            </div>
+            <span class="chev">›</span>
+          </div>
+        </div>
+      </div>
 
-  <div class="ng-tabs">
-    ${negocioTabsHerramientas.map(t=>`<button class="ng-tab-btn ${negocioTab===t.key?'active':''}" data-ng-tab="${t.key}">${ngIconHTML(t.key)} ${t.label}</button>`).join('')}
-  </div>
-
-  <div class="ng-tab-panel ${negocioTab==='pendientes'?'active':''}" data-tab="pendientes">
-    <div class="panel panel-wide">
-      <div class="section-label">${ngIconHTML('pendientes')} Pendientes</div>
-      ${pendientesList.length ? `<div class="pend-list">${pendientesList.map(i=>`<div class="pend-item">${i.texto}</div>`).join('')}</div>` : '<div class="empty-state">Todo al día: sin presupuestos sin responder ni citas próximas.</div>'}
+      <div class="ng-box">
+        <div class="ng-box-label">Herramientas</div>
+        <div class="nav-list">
+          ${negocioTabsHerramientas.map(t=>`
+          <div class="nav-card tool" data-ng-tab="${t.key}">
+            ${ngIconHTML(t.key)}
+            <div class="nc-body">
+              <span class="stat-value">${t.label}</span>
+              <span class="stat-sub">${toolSubtext(t.key)}</span>
+            </div>
+            <span class="chev">›</span>
+          </div>`).join('')}
+        </div>
+      </div>
     </div>
   </div>
 
@@ -3786,10 +4205,13 @@ async function renderNegocio(){
             <div class="field"><label>Tipo</label><select id="ng-cli-tipo"><option value="Particular">Particular</option><option value="Empresa">Empresa</option></select></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Teléfono</label><input type="tel" id="ng-cli-telefono" placeholder="600 123 456"></div>
-            <div class="field"><label>NIF/DNI <small>(opcional)</small></label><input type="text" id="ng-cli-nif" placeholder="Solo si lo tienes"></div>
+            <div class="field"><label>Teléfono <small>(para enviar por WhatsApp)</small></label><input type="tel" id="ng-cli-telefono" placeholder="600 123 456"></div>
+            <div class="field"><label>Email <small>(para enviar presupuestos)</small></label><input type="email" id="ng-cli-email" placeholder="cliente@email.com"></div>
           </div>
-          <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="ng-cli-direccion" placeholder="Calle, número, ciudad"></div>
+          <div class="field-row">
+            <div class="field"><label>NIF/DNI <small>(opcional)</small></label><input type="text" id="ng-cli-nif" placeholder="Solo si lo tienes"></div>
+            <div class="field"><label>Dirección <small>(opcional)</small></label><input type="text" id="ng-cli-direccion" placeholder="Calle, número, ciudad"></div>
+          </div>
           <button class="btn btn-outline btn-block" id="ng-cli-add">Añadir cliente</button>
           <div id="ng-cli-msg"></div>
         </div>
@@ -3805,6 +4227,10 @@ async function renderNegocio(){
       <details class="ng-add">
         <summary>Añadir gasto</summary>
         <div class="ng-add-body">
+          <button type="button" class="btn btn-outline btn-block file-btn" id="ng-gas-scan-btn">📷 Escanear factura (rellena los datos solo)
+            <input type="file" accept="image/*" capture="environment" id="ng-gas-foto">
+          </button>
+          <div id="ng-gas-scan-msg"></div>
           <div class="field-row">
             <div class="field"><label>Fecha</label><input type="date" id="ng-gas-fecha" value="${hoy}"></div>
             <div class="field"><label>Proveedor</label><input type="text" id="ng-gas-proveedor" placeholder="Ej. Ferretería Sur"></div>
@@ -3853,6 +4279,15 @@ async function renderNegocio(){
   <div class="ng-tab-panel ${negocioTab==='presupuestos'?'active':''}" data-tab="presupuestos">
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('presupuestos')} Presupuestos</div>
+      ${presupuestosSinRespuesta.length ? `
+      <div class="pp-stale-banner">
+        <strong>${presupuestosSinRespuesta.length} presupuesto${presupuestosSinRespuesta.length>1?'s':''} sin respuesta desde hace 5 días o más</strong>
+        <div class="pp-stale-list">
+          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Reenviar PDF</button></span>`).join('')}
+        </div>
+      </div>` : ''}
+      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">🔄 Comprobar si algún cliente respondió</button>` : ''}
+      ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
       <div id="negocio-presupuestos-list">${negocio.presupuestos.length ? negocio.presupuestos.slice().reverse().map(presupuestoRowHTML).join('') : '<div class="empty-state">Todavía no registraste presupuestos.</div>'}</div>
 
       <details class="ng-add">
@@ -3872,8 +4307,8 @@ async function renderNegocio(){
         </div>
       </details>
 
-      ${presupuestosLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
-      ${presupuestoDraft.length ? `
+      ${(presupuestosLimitReached && !presupuestoEditando) ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`) : `
+      ${(presupuestoDraft.length && !presupuestoEditando) ? `
       <div class="pp-draft-banner">
         <div class="pp-draft-ic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
         <div class="pp-draft-txt">
@@ -3884,27 +4319,32 @@ async function renderNegocio(){
         <button type="button" class="pp-draft-dismiss" id="pp-draft-dismiss" title="Descartar" aria-label="Descartar partidas guardadas">✕</button>
       </div>` : ''}
       <details class="ng-add" open>
-        <summary>Crear presupuesto</summary>
+        <summary>${presupuestoEditando ? `Editando presupuesto ${escapeHtml(presupuestoEditando.numero)}` : 'Crear presupuesto'}</summary>
         <div class="ng-add-body">
+          ${presupuestoEditando ? `<div class="msg" style="margin-bottom:12px;">Editando <strong>${escapeHtml(presupuestoEditando.numero)}</strong> — ${escapeHtml(presupuestoEditando.cliente)}. <button type="button" class="pp-mini-btn" id="ng-pre-cancel-edit">Cancelar edición</button></div>` : ''}
           <div class="field-row">
             <div class="field">
               <label>Cliente</label>
               <select id="ng-pre-cliente-select">
                 <option value="">— Cliente nuevo (escribe abajo) —</option>
-                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}">${escapeHtml(c.nombre)}</option>`).join('')}
+                ${negocio.clientes.map(c=>`<option value="${escapeHtml(c.id)}" ${presupuestoEditando && presupuestoEditando.clienteId===c.id ? 'selected':''}>${escapeHtml(c.nombre)}</option>`).join('')}
               </select>
             </div>
-            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa"></div>
+            <div class="field"><label>Nombre del cliente <small>(si es nuevo)</small></label><input type="text" id="ng-pre-cliente-nuevo" placeholder="Nombre y apellidos o empresa" value="${presupuestoEditando && !presupuestoEditando.clienteId ? escapeHtml(presupuestoEditando.cliente) : ''}"></div>
           </div>
           <div class="field-row">
-            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño"></div>
-            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente"></div>
+            <div class="field"><label>Teléfono del cliente <small>(para enviarlo por WhatsApp)</small></label><input type="tel" id="ng-pre-cliente-tel" placeholder="600 123 456" value="${escapeHtml((presupuestoEditando && (presupuestoEditando.clienteTelefono || negocio.clientes.find(c=>c.id===presupuestoEditando.clienteId)?.telefono)) || '')}"></div>
+            <div class="field"><label>Email del cliente <small>(para enviarlo por email)</small></label><input type="email" id="ng-pre-cliente-email" placeholder="cliente@email.com" value="${escapeHtml((presupuestoEditando && (presupuestoEditando.clienteEmail || negocio.clientes.find(c=>c.id===presupuestoEditando.clienteId)?.email)) || '')}"></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Concepto / título del trabajo</label><input type="text" id="ng-pre-concepto" placeholder="Ej. Reforma baño" value="${escapeHtml(presupuestoEditando?.concepto||'')}"></div>
+            <div class="field"><label>Dirección de la obra <small>(opcional)</small></label><input type="text" id="ng-pre-direccion-obra" placeholder="Si es distinta a la del cliente" value="${escapeHtml(presupuestoEditando?.direccionObra||'')}"></div>
           </div>
 
           <label>Partidas</label>
           <div id="pp-partidas-table">
             <div class="pp-partidas-row pp-partidas-head">
-              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
+              <span>Descripción</span><span>Ud.</span><span>Cant.</span><span>Precio €</span><span>IVA</span><span class="pp-coste-cell">Coste €</span><span>Importe</span><span></span>
             </div>
             <div id="pp-partidas-rows"></div>
           </div>
@@ -3920,34 +4360,40 @@ async function renderNegocio(){
           </div>
 
           <div class="field" style="margin-top:16px;">
-            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle"> Calcular margen (añade una columna de coste por línea)</label>
+            <label class="pp-check-label"><input type="checkbox" id="pp-margen-toggle" ${presupuestoEditando && presupuestoEditando.partidas.some(p=>Number(p.coste)>0) ? 'checked':''}> Calcular margen (añade una columna de coste por línea)</label>
           </div>
 
           <div class="field-row" style="margin-top:6px;">
             <div class="field">
-              <label>IVA</label>
+              <label>IVA por defecto <small>(para líneas nuevas — cada línea puede tener el suyo)</small></label>
               <select id="ng-pre-iva">
-                <option value="21">21% (general)</option>
+                <option value="21" selected>21% (general)</option>
                 <option value="10">10% (reforma vivienda particular, +2 años)</option>
                 <option value="4">4%</option>
                 <option value="0">0% / exento</option>
               </select>
             </div>
-            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="30"></div>
+            <div class="field"><label>Validez (días)</label><input type="number" min="1" id="ng-pre-validez" value="${presupuestoEditando?.validezDias||30}"></div>
           </div>
 
           <div class="field" id="pp-irpf-field">
-            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle"> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
+            <label class="pp-check-label"><input type="checkbox" id="pp-irpf-toggle" ${presupuestoEditando?.irpfAplica ? 'checked':''}> Aplicar retención de IRPF (solo si el cliente es empresa/profesional)</label>
             <div class="field-row" style="margin-top:8px;">
-              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15">15% (general)</option><option value="7">7% (nuevos autónomos, 1º-3º año)</option></select></div>
+              <div class="field"><label>% retención</label><select id="ng-pre-irpf-pct"><option value="15" ${(!presupuestoEditando || presupuestoEditando.irpfPct!==7) ? 'selected':''}>15% (general)</option><option value="7" ${presupuestoEditando?.irpfPct===7 ? 'selected':''}>7% (nuevos autónomos, 1º-3º año)</option></select></div>
             </div>
           </div>
 
-          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="Transferencia bancaria"></div>
+          <div class="field"><label>Forma de pago</label><input type="text" id="ng-pre-pago" value="${escapeHtml(presupuestoEditando?.formaPago||'Transferencia bancaria')}"></div>
+
+          <div class="field">
+            <label>Fotos del trabajo <small>(opcional, máx. 3)</small></label>
+            <input type="file" id="ng-pre-fotos" accept="image/*" multiple>
+            <div id="pp-fotos-preview" class="pp-fotos-preview"></div>
+          </div>
 
           <div id="pp-totales" class="pp-totales"></div>
 
-          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">Crear presupuesto</button>
+          <button class="btn btn-primary btn-block" id="ng-pre-add" style="margin-top:16px;">${presupuestoEditando ? 'Guardar cambios' : 'Crear presupuesto'}</button>
           <div id="ng-pre-msg"></div>
         </div>
       </details>`}
@@ -3960,13 +4406,14 @@ async function renderNegocio(){
       <p class="note">Guarda aquí tus precios habituales de materiales. Están disponibles también desde las calculadoras, en cualquier dispositivo donde inicies sesión.</p>
       <div id="negocio-materiales-list">${materialesFavoritos.length ? materialesFavoritos.slice().reverse().map(materialRowHTML).join('') : '<div class="empty-state">Todavía no guardaste ningún material favorito.</div>'}</div>
 
+      ${materialesLimitReached ? premiumLockHTML(`Llegaste al límite de ${FREE_LIMITS.materiales} materiales favoritos del plan gratuito. Hazte Premium para guardar materiales sin límite.`) : `
       <div class="mat-add-form">
         <div><label>Material</label><input type="text" id="mat-nombre" placeholder="Ej. Saco de cemento 25kg"></div>
         <div><label>Unidad</label><select id="mat-unidad">${UNIDADES_MATERIAL.map(u=>`<option value="${escapeHtml(u)}">${escapeHtml(u)}</option>`).join('')}</select></div>
         <div><label>Precio</label><input type="number" min="0" step="0.01" id="mat-precio" placeholder="0,00"></div>
         <button type="button" class="btn btn-primary" id="mat-add">+ Guardar</button>
       </div>
-      <div id="mat-msg"></div>
+      <div id="mat-msg"></div>`}
     </div>
   </div>
 
@@ -4001,6 +4448,7 @@ async function renderNegocio(){
         </div>
       </div>` : ''}
 
+      ${premium ? `
       <div class="fiscal-timeline">
         ${fiscalTimeline.slice(1).map(it=>`
           <div class="ft-item">
@@ -4022,6 +4470,11 @@ async function renderNegocio(){
         <div class="fin-stat"><div class="k">Estimación orientativa a pagar</div><div class="v est">≈ ${formatEUR(estimacionTrimestre)}</div></div>
       </div>
       <p class="note">Estimación aproximada (20% sobre presupuestos aceptados menos gastos), no un cálculo oficial. El importe exacto lo confirma tu gestor.</p>
+      ` : premiumLockHTML('Aquí ves solo el próximo vencimiento. Hazte Premium para ver el calendario fiscal completo y la estimación trimestral a pagar.', [
+        'Calendario completo con todos los modelos (IVA, IRPF o Sociedades, resumen anual…)',
+        'Estimación orientativa de lo que te tocaría pagar cada trimestre',
+        'Gastos deducibles acumulados del trimestre'
+      ])}
     </div>
   </div>
 
@@ -4033,10 +4486,10 @@ async function renderNegocio(){
         <div class="field"><label>Email de tu gestor/gestoría</label><input type="email" id="asesor-gestor-email" value="${escapeHtml(asesor.gestorEmail||'')}" placeholder="gestoria@ejemplo.com"></div>
         <div class="field"><label>Día preferido de envío</label>
           <select id="asesor-dia-envio">
-            <option value="lunes" ${asesor.diaEnvio==='lunes'?'selected':''}>Lunes</option>
-            <option value="viernes" ${asesor.diaEnvio==='viernes'?'selected':''}>Viernes</option>
+            ${DIAS_SEMANA.map(d=>`<option value="${d.key}" ${asesor.diaEnvio===d.key?'selected':''}>${d.label}</option>`).join('')}
           </select>
         </div>
+        <div class="field"><label>Hora preferida</label><input type="time" id="asesor-hora-envio" value="${escapeHtml(asesor.horaEnvio||'09:00')}"></div>
       </div>
       <button class="btn btn-outline btn-sm" id="asesor-config-save" style="margin-top:10px;">Guardar configuración</button>
       <div id="asesor-config-msg"></div>
@@ -4054,6 +4507,7 @@ async function renderNegocio(){
             <span class="amt">${formatEUR(g.total)}</span>
           </div>`).join('')}
       </div>
+      ${premium ? `
       <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
         <button class="btn btn-outline" id="asesor-ver-pdf">Ver / descargar PDF de la semana</button>
         <button class="btn btn-amber" id="asesor-abrir-correo">Abrir correo con los datos ya rellenos</button>
@@ -4063,13 +4517,15 @@ async function renderNegocio(){
         <li>Se abre tu correo con el destinatario, el asunto y el mensaje ya escritos.</li>
         <li>Adjuntas el PDF que acabas de guardar y le das a enviar.</li>
       </ol>
+      ` : premiumLockHTML(`Tienes ${gastosSemana.length} factura${gastosSemana.length===1?'':'s'} (${formatEUR(totalGastosSemana)}) pendientes de enviar esta semana. Hazte Premium para generar el PDF y el correo ya rellenos con un clic.`)}
       ` : '<div class="empty-state">No tienes gastos registrados esta semana todavía.</div>'}
     </div>
   </div>
 
   <div class="ng-tab-panel ${negocioTab==='agente'?'active':''}" data-tab="agente">
     <div class="panel panel-wide">
-      <div class="section-label">${ngIconHTML('agente')} Avisos de esta semana</div>
+      <div class="section-label">${ngIconHTML('agente')} Agente financiero</div>
+      ${premium ? `
       <p class="note">Nada que configurar aquí: se generan solos combinando el Asesor fiscal, el Envío al gestor y tus Gastos y Presupuestos.</p>
       <div class="asesor-cardgrid">
         ${nextDeadline ? `
@@ -4092,17 +4548,46 @@ async function renderNegocio(){
             : `Llevas ${formatEUR(facturadoTrimestre)} en presupuestos aceptados este trimestre.`}</p></div>
         </div>
       </div>
+      ` : `
+      <p class="note">Combina tu Asesor fiscal, el Envío al gestor y tus Gastos y Presupuestos en avisos automáticos cada semana, para que no se te pase ningún plazo ni ningún envío.</p>
+      ${premiumLockHTML('El Agente financiero es exclusivo del plan Premium.', [
+        'Aviso cuando se acerca un vencimiento fiscal',
+        'Aviso si aún no has enviado los gastos de la semana a tu gestor',
+        'Resumen de gastos deducibles del trimestre',
+        'Comparativa de facturación trimestre a trimestre'
+      ])}
+      `}
     </div>
   </div>`;
 }
 
+function updateNegocioBackLink(){
+  const backLink = document.getElementById('ng-back-link');
+  if(!backLink) return;
+  const arrow = '<svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor; fill:none; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; margin-right:4px;"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
+  if(negocioTab === 'pendientes'){
+    backLink.innerHTML = arrow + 'Volver a mi ficha';
+    backLink.onclick = ()=> showView('pro');
+  } else {
+    backLink.innerHTML = arrow + 'Volver al resumen';
+    backLink.onclick = ()=> activateNegocioTab('pendientes');
+  }
+}
+
+function activateNegocioTab(tab){
+  if(tab !== 'presupuestos') negocioEditPresupuestoId = null;
+  negocioTab = tab;
+  document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
+  const overview = document.getElementById('ng-overview');
+  if(overview) overview.classList.toggle('active', negocioTab==='pendientes');
+  updateNegocioBackLink();
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
 function bindNegocio(){
+  updateNegocioBackLink();
   document.querySelectorAll('[data-ng-tab]').forEach(el=>{
-    el.onclick = ()=>{
-      negocioTab = el.dataset.ngTab;
-      document.querySelectorAll('.ng-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.ngTab===negocioTab));
-      document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
-    };
+    el.onclick = ()=> activateNegocioTab(el.dataset.ngTab);
   });
 
   let citaOverlapAcknowledged = false;
@@ -4114,6 +4599,7 @@ function bindNegocio(){
     const nombre = document.getElementById('ng-cli-nombre').value.trim();
     const tipo = document.getElementById('ng-cli-tipo').value;
     const telefono = document.getElementById('ng-cli-telefono').value.trim();
+    const email = document.getElementById('ng-cli-email').value.trim();
     const nif = document.getElementById('ng-cli-nif').value.trim();
     const direccion = document.getElementById('ng-cli-direccion').value.trim();
     if(!nombre){
@@ -4125,11 +4611,48 @@ function bindNegocio(){
       msgBox.innerHTML = `<div class="msg err">Ya tienes un cliente registrado como ${escapeHtml(dup.nombre)}${dup.telefono?' ('+escapeHtml(dup.telefono)+')':''}.</div>`;
       return;
     }
-    negocio.clientes.push({ id:'cl'+Date.now(), nombre, tipo, telefono, nif, direccion, favorito:false, createdAt: Date.now() });
+    negocio.clientes.push({ id:'cl'+Date.now(), nombre, tipo, telefono, email, nif, direccion, favorito:false, createdAt: Date.now() });
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el cliente. Inténtalo de nuevo.</div>'; return; }
     showToast('Cliente añadido.');
     showView('negocio');
+  };
+
+  const ngGasFotoInput = document.getElementById('ng-gas-foto');
+  if(ngGasFotoInput) ngGasFotoInput.onchange = async (e)=>{
+    const file = e.target.files[0];
+    e.target.value = '';
+    if(!file) return;
+    const scanMsg = document.getElementById('ng-gas-scan-msg');
+    scanMsg.innerHTML = '<div class="msg">Leyendo factura…</div>';
+    try{
+      const dataUrl = await compressImage(file, 1400);
+      const client = await initSupabaseClient();
+      if(!client){
+        scanMsg.innerHTML = '<div class="msg err">Escanear factura necesita conexión con el servidor. Rellena los datos a mano.</div>';
+        return;
+      }
+      const { data, error } = await client.functions.invoke('parse-gasto', { body: { image: dataUrl } });
+      if(error || !data || data.error){
+        let msg = (data && data.error) || 'No se pudo leer la factura. Rellena los datos a mano.';
+        if(error && error.context && typeof error.context.json === 'function'){
+          try{ const errBody = await error.context.json(); if(errBody && errBody.error) msg = errBody.error; }catch(_e){}
+        }
+        scanMsg.innerHTML = `<div class="msg err">${escapeHtml(msg)}</div>`;
+        return;
+      }
+      document.getElementById('ng-gas-fecha').value = data.fecha || hoy;
+      document.getElementById('ng-gas-proveedor').value = data.proveedor || '';
+      document.getElementById('ng-gas-concepto').value = data.concepto || '';
+      if(data.categoria) document.getElementById('ng-gas-categoria').value = data.categoria;
+      if(data.total) document.getElementById('ng-gas-total').value = data.total;
+      if(data.ivaPct !== undefined && data.ivaPct !== null) document.getElementById('ng-gas-iva').value = String(data.ivaPct);
+      const avisoConfianza = data.confianza === 'baja' ? ' La foto no se leyó del todo clara: revisa bien los importes.' : '';
+      scanMsg.innerHTML = `<div class="msg ok">Factura leída. Revisa los datos y pulsa "Añadir gasto".${avisoConfianza}</div>`;
+    }catch(err){
+      console.error('parse-gasto:', err);
+      scanMsg.innerHTML = '<div class="msg err">No se pudo leer la factura. Rellena los datos a mano.</div>';
+    }
   };
 
   const ngGasAddBtn = document.getElementById('ng-gas-add');
@@ -4220,8 +4743,108 @@ function bindNegocio(){
       negocio.presupuestos = negocio.presupuestos.filter(x=>x.id!==p.id);
       const saved = await saveNegocio(account.email, negocio);
       if(saved){ showToast('Presupuesto eliminado.'); showView('negocio'); }
+      return;
     }
+    const dupBtn = e.target.closest('[data-dup-presupuesto]');
+    if(dupBtn){
+      const orig = negocio.presupuestos.find(x=>x.id===dupBtn.dataset.dupPresupuesto);
+      if(!orig) return;
+      const inicioMes = todayISO().slice(0,7);
+      const presupuestosMes = negocio.presupuestos.filter(p => (p.fecha||'').startsWith(inicioMes));
+      const premium = isProPremium(account);
+      if(!premium && presupuestosMes.length >= FREE_LIMITS.presupuestosPorMes){
+        showToast(`Llegaste al límite de ${FREE_LIMITS.presupuestosPorMes} presupuestos este mes del plan gratuito. Hazte Premium para crear presupuestos sin límite.`);
+        return;
+      }
+      negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+      const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+      negocio.presupuestos.push({
+        ...orig,
+        id:'p'+Date.now(), numero, fecha: todayISO(),
+        partidas: (orig.partidas||[]).map(x=>({...x})),
+        estado:'Pendiente', createdAt: Date.now(),
+        shareId: undefined, firmaNombre: undefined, firmaFecha: undefined
+      });
+      const saved = await saveNegocio(account.email, negocio);
+      if(saved){ showToast(`Presupuesto ${numero} creado a partir de ${orig.numero}.`); showView('negocio'); }
+      return;
+    }
+    const editBtn = e.target.closest('[data-edit-presupuesto]');
+    if(editBtn){
+      negocioEditPresupuestoId = editBtn.dataset.editPresupuesto;
+      activateNegocioTab('presupuestos');
+      showView('negocio');
+      return;
+    }
+    const shareBtn = e.target.closest('[data-share-presupuesto]');
+    if(shareBtn){
+      const p = negocio.presupuestos.find(x=>x.id===shareBtn.dataset.sharePresupuesto);
+      if(!p) return;
+      shareBtn.disabled = true;
+      shareBtn.textContent = 'Preparando enlace…';
+      const yaExistia = !!p.shareId;
+      const shareId = await publicarPresupuesto(p);
+      shareBtn.disabled = false;
+      shareBtn.textContent = '🔗 Compartir con el cliente';
+      if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
+      if(!yaExistia) await saveNegocio(account.email, negocio);
+      const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
+      try { await navigator.clipboard.writeText(url); showToast('Enlace copiado: ' + url); }
+      catch(e){ showToast('Copia este enlace para tu cliente: ' + url); }
+      return;
+    }
+    const emailBtn = e.target.closest('[data-email-presupuesto]');
+    if(emailBtn){ enviarPresupuesto(emailBtn.dataset.emailPresupuesto, 'email'); return; }
+    const waBtn = e.target.closest('[data-whatsapp-presupuesto]');
+    if(waBtn){ enviarPresupuesto(waBtn.dataset.whatsappPresupuesto, 'whatsapp'); return; }
   });
+
+  const checkRespuestasBtn = document.getElementById('pp-check-respuestas');
+  if(checkRespuestasBtn){
+    checkRespuestasBtn.onclick = async ()=>{
+      checkRespuestasBtn.disabled = true;
+      checkRespuestasBtn.textContent = 'Comprobando…';
+      const candidatos = negocio.presupuestos.filter(p=>p.shareId && p.estado==='Pendiente');
+      let cambios = 0;
+      for(const p of candidatos){
+        const publico = await comprobarRespuestaPublica(p);
+        if(publico && publico.estado && publico.estado !== 'Pendiente'){
+          p.estado = publico.estado;
+          p.firmaNombre = publico.firmaNombre||'';
+          p.firmaFecha = publico.firmaFecha||'';
+          cambios++;
+        }
+      }
+      if(cambios) await saveNegocio(account.email, negocio);
+      checkRespuestasBtn.disabled = false;
+      checkRespuestasBtn.textContent = '🔄 Comprobar si algún cliente respondió';
+      showToast(cambios ? `${cambios} presupuesto${cambios>1?'s':''} actualizado${cambios>1?'s':''}.` : 'Sin novedades por ahora.');
+      if(cambios) showView('negocio');
+    };
+  }
+
+  const ppStaleBanner = document.querySelector('.pp-stale-banner');
+  if(ppStaleBanner){
+    ppStaleBanner.addEventListener('click', (e)=>{
+      const pdfBtn = e.target.closest('[data-pdf-id]');
+      if(pdfBtn) abrirPresupuestoPDF(pdfBtn.dataset.pdfId);
+    });
+  }
+
+  const ppFiltroInput = document.getElementById('pp-filtro');
+  if(ppFiltroInput){
+    ppFiltroInput.oninput = ()=>{
+      const q = ppFiltroInput.value.trim().toLowerCase();
+      const listEl = document.getElementById('negocio-presupuestos-list');
+      const filtradas = !q ? negocio.presupuestos.slice().reverse() : negocio.presupuestos.slice().reverse().filter(p=>
+        (p.numero||'').toLowerCase().includes(q) ||
+        (p.cliente||'').toLowerCase().includes(q) ||
+        (p.estado||'Pendiente').toLowerCase().includes(q) ||
+        (p.concepto||'').toLowerCase().includes(q)
+      );
+      listEl.innerHTML = filtradas.length ? filtradas.map(presupuestoRowHTML).join('') : '<div class="empty-state">Ningún presupuesto coincide con la búsqueda.</div>';
+    };
+  }
 
   document.getElementById('negocio-clientes-list').addEventListener('click', async (e)=>{
     const delBtn = e.target.closest('[data-del-cliente]');
@@ -4298,11 +4921,7 @@ function wireEpigrafeCard(){
   if(!card) return;
 
   card.querySelectorAll('[data-ng-tab]').forEach(el=>{
-    el.onclick = ()=>{
-      negocioTab = el.dataset.ngTab;
-      document.querySelectorAll('.ng-tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.ngTab===negocioTab));
-      document.querySelectorAll('.ng-tab-panel').forEach(p=> p.classList.toggle('active', p.dataset.tab===negocioTab));
-    };
+    el.onclick = ()=> activateNegocioTab(el.dataset.ngTab);
   });
 
   async function persistEpigrafe(code, confidence){
@@ -4351,6 +4970,19 @@ function wireEpigrafeCard(){
     });
   };
 
+  const removeBtn = document.getElementById('epi-remove-btn');
+  if(removeBtn) removeBtn.onclick = async ()=>{
+    negocio.asesor.epigrafeCode = null;
+    negocio.asesor.epigrafeConfianza = '';
+    negocio.asesor.epigrafeConfirmado = false;
+    const saved = await saveNegocio(account.email, negocio);
+    if(!saved) return;
+    const oficioEntry = OFICIO_EPIGRAFE[account.oficio] || null;
+    card.className = '';
+    card.innerHTML = epigrafeSuggestCardHTML(negocio.asesor, oficioEntry);
+    wireEpigrafeCard();
+  };
+
   const confirmBtn = document.getElementById('epi-confirm-btn');
   if(confirmBtn) confirmBtn.onclick = async ()=>{
     const confirmed = confirmBtn.dataset.confirmed === 'true';
@@ -4380,6 +5012,7 @@ function bindAsesorFinanciero(){
     msgBox.innerHTML = '';
     negocio.asesor.gestorEmail = document.getElementById('asesor-gestor-email').value.trim();
     negocio.asesor.diaEnvio = document.getElementById('asesor-dia-envio').value;
+    negocio.asesor.horaEnvio = document.getElementById('asesor-hora-envio').value || '09:00';
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar. Inténtalo de nuevo.</div>'; return; }
     showToast('Configuración guardada.');
@@ -4414,7 +5047,49 @@ function bindPresupuestoForm(){
   // a su límite mensual (ver premiumLockHTML en renderNegocio) — sin form, nada que enlazar.
   if(!document.getElementById('ng-pre-add')) return;
 
-  let ppPartidas = [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0}];
+  const editando = negocioEditPresupuestoId ? negocio.presupuestos.find(p=>p.id===negocioEditPresupuestoId) : null;
+
+  // Los presupuestos antiguos tenían un único IVA global (editando.ivaPct) en vez de
+  // uno por línea: si una partida no trae "iva" propio, se hereda de ahí al editar.
+  let ppPartidas = editando
+    ? editando.partidas.map(p=>({...p, iva: p.iva===undefined ? (editando.ivaPct===undefined?21:editando.ivaPct) : p.iva}))
+    : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:21}];
+
+  let ppFotos = editando ? (editando.fotos||[]).slice() : [];
+  const FOTOS_MAX = 3;
+
+  function renderFotosPreview(){
+    const el = document.getElementById('pp-fotos-preview');
+    if(!el) return;
+    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
+  }
+  renderFotosPreview();
+
+  const fotosInput = document.getElementById('ng-pre-fotos');
+  if(fotosInput){
+    fotosInput.onchange = async ()=>{
+      const files = Array.from(fotosInput.files || []).slice(0, Math.max(0, FOTOS_MAX - ppFotos.length));
+      fotosInput.value = '';
+      for(const file of files){
+        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){}
+      }
+      renderFotosPreview();
+    };
+  }
+  const fotosPreviewEl = document.getElementById('pp-fotos-preview');
+  if(fotosPreviewEl){
+    fotosPreviewEl.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-remove-foto]');
+      if(!btn) return;
+      ppFotos.splice(Number(btn.dataset.removeFoto), 1);
+      renderFotosPreview();
+    });
+  }
+
+  const cancelEditBtn = document.getElementById('ng-pre-cancel-edit');
+  if(cancelEditBtn){
+    cancelEditBtn.onclick = ()=>{ negocioEditPresupuestoId = null; showView('negocio'); };
+  }
 
   function renderRows(){
     const rowsEl = document.getElementById('pp-partidas-rows');
@@ -4423,14 +5098,25 @@ function bindPresupuestoForm(){
     recalcTotales();
   }
 
+  function ivaDesgloseDe(partidas){
+    const grupos = {};
+    partidas.forEach(p=>{
+      const pct = p.iva===undefined ? 21 : Number(p.iva);
+      const base = (Number(p.cantidad)||0)*(Number(p.precio)||0);
+      if(!grupos[pct]) grupos[pct] = 0;
+      grupos[pct] += base;
+    });
+    return Object.keys(grupos).map(Number).sort((a,b)=>b-a).map(pct=>({pct, base: grupos[pct], cuota: grupos[pct]*pct/100}));
+  }
+
   function recalcTotales(){
     const subtotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.precio)||0), 0);
     const costeTotal = ppPartidas.reduce((s,p)=> s + (Number(p.cantidad)||0)*(Number(p.coste)||0), 0);
-    const ivaPct = Number(document.getElementById('ng-pre-iva')?.value || 21);
+    const desglose = ivaDesgloseDe(ppPartidas);
+    const cuota = desglose.reduce((s,d)=> s + d.cuota, 0);
     const irpfToggle = document.getElementById('pp-irpf-toggle');
     const irpfAplica = irpfToggle ? irpfToggle.checked : false;
     const irpfPct = Number(document.getElementById('ng-pre-irpf-pct')?.value || 15);
-    const cuota = subtotal * ivaPct/100;
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
     const margen = subtotal - costeTotal;
@@ -4450,7 +5136,7 @@ function bindPresupuestoForm(){
     if(totalesEl){
       totalesEl.innerHTML = `
         <div class="pp-totales-row"><span>Subtotal</span><span>${formatEUR(subtotal)}</span></div>
-        <div class="pp-totales-row"><span>IVA (${ivaPct}%)</span><span>${formatEUR(cuota)}</span></div>
+        ${desglose.map(d=>`<div class="pp-totales-row"><span>IVA (${d.pct}%)${desglose.length>1?' — base '+formatEUR(d.base):''}</span><span>${formatEUR(d.cuota)}</span></div>`).join('')}
         ${irpfAplica ? `<div class="pp-totales-row"><span>Retención IRPF (${irpfPct}%)</span><span>−${formatEUR(irpfImporte)}</span></div>` : ''}
         <div class="pp-totales-row total"><span>TOTAL</span><span>${formatEUR(total)}</span></div>
         ${hasCoste ? `<div class="pp-totales-row" style="margin-top:8px; opacity:0.75;"><span>Margen estimado</span><span>${formatEUR(margen)} (${margenPct.toFixed(1)}%)</span></div>` : ''}
@@ -4458,8 +5144,10 @@ function bindPresupuestoForm(){
     }
   }
 
+  function ivaPorDefecto(){ return Number(document.getElementById('ng-pre-iva')?.value || 21); }
+
   document.getElementById('pp-add-partida').onclick = ()=>{
-    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0});
+    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:ivaPorDefecto()});
     renderRows();
   };
 
@@ -4476,7 +5164,7 @@ function bindPresupuestoForm(){
       const m = materialesFavoritos.find(x=>x.id===item.dataset.favId);
       if(!m) return;
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
-      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0};
+      const nueva = {descripcion:m.nombre, unidad:m.unidad, cantidad:1, precio:m.precio, coste:0, iva:ivaPorDefecto()};
       if(soloVacia) ppPartidas = [nueva]; else ppPartidas.push(nueva);
       favMenu.style.display = 'none';
       renderRows();
@@ -4494,6 +5182,7 @@ function bindPresupuestoForm(){
     else if(e.target.classList.contains('pp-cantidad')) p.cantidad = e.target.value;
     else if(e.target.classList.contains('pp-precio')) p.precio = e.target.value;
     else if(e.target.classList.contains('pp-coste')) p.coste = e.target.value;
+    else if(e.target.classList.contains('pp-iva')) p.iva = Number(e.target.value);
     recalcTotales();
   });
 
@@ -4522,7 +5211,15 @@ function bindPresupuestoForm(){
       document.getElementById('pp-irpf-toggle').checked = true;
     }
   }
-  clienteSelect.onchange = ()=>{ syncClienteState(); recalcTotales(); };
+  clienteSelect.onchange = ()=>{
+    syncClienteState();
+    const cliente = negocio.clientes.find(c=>c.id===clienteSelect.value);
+    if(cliente){
+      document.getElementById('ng-pre-cliente-tel').value = cliente.telefono||'';
+      document.getElementById('ng-pre-cliente-email').value = cliente.email||'';
+    }
+    recalcTotales();
+  };
   document.getElementById('pp-irpf-toggle').onchange = recalcTotales;
   document.getElementById('ng-pre-irpf-pct').onchange = recalcTotales;
   document.getElementById('ng-pre-iva').onchange = recalcTotales;
@@ -4535,7 +5232,7 @@ function bindPresupuestoForm(){
     draftUseBtn.onclick = ()=>{
       const draft = getPresupuestoDraft(account.email);
       if(!draft.length) return;
-      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0}));
+      const nuevas = draft.map(d=>({descripcion:d.concepto||'', unidad:'ud', cantidad:1, precio:Number(d.importe)||0, coste:0, iva:ivaPorDefecto()}));
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
       ppPartidas = soloVacia ? nuevas : ppPartidas.concat(nuevas);
       clearPresupuestoDraft(account.email);
@@ -4563,7 +5260,7 @@ function bindPresupuestoForm(){
       return;
     }
     const partidasValidas = ppPartidas
-      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0}))
+      .map(p=>({descripcion:(p.descripcion||'').trim(), unidad:p.unidad||'ud', cantidad:Number(p.cantidad)||0, precio:Number(p.precio)||0, coste:Number(p.coste)||0, iva:Number(p.iva===undefined?21:p.iva)}))
       .filter(p=>p.descripcion && p.cantidad>0 && p.precio>=0);
     if(!partidasValidas.length){
       msgBox.innerHTML = '<div class="msg err">Añade al menos una línea con descripción, cantidad y precio.</div>';
@@ -4571,38 +5268,70 @@ function bindPresupuestoForm(){
     }
     const concepto = document.getElementById('ng-pre-concepto').value.trim();
     const direccionObra = document.getElementById('ng-pre-direccion-obra').value.trim();
-    const ivaPct = Number(document.getElementById('ng-pre-iva').value);
+    const clienteTelefono = document.getElementById('ng-pre-cliente-tel').value.trim();
+    const clienteEmail = document.getElementById('ng-pre-cliente-email').value.trim();
     const validezDias = Number(document.getElementById('ng-pre-validez').value) || 30;
     const formaPago = document.getElementById('ng-pre-pago').value.trim() || 'Transferencia bancaria';
     const irpfAplica = document.getElementById('pp-irpf-toggle').checked;
     const irpfPct = Number(document.getElementById('ng-pre-irpf-pct').value);
 
     const subtotal = partidasValidas.reduce((s,p)=> s + p.cantidad*p.precio, 0);
-    const cuota = subtotal * ivaPct/100;
+    const ivaDesglose = ivaDesgloseDe(partidasValidas).map(d=>({pct:d.pct, base:Math.round(d.base*100)/100, cuota:Math.round(d.cuota*100)/100}));
+    const cuota = ivaDesglose.reduce((s,d)=> s + d.cuota, 0);
     const irpfImporte = irpfAplica ? subtotal * irpfPct/100 : 0;
     const total = subtotal + cuota - irpfImporte;
 
-    negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
-    const numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+    if(clienteObj){
+      clienteObj.telefono = clienteTelefono;
+      clienteObj.email = clienteEmail;
+    }
 
-    negocio.presupuestos.push({
-      id:'p'+Date.now(), numero, fecha: todayISO(),
+    const datosComunes = {
       clienteId: clienteObj ? clienteObj.id : null,
       cliente: clienteObj ? clienteObj.nombre : clienteNombreNuevo,
       clienteTipo: clienteObj ? (clienteObj.tipo||'Particular') : 'Particular',
       clienteNif: clienteObj ? (clienteObj.nif||'') : '',
       clienteDireccion: clienteObj ? (clienteObj.direccion||'') : '',
-      clienteTelefono: clienteObj ? (clienteObj.telefono||'') : '',
-      concepto, direccionObra, partidas: partidasValidas,
-      base: Math.round(subtotal*100)/100, ivaPct, cuota: Math.round(cuota*100)/100,
+      clienteTelefono, clienteEmail,
+      concepto, direccionObra, partidas: partidasValidas, fotos: ppFotos.slice(),
+      base: Math.round(subtotal*100)/100, ivaDesglose, cuota: Math.round(cuota*100)/100,
       irpfAplica, irpfPct: irpfAplica?irpfPct:0, irpfImporte: Math.round(irpfImporte*100)/100,
-      total: Math.round(total*100)/100, validezDias, formaPago,
-      estado:'Pendiente', createdAt: Date.now()
-    });
+      total: Math.round(total*100)/100, validezDias, formaPago
+    };
+
+    let numero, presupuestoFinal;
+    if(editando){
+      numero = editando.numero;
+      Object.assign(editando, datosComunes);
+      presupuestoFinal = editando;
+    } else {
+      negocio.datos.ultimoPresupuesto = (negocio.datos.ultimoPresupuesto||0) + 1;
+      numero = `${new Date().getFullYear()}-${String(negocio.datos.ultimoPresupuesto).padStart(3,'0')}`;
+      presupuestoFinal = { id:'p'+Date.now(), numero, fecha: todayISO(), ...datosComunes, estado:'Pendiente', createdAt: Date.now() };
+      negocio.presupuestos.push(presupuestoFinal);
+    }
     const saved = await saveNegocio(account.email, negocio);
     if(!saved){ msgBox.innerHTML = '<div class="msg err">No se pudo guardar el presupuesto. Inténtalo de nuevo.</div>'; return; }
-    showToast(`Presupuesto ${numero} creado — ${formatEUR(total)}.`);
-    showView('negocio');
+    if(presupuestoFinal.shareId) publicarPresupuesto(presupuestoFinal); // refresca el enlace ya compartido, sin bloquear el guardado
+    negocioEditPresupuestoId = null;
+
+    const accionesEnvio = [
+      clienteEmail ? `<button type="button" class="pp-mini-btn" data-quick-email="${presupuestoFinal.id}">📧 Enviar por email</button>` : '',
+      clienteTelefono ? `<button type="button" class="pp-mini-btn" data-quick-wa="${presupuestoFinal.id}">${WA_ICON} Enviar por WhatsApp</button>` : ''
+    ].filter(Boolean).join('');
+    msgBox.innerHTML = `<div class="msg ok">
+      ✅ Presupuesto ${escapeHtml(numero)} ${editando?'actualizado':'creado'} — ${formatEUR(total)}.
+      <div class="drow-row-actions" style="margin-top:10px;">
+        ${accionesEnvio}
+        <button type="button" class="pp-mini-btn" id="ng-pre-ir-lista">Ir a mis presupuestos →</button>
+      </div>
+    </div>`;
+    const irListaBtn = document.getElementById('ng-pre-ir-lista');
+    if(irListaBtn) irListaBtn.onclick = ()=> showView('negocio');
+    const quickEmailBtn = msgBox.querySelector('[data-quick-email]');
+    if(quickEmailBtn) quickEmailBtn.onclick = ()=> enviarPresupuesto(presupuestoFinal.id, 'email');
+    const quickWaBtn = msgBox.querySelector('[data-quick-wa]');
+    if(quickWaBtn) quickWaBtn.onclick = ()=> enviarPresupuesto(presupuestoFinal.id, 'whatsapp');
   };
 }
 
@@ -4630,7 +5359,7 @@ function renderApp(){
     <div class="how-card-ic">
       <div class="ic-circle" style="background:#3E5FBF;"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17.5v-10z"/></svg></div>
       <h3>Mis proyectos</h3>
-      <p>Agrupa varios cálculos en un mismo proyecto de obra antes de convertirlo en presupuesto.</p>
+      <p>Ya puedes ir guardando partidas de varias calculadoras distintas para el mismo trabajo — se acumulan en un indicador en la barra superior de Calculadoras hasta que las uses todas juntas en un presupuesto.</p>
     </div>
     <div class="how-card-ic">
       <div class="ic-circle" style="background:#7458C2;"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
@@ -4717,7 +5446,8 @@ function proCardHTML(p){
 }
 
 async function renderBuscar(){
-  const pros = applyFilters(sortPros(await getAllProfessionals()), '');
+  buscarProsCache = sortPros(await getAllProfessionals());
+  const pros = applyFilters(buscarProsCache, '');
   return `
   <div class="section-label">Buscar profesional</div>
   <div class="section-heading">¿Qué necesitas resolver hoy?</div>
@@ -4756,9 +5486,9 @@ function bindBuscar(){
   const textInput = document.getElementById('sf-text');
   const dropdown = document.getElementById('sfDropdown');
 
-  const doFilter = async ()=>{
+  const doFilter = ()=>{
     const q = textInput.value;
-    const pros = applyFilters(sortPros(await getAllProfessionals()), q);
+    const pros = applyFilters(buscarProsCache, q);
     document.getElementById('results-list').innerHTML = pros.length ? pros.map(proCardHTML).join('') : '<div class="empty-state">No encontramos resultados para tu búsqueda.</div>';
     bindResultButtons();
   };
@@ -5086,6 +5816,20 @@ function bindDetalle(){
 document.querySelectorAll('.nav-btn').forEach(b=>{
   b.addEventListener('click', ()=> showView(b.dataset.view));
 });
+document.getElementById('brandHomeBtn')?.addEventListener('click', ()=> showView('home'));
+
+document.querySelectorAll('[data-modal]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.getElementById(btn.dataset.modal)?.classList.add('show');
+  });
+});
+document.querySelectorAll('.info-modal-backdrop').forEach(backdrop=>{
+  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) backdrop.classList.remove('show'); });
+  backdrop.querySelector('[data-modal-close]')?.addEventListener('click', ()=> backdrop.classList.remove('show'));
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') document.querySelectorAll('.info-modal-backdrop.show').forEach(b=>b.classList.remove('show'));
+});
 
 
 const openDrawerBtn = document.getElementById('openDrawerBtn');
@@ -5273,6 +6017,10 @@ function handleViewParam(){
   const view = params.get('view');
   if(view === 'pro' || view === 'client' || view === 'buscar'){
     showView(view);
+  }
+  if(view === 'negocio' && account){
+    negocioTab = 'presupuestos';
+    showView('negocio');
   }
 }
 
