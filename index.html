@@ -4025,6 +4025,7 @@ async function renderNegocio(){
   const totalGastosMes = gastosMes.reduce((s,g)=> s + (Number(g.total)||0), 0);
 
   const presupuestosPendientes = negocio.presupuestos.filter(p => p.estado === 'Pendiente' || !p.estado);
+  const presupuestosCerrados = negocio.presupuestos.filter(p => p.estado === 'Aceptado' || p.estado === 'Rechazado');
   const totalPresupuestosPendientes = presupuestosPendientes.reduce((s,p)=> s + (Number(p.total)||0), 0);
   const diasSinRespuesta = (fecha)=> Math.floor((new Date(hoy+'T00:00:00') - new Date((fecha||hoy)+'T00:00:00')) / 86400000);
   const presupuestosSinRespuesta = presupuestosPendientes.filter(p => diasSinRespuesta(p.fecha) >= 5).sort((a,b)=> (a.fecha||'').localeCompare(b.fecha||''));
@@ -4299,7 +4300,12 @@ async function renderNegocio(){
       </div>` : ''}
       ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">🔄 Comprobar si algún cliente respondió</button>` : ''}
       ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
-      <div id="negocio-presupuestos-list">${negocio.presupuestos.length ? negocio.presupuestos.slice().reverse().map(presupuestoRowHTML).join('') : '<div class="empty-state">Todavía no registraste presupuestos.</div>'}</div>
+      <div id="negocio-presupuestos-list">${presupuestosPendientes.length ? presupuestosPendientes.slice().reverse().map(presupuestoRowHTML).join('') : (negocio.presupuestos.length ? '<div class="empty-state">No tienes presupuestos pendientes de respuesta.</div>' : '<div class="empty-state">Todavía no registraste presupuestos.</div>')}</div>
+      ${presupuestosCerrados.length ? `
+      <details class="ng-add" id="pp-cerrados-details">
+        <summary>Ver cerrados (${presupuestosCerrados.length})</summary>
+        <div class="ng-add-body" id="negocio-presupuestos-cerrados">${presupuestosCerrados.slice().reverse().map(presupuestoRowHTML).join('')}</div>
+      </details>` : ''}
 
       <details class="ng-add">
         <summary>Datos de tu negocio (para el membrete del PDF)</summary>
@@ -4329,8 +4335,8 @@ async function renderNegocio(){
         <button type="button" class="btn btn-sm" id="pp-draft-use">Usarlas en este presupuesto</button>
         <button type="button" class="pp-draft-dismiss" id="pp-draft-dismiss" title="Descartar" aria-label="Descartar partidas guardadas">✕</button>
       </div>` : ''}
-      <details class="ng-add" open>
-        <summary>${presupuestoEditando ? `Editando presupuesto ${escapeHtml(presupuestoEditando.numero)}` : 'Crear presupuesto'}</summary>
+      <details class="ng-add" ${(presupuestoEditando || presupuestoDraft.length) ? 'open' : ''}>
+        <summary>${presupuestoEditando ? `Editando presupuesto ${escapeHtml(presupuestoEditando.numero)}` : '+ Nuevo presupuesto'}</summary>
         <div class="ng-add-body">
           ${presupuestoEditando ? `<div class="msg" style="margin-bottom:12px;">Editando <strong>${escapeHtml(presupuestoEditando.numero)}</strong> — ${escapeHtml(presupuestoEditando.cliente)}. <button type="button" class="pp-mini-btn" id="ng-pre-cancel-edit">Cancelar edición</button></div>` : ''}
           <div class="field-row">
@@ -4734,7 +4740,7 @@ function bindNegocio(){
     showView('negocio');
   };
 
-  document.getElementById('negocio-presupuestos-list').addEventListener('click', async (e)=>{
+  const presupuestoRowClickHandler = async (e)=>{
     const pdfBtn = e.target.closest('[data-pdf-id]');
     if(pdfBtn){ abrirPresupuestoPDF(pdfBtn.dataset.pdfId); return; }
     const estadoBtn = e.target.closest('[data-estado-btn]');
@@ -4808,7 +4814,10 @@ function bindNegocio(){
     if(emailBtn){ enviarPresupuesto(emailBtn.dataset.emailPresupuesto, 'email'); return; }
     const waBtn = e.target.closest('[data-whatsapp-presupuesto]');
     if(waBtn){ enviarPresupuesto(waBtn.dataset.whatsappPresupuesto, 'whatsapp'); return; }
-  });
+  };
+  document.getElementById('negocio-presupuestos-list').addEventListener('click', presupuestoRowClickHandler);
+  const negocioPresupuestosCerrados = document.getElementById('negocio-presupuestos-cerrados');
+  if(negocioPresupuestosCerrados) negocioPresupuestosCerrados.addEventListener('click', presupuestoRowClickHandler);
 
   const checkRespuestasBtn = document.getElementById('pp-check-respuestas');
   if(checkRespuestasBtn){
@@ -4846,14 +4855,19 @@ function bindNegocio(){
   if(ppFiltroInput){
     ppFiltroInput.oninput = ()=>{
       const q = ppFiltroInput.value.trim().toLowerCase();
-      const listEl = document.getElementById('negocio-presupuestos-list');
-      const filtradas = !q ? negocio.presupuestos.slice().reverse() : negocio.presupuestos.slice().reverse().filter(p=>
+      const coincide = p => !q ||
         (p.numero||'').toLowerCase().includes(q) ||
         (p.cliente||'').toLowerCase().includes(q) ||
         (p.estado||'Pendiente').toLowerCase().includes(q) ||
-        (p.concepto||'').toLowerCase().includes(q)
-      );
-      listEl.innerHTML = filtradas.length ? filtradas.map(presupuestoRowHTML).join('') : '<div class="empty-state">Ningún presupuesto coincide con la búsqueda.</div>';
+        (p.concepto||'').toLowerCase().includes(q);
+      const pendientesF = negocio.presupuestos.filter(p=> (p.estado==='Pendiente' || !p.estado) && coincide(p)).slice().reverse();
+      const cerradosF = negocio.presupuestos.filter(p=> (p.estado==='Aceptado' || p.estado==='Rechazado') && coincide(p)).slice().reverse();
+      const listEl = document.getElementById('negocio-presupuestos-list');
+      listEl.innerHTML = pendientesF.length ? pendientesF.map(presupuestoRowHTML).join('') : '<div class="empty-state">Ningún presupuesto pendiente coincide con la búsqueda.</div>';
+      const cerradosEl = document.getElementById('negocio-presupuestos-cerrados');
+      if(cerradosEl){
+        cerradosEl.innerHTML = cerradosF.length ? cerradosF.map(presupuestoRowHTML).join('') : '<div class="empty-state">Ningún presupuesto cerrado coincide con la búsqueda.</div>';
+      }
     };
   }
 
