@@ -1,0 +1,7 @@
+project_id = "tvhyodvvvcowaeyoihgn"
+
+# Redsys llama a esta función servidor-a-servidor (notificación online) para confirmar
+# el pago. No envía ninguna cabecera de autenticación de Supabase, así que hay que
+# desactivar la verificación de JWT o Redsys recibiría siempre un 401.
+[functions.redsys-notification]
+verify_jwt = false

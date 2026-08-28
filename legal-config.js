@@ -5,7 +5,6 @@ window.TODOOFICIOS_LEGAL = {
   emailContacto: "contacto@todooficios.es",
   emailSoporte: "soporte@todooficios.es",
   telefono: "+34 910 00 00 00",
-  paypalClientId: "PENDIENTE_PAYPAL_CLIENT_ID",
   supabaseUrl: "https://tvhyodvvvcowaeyoihgn.supabase.co",
   supabaseAnonKey: "sb_publishable_CGw6LfpaSzuwwwMPMM57qg_XrWbmJf1",
   showLegalAlertInProduction: false,

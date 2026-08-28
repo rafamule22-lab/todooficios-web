@@ -1130,8 +1130,8 @@
     <h2 id="featuredModalTitle">Activar perfil destacado</h2>
     <p class="modal-info" id="featuredModalInfo">Paga 4,99 €/mes y tendrás 1 mes de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.</p>
     <div class="featured-modal-info">Cuenta: <strong id="featuredModalEmail"></strong></div>
-    <div id="featured-paypal-btn"></div>
-    <div class="pay-status" id="featuredModalStatus">Usa PayPal para completar el pago.</div>
+    <div id="featured-redsys-btn"></div>
+    <div class="pay-status" id="featuredModalStatus">Serás redirigido a la pasarela de pago segura para completar el pago.</div>
     <div class="pay-actions">
       <button class="btn btn-secondary" id="featuredModalCancel" type="button">Cancelar</button>
     </div>
@@ -1541,7 +1541,6 @@ window.TODOOFICIOS_LEGAL = Object.assign({
   emailContacto: 'contacto@todooficios.es',
   emailSoporte: 'soporte@todooficios.es',
   telefono: '+34 910 00 00 00',
-  paypalClientId: 'PENDIENTE_PAYPAL_CLIENT_ID',
   supabaseUrl: 'PENDIENTE_SUPABASE_URL',
   supabaseAnonKey: 'PENDIENTE_SUPABASE_ANON_KEY',
   showLegalAlertInProduction: true,
@@ -1912,7 +1911,6 @@ function getLegalProfile(){
     emailContacto: cfg.emailContacto || 'contacto@todooficios.es',
     emailSoporte: cfg.emailSoporte || 'soporte@todooficios.es',
     telefono: cfg.telefono || '+34 910 00 00 00',
-    paypalClientId: cfg.paypalClientId || 'PENDIENTE_PAYPAL_CLIENT_ID',
     supabaseUrl: cfg.supabaseUrl || 'PENDIENTE_SUPABASE_URL',
     supabaseAnonKey: cfg.supabaseAnonKey || 'PENDIENTE_SUPABASE_ANON_KEY',
     showLegalAlertInProduction: !!cfg.showLegalAlertInProduction,
@@ -2023,10 +2021,10 @@ const LEGAL_DOCS = {
       <ul>
         <li><strong>Google LLC</strong>: si eliges iniciar sesión con Google, recibe y trata tu nombre, email y foto de perfil para gestionar la autenticación.</li>
         <li><strong>Supabase Inc.</strong>: aloja en la nube la base de datos con las cuentas, mensajes, reseñas y demás contenidos del servicio (cuando la app funciona con backend en la nube; en modo local sin configurar, los datos se guardan solo en el propio dispositivo del usuario).</li>
-        <li><strong>PayPal (Europe) S.à r.l. et Cie, S.C.A.</strong>: gestiona los datos de pago y facturación cuando el usuario utiliza el flujo de pago destacado. TodoOficios.es no almacena datos de tarjetas ni credenciales de pago.</li>
+        <li><strong>Redsys (Sistema de Tarjetas y Medios de Pago, S.L.)</strong> y la entidad bancaria adquirente que da servicio a TodoOficios.es: gestionan el cobro cuando el usuario contrata el plan Premium. El pago se realiza en la página segura de la pasarela bancaria, fuera de TodoOficios.es; esta web no almacena datos de tarjetas ni credenciales de pago.</li>
       </ul>
       <h3>Transferencias internacionales</h3>
-      <p>Algunos de estos proveedores (Google, Supabase y PayPal) pueden alojar o procesar datos en servidores ubicados fuera del Espacio Económico Europeo. En esos casos, la transferencia se realiza acogiéndose a las garantías previstas en el RGPD (como las Cláusulas Contractuales Tipo aprobadas por la Comisión Europea o decisiones de adecuación), conforme a las políticas de privacidad publicadas por cada proveedor.</p>
+      <p>Algunos de estos proveedores (Google y Supabase) pueden alojar o procesar datos en servidores ubicados fuera del Espacio Económico Europeo. En esos casos, la transferencia se realiza acogiéndose a las garantías previstas en el RGPD (como las Cláusulas Contractuales Tipo aprobadas por la Comisión Europea o decisiones de adecuación), conforme a las políticas de privacidad publicadas por cada proveedor. Redsys y la entidad bancaria adquirente están radicadas en España, dentro del Espacio Económico Europeo.</p>
       <h3>Medidas de seguridad</h3>
       <p>Aplicamos medidas técnicas y organizativas razonables para proteger tus datos, entre ellas el almacenamiento de contraseñas mediante funciones de hash (nunca en texto plano), conexiones cifradas (HTTPS) y control de acceso a la base de datos en la nube.</p>
       <h3>Menores de edad</h3>
@@ -2044,7 +2042,7 @@ const LEGAL_DOCS = {
       <ul>
         <li>Técnico/funcional: necesario para login, perfiles y funcionamiento básico.</li>
         <li>Persistencia local: datos de cuenta y estado de navegación en el navegador del usuario.</li>
-        <li>Servicios de terceros bajo acción del usuario: el SDK de PayPal solo se carga cuando el usuario abre el flujo de pago destacado.</li>
+        <li>Servicios de terceros bajo acción del usuario: al contratar el plan Premium se redirige al usuario a la pasarela de pago segura de Redsys / la entidad bancaria, fuera de esta web.</li>
       </ul>
       <p>Al continuar usando la web y registrarte, aceptas este uso técnico del almacenamiento local.</p>
     `
@@ -2213,7 +2211,7 @@ let proAuthMode = 'registro'; // 'registro' | 'login', solo aplica si no hay ses
 let clientAuthMode = 'registro';
 
 /* ======================= PROMOCIÓN DE LANZAMIENTO ======================= */
-const PAYMENTS_ENABLED = false; // Oculta el cobro real (PayPal) hasta activar la pasarela en producción
+const PAYMENTS_ENABLED = false; // Oculta el cobro real (Redsys) hasta activar la pasarela en producción
 const PROMO_FREE_PRO_LIMIT = 300;
 const PROMO_PREMIUM_MONTHS = 6;
 const PROMO_MONTH_MS = 30*24*60*60*1000;
@@ -2223,7 +2221,6 @@ const PREMIUM_PRICE_YEAR2 = 6.99;      // €/mes durante el año 2 del escalona
 const PREMIUM_PRICE_YEAR3 = 8.99;      // €/mes durante el año 3 del escalonado
 const PREMIUM_PRICE_RENEWAL = 9.99;    // €/mes techo, a partir del año 4
 const PREMIUM_FOUNDER_MONTHS = 24;     // cuentas con premiumPromo (primeros PROMO_FREE_PRO_LIMIT profesionales) mantienen el precio de año 1 el doble de meses antes de entrar al escalonado
-const PREMIUM_DURATION_MS = 30*24*60*60*1000; // cada pago cubre 1 mes
 const PREMIUM_TRIAL_DAYS = 14; // prueba gratis de Premium para profesionales recién inscritos que no entran en la promo de lanzamiento
 const PREMIUM_TRIAL_MS = PREMIUM_TRIAL_DAYS*24*60*60*1000;
 function premiumPrice(acc){
@@ -5814,113 +5811,77 @@ document.addEventListener('keydown', (e)=>{
   else if(sideDrawer?.classList.contains('open')) toggleDrawer();
 });
 
-let paypalSdkPromise = null;
-function paypalClientId(){
-  const legal = getLegalProfile();
-  return (legal.paypalClientId || '').trim();
-}
-function canUsePaypalClientId(clientId){
-  if(!clientId) return false;
-  if(clientId === 'sb') return false;
-  if(clientId.includes('PENDIENTE_')) return false;
-  return true;
-}
-function loadPaypalSdk(){
-  if(window.paypal) return Promise.resolve(true);
-  if(paypalSdkPromise) return paypalSdkPromise;
-  const clientId = paypalClientId();
-  if(!canUsePaypalClientId(clientId)) return Promise.resolve(false);
-  paypalSdkPromise = new Promise((resolve)=>{
-    const script = document.createElement('script');
-    script.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=EUR`;
-    script.async = true;
-    script.onload = ()=> resolve(!!window.paypal);
-    script.onerror = ()=> resolve(false);
-    document.head.appendChild(script);
-  });
-  return paypalSdkPromise;
-}
-
 async function openFeaturedModal(email){
   if(!email){ showToast('Debes indicar un email válido.'); return; }
   pendingFeaturedEmail = email;
   document.getElementById('featuredModalEmail').textContent = email;
-  document.getElementById('featuredModalStatus').textContent = 'Cargando botón de pago...';
+  document.getElementById('featuredModalStatus').textContent = 'Serás redirigido a la pasarela de pago segura para completar el pago.';
   const raw = await safeGet('account:'+email, true);
   window.__pendingFeaturedAccount = raw ? JSON.parse(raw) : null;
   const price = window.__pendingFeaturedAccount ? premiumPrice(window.__pendingFeaturedAccount) : PREMIUM_PRICE_FIRST_YEAR;
   const infoEl = document.getElementById('featuredModalInfo');
   if(infoEl) infoEl.textContent = `Paga ${formatEUR(price)}/mes y tendrás 1 mes de visibilidad extra, hasta 10 fotos de trabajos y mejor posicionamiento en búsquedas.`;
   featuredModalBackdrop?.classList.add('show');
-  const loaded = await loadPaypalSdk();
-  if(!loaded){
-    document.getElementById('featuredModalStatus').textContent = 'Pago no disponible: configura un PayPal Client ID real en legal-config.js.';
-    return;
-  }
-  renderFeaturedPaypalButtons();
+  renderFeaturedPaymentButton();
 }
 
 function closeFeaturedModal(){
   featuredModalBackdrop?.classList.remove('show');
 }
 
-async function markFeaturedAccount(email){
-  const raw = await safeGet('account:'+email, true);
-  if(!raw) return false;
-  const acc = JSON.parse(raw);
-  acc.featuredUntil = Date.now() + PREMIUM_DURATION_MS;
-  acc.premiumMonthsPaid = (acc.premiumMonthsPaid||0) + 1;
-  const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
-  if(!saved) return false;
-  if(session?.email === email){ account = acc; }
-  return true;
+function renderFeaturedPaymentButton(){
+  const container = document.getElementById('featured-redsys-btn');
+  const status = document.getElementById('featuredModalStatus');
+  if(!container) return;
+  container.innerHTML = '';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn btn-primary';
+  btn.textContent = 'Pagar ahora';
+  btn.onclick = () => startRedsysPayment(btn, status);
+  container.appendChild(btn);
 }
 
-function renderFeaturedPaypalButtons(){
-  const container = document.getElementById('featured-paypal-btn');
-  const status = document.getElementById('featuredModalStatus');
-  if(!container){ return; }
-  container.innerHTML = '';
-  if(!canUsePaypalClientId(paypalClientId())){
-    status.textContent = 'Falta configurar PayPal en producción. Edita paypalClientId en legal-config.js.';
-    return;
-  }
-  if(!window.paypal){
-    status.textContent = 'No se cargó PayPal. Recarga la página.';
-    return;
-  }
-  paypal.Buttons({
-    createOrder: function(data, actions) {
-      const pendingRaw = window.__pendingFeaturedAccount;
-      const price = pendingRaw ? premiumPrice(pendingRaw) : PREMIUM_PRICE_FIRST_YEAR;
-      return actions.order.create({
-        purchase_units: [{
-          amount: { value: price.toFixed(2) },
-          description: 'Suscripción Premium TodoOficios - 1 mes'
-        }]
-      });
-    },
-    onApprove: function(data, actions) {
-      status.textContent = 'Procesando pago...';
-      return actions.order.capture().then(async function(details) {
-        const success = await markFeaturedAccount(pendingFeaturedEmail);
-        if(success){
-          status.textContent = 'Pago completado. Perfil destacado activado.';
-          if(session?.email === pendingFeaturedEmail){ showView('pro'); }
-          setTimeout(closeFeaturedModal, 1100);
-        } else {
-          status.textContent = 'No se encontró la cuenta para activar el destaque.';
-        }
-      });
-    },
-    onCancel: function() {
-      status.textContent = 'Pago cancelado.';
-    },
-    onError: function(err) {
-      console.error(err);
-      status.textContent = 'Error en el pago. Intenta nuevamente.';
+async function startRedsysPayment(btn, status){
+  const email = pendingFeaturedEmail;
+  if(!email) return;
+  btn.disabled = true;
+  status.textContent = 'Conectando con la pasarela de pago...';
+  try{
+    const client = await initSupabaseClient();
+    if(!client){
+      status.textContent = 'El pago necesita conexión con el servidor. Inténtalo de nuevo en unos minutos.';
+      btn.disabled = false;
+      return;
     }
-  }).render('#featured-paypal-btn');
+    const { data, error } = await client.functions.invoke('redsys-create-payment', { body: { email } });
+    if(error || !data || data.error || !data.url || !data.fields){
+      let msg = (data && data.error) || 'No se pudo iniciar el pago. Inténtalo de nuevo.';
+      if(error && error.context && typeof error.context.json === 'function'){
+        try{ const errBody = await error.context.json(); if(errBody && errBody.error) msg = errBody.error; }catch(_e){}
+      }
+      status.textContent = msg;
+      btn.disabled = false;
+      return;
+    }
+    status.textContent = 'Redirigiendo a la pasarela de pago...';
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = data.url;
+    Object.entries(data.fields).forEach(([name, value]) => {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+    document.body.appendChild(form);
+    form.submit();
+  }catch(err){
+    console.error('redsys-create-payment:', err);
+    status.textContent = 'No se pudo iniciar el pago. Inténtalo de nuevo.';
+    btn.disabled = false;
+  }
 }
 
 /* ======================= INIT ======================= */
@@ -5935,7 +5896,7 @@ async function init(){
   bindLegalActions(document);
   const footerYear = document.getElementById('footerYear');
   if(footerYear) footerYear.textContent = String(new Date().getFullYear());
-  handlePaymentRedirect();
+  await handlePaymentRedirect();
   handleViewParam();
   await handleGoogleAuthRedirect();
 }
@@ -5953,15 +5914,20 @@ function handleViewParam(){
   }
 }
 
-function handlePaymentRedirect(){
+async function handlePaymentRedirect(){
   const params = new URLSearchParams(window.location.search);
   const status = params.get('payment');
   const email = params.get('email');
   if(!status) return;
   if(status === 'success'){
-    showToast('Pago recibido. Suscripción destacada activada.');
-    if(email && session?.email === email){
+    // El pago lo confirma Redsys llamando al webhook redsys-notification, no este
+    // redirigido del navegador; refrescamos la cuenta desde la nube para reflejarlo.
+    if(email && session?.email === email) await loadSession();
+    if(email && session?.email === email && isProPremium(account)){
+      showToast('Pago recibido. Premium activado.');
       showView('pro');
+    } else {
+      showToast('Pago recibido. Tu Premium se activará en unos segundos; recarga la página si aún no lo ves.');
     }
   } else if(status === 'cancel'){
     showToast('Pago cancelado.');
