@@ -659,7 +659,7 @@
   .edit-pill:hover{border-color:var(--ink);}
 
   .ng-add{margin-top:20px; border-top:1px dashed var(--line); padding-top:16px;}
-  .ng-add summary{cursor:pointer; font-family:'IBM Plex Mono'; font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px;}
+  .ng-add summary{cursor:pointer; font-family:'IBM Plex Mono'; font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink); list-style:none; display:flex; align-items:center; flex-wrap:wrap; gap:8px;}
   .ng-add summary::-webkit-details-marker{display:none;}
   .ng-add summary::before{content:'+'; display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--amber); color:var(--ink); font-weight:700; font-size:14px; flex-shrink:0;}
   .ng-add[open] summary::before{content:'−';}
@@ -4313,7 +4313,7 @@ async function renderNegocio(){
     <div class="panel panel-wide">
       <div class="section-label">${ngIconHTML('presupuestos')} Crear presupuesto</div>
       <details class="ng-add">
-        <summary>Datos de tu negocio (para el membrete del PDF)</summary>
+        <summary>Datos de tu negocio (para el membrete del PDF)${negocio.datos.nombreFiscal ? '<span class="badge ok">✓ Guardados</span>' : ''}</summary>
         <p class="note" style="margin:2px 0 14px;">Se guarda una vez y se usa en todos tus presupuestos — no hace falta repetirlo cada vez.</p>
         <div class="ng-add-body">
           <div class="field-row">
