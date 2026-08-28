@@ -1845,8 +1845,16 @@
     {
       id:'estimacion_reforma', cat:'reformas', titulo:'Calcula cuánto material necesitas para tu reforma',
       destacada:true,
-      info:'Estimación orientativa de materiales para una estancia completa: suelo, paredes, adhesivo, juntas, pintura y rodapié, con un 10% de desperdicio.',
+      info:'Asistente por alcance: marca qué vas a reformar y solo verás los materiales de esa parte de la obra, con un 10% de desperdicio donde aplica.',
       fields:[
+        {key:'head_alcance', type:'heading', label:'Paso 1 — ¿Qué vas a reformar? (marca todo lo que aplique)'},
+        {key:'scope_suelo', type:'checkbox', label:'Suelo (baldosa/gres)'},
+        {key:'scope_alicatado', type:'checkbox', label:'Alicatado (azulejo en pared)'},
+        {key:'scope_pintura', type:'checkbox', label:'Pintura (paredes y techo)'},
+        {key:'scope_fontaneria', type:'checkbox', label:'Fontanería (puntos de agua)'},
+        {key:'scope_electricidad', type:'checkbox', label:'Electricidad (puntos de luz)'},
+        {key:'scope_carpinteria', type:'checkbox', label:'Carpintería (puertas/ventanas)'},
+        {key:'head_medidas', type:'heading', label:'Paso 2 — Medidas de la estancia'},
         {key:'estancia', label:'Tipo de estancia', type:'select', options:[
           {value:'bano', label:'Baño'}, {value:'cocina', label:'Cocina'}, {value:'salon', label:'Salón'},
           {value:'dormitorio', label:'Dormitorio'}, {value:'terraza', label:'Terraza'}
@@ -1855,43 +1863,109 @@
         {key:'ancho', label:'Ancho de la estancia', unit:'m', type:'number'},
         {key:'alto', label:'Altura', unit:'m', type:'number', def:2.5},
         {key:'puertas', label:'Número de puertas', unit:'', type:'number', def:1},
-        {key:'lado_baldosa', label:'Lado de la baldosa (cuadrada)', unit:'cm', type:'number', def:33},
-        {key:'piezas_caja', label:'Piezas por caja', unit:'', type:'number', def:11},
-        {key:'rendimiento_pintura', label:'Rendimiento de la pintura', unit:'m²/L', type:'number', def:6},
-        {key:'manos_pintura', label:'Manos de pintura', unit:'', type:'number', def:2}
+        {key:'head_suelo_alicatado', type:'heading', label:'Suelo y alicatado',
+          showIf:function(v){ return !!v.scope_suelo || !!v.scope_alicatado; }},
+        {key:'lado_baldosa', label:'Lado de la baldosa (cuadrada)', unit:'cm', type:'number', def:33,
+          showIf:function(v){ return !!v.scope_suelo || !!v.scope_alicatado; }},
+        {key:'piezas_caja', label:'Piezas por caja', unit:'', type:'number', def:11,
+          showIf:function(v){ return !!v.scope_suelo || !!v.scope_alicatado; }},
+        {key:'head_pintura', type:'heading', label:'Pintura', showIf:function(v){ return !!v.scope_pintura; }},
+        {key:'rendimiento_pintura', label:'Rendimiento de la pintura', unit:'m²/L', type:'number', def:6,
+          showIf:function(v){ return !!v.scope_pintura; }},
+        {key:'manos_pintura', label:'Manos de pintura', unit:'', type:'number', def:2,
+          showIf:function(v){ return !!v.scope_pintura; }},
+        {key:'head_fontaneria', type:'heading', label:'Fontanería', showIf:function(v){ return !!v.scope_fontaneria; }},
+        {key:'puntos_agua', label:'Puntos de agua a instalar', unit:'uds', type:'number', def:2,
+          showIf:function(v){ return !!v.scope_fontaneria; }},
+        {key:'head_electricidad', type:'heading', label:'Electricidad', showIf:function(v){ return !!v.scope_electricidad; }},
+        {key:'puntos_luz', label:'Puntos de luz/enchufe a instalar', unit:'uds', type:'number', def:4,
+          showIf:function(v){ return !!v.scope_electricidad; }},
+        {key:'head_carpinteria', type:'heading', label:'Carpintería', showIf:function(v){ return !!v.scope_carpinteria; }},
+        {key:'num_puertas_ventanas', label:'Puertas/ventanas a reformar', unit:'uds', type:'number', def:1,
+          showIf:function(v){ return !!v.scope_carpinteria; }}
       ],
       compute:function(v){
-        var estancia = gv(v,'estancia','bano'), l = gn(v,'largo'), a = gn(v,'ancho'), h = gnOpt(v,'alto',2.5);
-        var puertas = gnOpt(v,'puertas',1), lado = gn(v,'lado_baldosa')/100, pc = gnOpt(v,'piezas_caja',11);
-        var rendPintura = gnOpt(v,'rendimiento_pintura',6), manos = gnOpt(v,'manos_pintura',2);
+        var scopeSuelo = !!gv(v,'scope_suelo',false), scopeAlicatado = !!gv(v,'scope_alicatado',false);
+        var scopePintura = !!gv(v,'scope_pintura',false), scopeFontaneria = !!gv(v,'scope_fontaneria',false);
+        var scopeElectricidad = !!gv(v,'scope_electricidad',false), scopeCarpinteria = !!gv(v,'scope_carpinteria',false);
+        if(!scopeSuelo && !scopeAlicatado && !scopePintura && !scopeFontaneria && !scopeElectricidad && !scopeCarpinteria){
+          return [{label:'Selecciona el alcance de la reforma', unit:'',
+            value:'Marca arriba, en el Paso 1, qué vas a reformar (suelo, alicatado, pintura, fontanería, electricidad o carpintería) para calcular los materiales.'}];
+        }
+        var estancia = gv(v,'estancia','bano');
         var nombres = {bano:'Baño', cocina:'Cocina', salon:'Salón', dormitorio:'Dormitorio', terraza:'Terraza'};
         var merma = 0.10;
-        var areaSuelo = l*a;
-        var perimetro = 2*(l+a);
-        var areaParedes = Math.max(0, perimetro*h - puertas*1.6);
-        var areaPieza = lado*lado;
-        must(areaPieza > 0, 'El lado de la baldosa debe ser mayor que 0');
-        var piezas = Math.ceil((areaSuelo*(1+merma))/areaPieza);
-        var cajas = Math.ceil(piezas/pc);
-        var adhesivoKg = areaSuelo*4;
-        var adhesivoSacos = Math.ceil(adhesivoKg/25);
-        var juntaKg = areaSuelo*0.5;
-        must(rendPintura > 0, 'El rendimiento de pintura debe ser mayor que 0');
-        var pinturaLitros = (areaParedes*manos)/rendPintura;
-        var rodapieM = Math.max(0, perimetro - puertas*0.8)*(1+merma);
-        return [
-          {label:'Estancia', value: nombres[estancia] || estancia, unit:''},
-          {label:'Área de suelo', value: fmt(areaSuelo,2), unit:'m²'},
-          {label:'Área de paredes', value: fmt(areaParedes,2), unit:'m²'},
-          {label:'Baldosas necesarias', value: fmt(piezas,0), unit:'uds'},
-          {label:'Cajas de baldosas', value: fmt(cajas,0), unit:'cajas'},
-          {label:'Adhesivo / mortero cola', value: fmt(adhesivoSacos,0), unit:'sacos de 25 kg'},
-          {label:'Material de juntas', value: fmt(juntaKg,1), unit:'kg'},
-          {label:'Pintura para paredes', value: fmt(pinturaLitros,2), unit:'L'},
-          {label:'Rodapié', value: fmt(rodapieM,2), unit:'m'},
-          {label:'Desperdicio aplicado', value: fmt(merma*100,0), unit:'%'},
-          {link:true, label:'¿Necesitas un profesional para esta obra? → Buscar en TodoOficios.es', href:'index.html'}
-        ];
+        var res = [{label:'Estancia', value: nombres[estancia] || estancia, unit:''}];
+
+        var necesitaMedidas = scopeSuelo || scopeAlicatado || scopePintura;
+        var areaSuelo, areaParedes;
+        if(necesitaMedidas){
+          var l = gn(v,'largo'), a = gn(v,'ancho'), h = gnOpt(v,'alto',2.5), puertas = gnOpt(v,'puertas',1);
+          var perimetro = 2*(l+a);
+          areaSuelo = l*a;
+          areaParedes = Math.max(0, perimetro*h - puertas*1.6);
+        }
+
+        if(scopeSuelo || scopeAlicatado){
+          var lado = gn(v,'lado_baldosa')/100, pc = gnOpt(v,'piezas_caja',11);
+          var areaPieza = lado*lado;
+          must(areaPieza > 0, 'El lado de la baldosa debe ser mayor que 0');
+          if(scopeSuelo){
+            var piezasSuelo = Math.ceil((areaSuelo*(1+merma))/areaPieza);
+            res.push({label:'Área de suelo', value: fmt(areaSuelo,2), unit:'m²'});
+            res.push({label:'Baldosas de suelo necesarias', value: fmt(piezasSuelo,0), unit:'uds'});
+            res.push({label:'Cajas de baldosas de suelo', value: fmt(Math.ceil(piezasSuelo/pc),0), unit:'cajas'});
+            res.push({label:'Adhesivo / mortero cola (suelo)', value: fmt(Math.ceil((areaSuelo*4)/25),0), unit:'sacos de 25 kg'});
+            res.push({label:'Material de juntas (suelo)', value: fmt(areaSuelo*0.5,1), unit:'kg'});
+            var rodapieM = Math.max(0, perimetro - puertas*0.8)*(1+merma);
+            res.push({label:'Rodapié', value: fmt(rodapieM,2), unit:'m'});
+          }
+          if(scopeAlicatado){
+            var piezasAlicatado = Math.ceil((areaParedes*(1+merma))/areaPieza);
+            res.push({label:'Área de paredes a alicatar', value: fmt(areaParedes,2), unit:'m²'});
+            res.push({label:'Azulejos de pared necesarios', value: fmt(piezasAlicatado,0), unit:'uds'});
+            res.push({label:'Cajas de azulejos', value: fmt(Math.ceil(piezasAlicatado/pc),0), unit:'cajas'});
+            res.push({label:'Adhesivo / mortero cola (alicatado)', value: fmt(Math.ceil((areaParedes*4)/25),0), unit:'sacos de 25 kg'});
+            res.push({label:'Material de juntas (alicatado)', value: fmt(areaParedes*0.5,1), unit:'kg'});
+          }
+        }
+
+        if(scopePintura){
+          var rendPintura = gnOpt(v,'rendimiento_pintura',6), manos = gnOpt(v,'manos_pintura',2);
+          must(rendPintura > 0, 'El rendimiento de pintura debe ser mayor que 0');
+          var pinturaLitros = (areaParedes*manos)/rendPintura;
+          res.push({label:'Área de paredes a pintar', value: fmt(areaParedes,2), unit:'m²'});
+          res.push({label:'Pintura necesaria', value: fmt(pinturaLitros,2), unit:'L'});
+        }
+
+        if(scopeFontaneria){
+          var puntosAgua = gnOpt(v,'puntos_agua',2);
+          var tuberiaFontaneria = puntosAgua*3*(1+merma);
+          res.push({label:'Puntos de agua a instalar', value: fmt(puntosAgua,0), unit:'uds'});
+          res.push({label:'Tubería estimada', value: fmt(tuberiaFontaneria,1), unit:'m'});
+        }
+
+        if(scopeElectricidad){
+          var puntosLuz = gnOpt(v,'puntos_luz',4);
+          var cableElectricidad = puntosLuz*6*(1+merma);
+          res.push({label:'Puntos de luz/enchufe a instalar', value: fmt(puntosLuz,0), unit:'uds'});
+          res.push({label:'Cable estimado', value: fmt(cableElectricidad,1), unit:'m'});
+          res.push({label:'Cajas de mecanismo empotrar', value: fmt(puntosLuz,0), unit:'uds'});
+        }
+
+        if(scopeCarpinteria){
+          var numPV = gnOpt(v,'num_puertas_ventanas',1);
+          var tapajuntas = numPV*5.6*(1+merma);
+          res.push({label:'Puertas/ventanas a instalar', value: fmt(numPV,0), unit:'uds'});
+          res.push({label:'Tapajuntas/molduras estimadas', value: fmt(tapajuntas,1), unit:'m'});
+        }
+
+        if(scopeSuelo || scopeAlicatado || scopeCarpinteria){
+          res.push({label:'Desperdicio aplicado', value: fmt(merma*100,0), unit:'%'});
+        }
+
+        res.push({link:true, label:'¿Necesitas un profesional para esta obra? → Buscar en TodoOficios.es', href:'index.html'});
+        return res;
       }
     }
   ];
@@ -2314,6 +2388,128 @@
     });
   }
 
+  /* ============================================================
+     LISTA DE LA REFORMA: acumula resultados de varias calculadoras
+     (distintas estancias u oficios) antes de pedir presupuesto.
+     A diferencia del borrador de presupuesto (solo profesional, con
+     precios e IVA para el Gestor de negocio), esta lista es para
+     cualquier cuenta registrada -cliente o profesional- y solo junta
+     materiales/cantidades para compartir con quien vaya a hacer la obra.
+     ============================================================ */
+  function emailCuentaActual(){
+    try { return localStorage.getItem('session-email') || localStorage.getItem('session-email-client') || ''; } catch(e){ return ''; }
+  }
+
+  function detalleDeResultado(res){
+    return res.filter(function(r){ return !r.link; }).map(function(r){
+      return r.label + ': ' + r.value + (r.unit ? ' ' + r.unit : '');
+    });
+  }
+
+  function leerListaObra(){
+    try {
+      var email = emailCuentaActual();
+      if(!email) return [];
+      return JSON.parse(localStorage.getItem('obra-lista:'+email) || '[]');
+    } catch(e){ return []; }
+  }
+
+  function guardarEnListaObra(concepto, detalle){
+    try {
+      var email = emailCuentaActual();
+      if(!email) return 0;
+      var lista = leerListaObra();
+      lista.push({id:'ob'+Date.now(), concepto:concepto, detalle:detalle||[]});
+      localStorage.setItem('obra-lista:'+email, JSON.stringify(lista));
+      return lista.length;
+    } catch(e){ return 0; }
+  }
+
+  function quitarDeListaObra(id){
+    try {
+      var email = emailCuentaActual();
+      if(!email) return;
+      var lista = leerListaObra().filter(function(x){ return x.id !== id; });
+      localStorage.setItem('obra-lista:'+email, JSON.stringify(lista));
+    } catch(e){}
+  }
+
+  function resumenListaObraTexto(){
+    var lista = leerListaObra();
+    if(!lista.length) return '';
+    var partes = lista.map(function(item){
+      return '- ' + item.concepto + (item.detalle.length ? ': ' + item.detalle.join(', ') : '');
+    });
+    return 'Hola, quiero pedir presupuesto para esta reforma:\n\n' + partes.join('\n');
+  }
+
+  /* Deja la lista lista para que index.html la recoja al contactar con
+     un profesional (WhatsApp o mensaje), sin backend propio de por medio. */
+  function guardarSolicitudPresupuestoAlcance(texto){
+    try {
+      if(!texto) return;
+      localStorage.setItem('solicitud-presupuesto-alcance', JSON.stringify({resumen: texto, creadoEn: Date.now()}));
+    } catch(e){}
+  }
+
+  function renderListaObraIndicator(){
+    var wrap = document.getElementById('cecObraWrap');
+    var pill = document.getElementById('cecObraPill');
+    var menu = document.getElementById('cecObraMenu');
+    if(!wrap || !pill || !menu) return;
+    var lista = leerListaObra();
+    if(!isRegistered() || !lista.length){
+      wrap.style.display = 'none';
+      menu.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    pill.textContent = '🧱 ' + lista.length + (lista.length === 1 ? ' partida en tu lista' : ' partidas en tu lista');
+    menu.innerHTML = lista.map(function(it){
+      return '<div class="cec-draft-item"><span title="' + escapeHtml(it.concepto) + '">' + escapeHtml(it.concepto) + '</span>' +
+        '<button type="button" data-remove-obra="' + it.id + '" title="Quitar" aria-label="Quitar">✕</button></div>';
+    }).join('') +
+      '<button type="button" class="btn-link" id="cecObraCopiar" style="width:100%;border:none;cursor:pointer;">📋 Copiar lista para pedir presupuesto</button>' +
+      (isProfessionalLoggedIn() ? '' : '<a class="btn-link" href="index.html?view=buscar" id="cecObraBuscar" style="margin-top:6px;">Buscar profesionales verificados →</a>');
+  }
+
+  function bindListaObraIndicator(){
+    var pill = document.getElementById('cecObraPill');
+    var menu = document.getElementById('cecObraMenu');
+    if(!pill || !menu) return;
+    pill.addEventListener('click', function(){
+      menu.style.display = menu.style.display === 'none' ? '' : 'none';
+    });
+    menu.addEventListener('click', function(e){
+      var btnQuitar = e.target.closest('[data-remove-obra]');
+      if(btnQuitar){
+        quitarDeListaObra(btnQuitar.getAttribute('data-remove-obra'));
+        renderListaObraIndicator();
+        var menuAfter = document.getElementById('cecObraMenu');
+        if(menuAfter) menuAfter.style.display = '';
+        return;
+      }
+      if(e.target.closest('#cecObraCopiar')){
+        var texto = resumenListaObraTexto();
+        guardarSolicitudPresupuestoAlcance(texto);
+        var avisar = function(){ window.alert('Lista copiada. Pégala al contactar con un profesional, o pulsa "Buscar profesionales verificados" para que se rellene sola.'); };
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(texto).then(avisar).catch(function(){ window.alert(texto); });
+        } else {
+          window.alert(texto);
+        }
+        return;
+      }
+      if(e.target.closest('#cecObraBuscar')){
+        guardarSolicitudPresupuestoAlcance(resumenListaObraTexto());
+      }
+    });
+    document.addEventListener('click', function(e){
+      if(menu.style.display === 'none') return;
+      if(!menu.contains(e.target) && e.target !== pill) menu.style.display = 'none';
+    });
+  }
+
   function botonAnadirPresupuestoHTML(calc, res){
     if(!isProfessionalLoggedIn()) return '';
     var relevantes = res.filter(function(r){ return !r.link; });
@@ -2587,6 +2783,13 @@
 
   function fieldHTML(f){
     var id = 'f_' + f.key;
+    if(f.type === 'heading'){
+      return '<div class="cec-form-heading" id="' + id + '">' + f.label + '</div>';
+    }
+    if(f.type === 'checkbox'){
+      var checkedAttr = f.def ? ' checked' : '';
+      return '<label class="cec-field cec-field-checkbox"><input type="checkbox" id="' + id + '" data-key="' + f.key + '"' + checkedAttr + '><span>' + f.label + '</span></label>';
+    }
     if(f.type === 'select'){
       var opciones = f.options.map(function(o){
         var sel = (f.def === o.value) ? ' selected' : '';
@@ -2624,7 +2827,12 @@
       '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + (isProfessionalLoggedIn() ? favoritaStarHTML(calc.id) : '') + '</h2>' +
       (calc.info ? '<p class="cec-info">' + calc.info + '</p>' : '') +
       '<div class="cec-form">' + calc.fields.map(fieldHTML).join('') + '</div>' +
-      '<div class="cec-result" id="cecResult"></div>';
+      '<div class="cec-result" id="cecResult"></div>' +
+      (isRegistered() ?
+        '<div id="cecObraActionWrap" style="display:none;margin-top:10px;">' +
+          '<button type="button" class="cec-add-budget-btn" id="cecAddObra">🧱 Añadir a mi lista de la reforma</button>' +
+          '<div class="cec-add-toast" id="cecAddObraToast" style="display:none;"></div>' +
+        '</div>' : '');
     elCalc.innerHTML = html;
 
     var ofBread = oficioDeCategoria(calc.cat);
@@ -2653,6 +2861,18 @@
         });
       });
     }
+    var addObraBtn = document.getElementById('cecAddObra');
+    if(addObraBtn){
+      addObraBtn.addEventListener('click', function(){
+        var n = guardarEnListaObra(calc.titulo, detalleDeResultado(ultimoResultado));
+        var toastObra = document.getElementById('cecAddObraToast');
+        if(toastObra && n > 0){
+          toastObra.style.display = '';
+          toastObra.textContent = 'Añadido — llevas ' + n + (n === 1 ? ' partida' : ' partidas') + ' en tu lista de la reforma';
+        }
+        renderListaObraIndicator();
+      });
+    }
     elCalc.onclick = function(e){
       var chip = e.target.closest('.mat-chip');
       if(chip){
@@ -2678,9 +2898,21 @@
     };
     var inputs = elCalc.querySelectorAll('[data-key]');
     var ultimoResultado = [];
+    function actualizarVisibilidadCampos(values){
+      calc.fields.forEach(function(f){
+        if(typeof f.showIf !== 'function') return;
+        var el = document.getElementById('f_' + f.key);
+        if(!el) return;
+        var target = el.classList.contains('cec-form-heading') ? el : (el.closest('.cec-field') || el);
+        target.style.display = f.showIf(values) ? '' : 'none';
+      });
+    }
     function recalcular(){
       var values = {};
-      Array.prototype.forEach.call(inputs, function(inp){ values[inp.getAttribute('data-key')] = inp.value; });
+      Array.prototype.forEach.call(inputs, function(inp){
+        values[inp.getAttribute('data-key')] = inp.type === 'checkbox' ? inp.checked : inp.value;
+      });
+      actualizarVisibilidadCampos(values);
       var out = document.getElementById('cecResult');
       try {
         var res = calc.compute(values);
@@ -2690,6 +2922,8 @@
           return '<div class="cec-result-row"><span>' + r.label + '</span><strong>' + r.value + (r.unit ? ' ' + r.unit : '') + '</strong></div>';
         }).join('') + botonAnadirPresupuestoHTML(calc, res);
         out.classList.remove('cec-error');
+        var obraActionWrap = document.getElementById('cecObraActionWrap');
+        if(obraActionWrap) obraActionWrap.style.display = res.some(function(r){ return !r.link; }) ? '' : 'none';
         var addBtn = document.getElementById('cecAddBudget');
         var picker = document.getElementById('cecAddPicker');
         var pickerListEl = document.getElementById('cecAddPickerList');
@@ -2846,6 +3080,11 @@
       });
       bindDraftIndicator();
       renderDraftIndicator();
+    }
+
+    if(isRegistered()){
+      bindListaObraIndicator();
+      renderListaObraIndicator();
     }
   }
 
