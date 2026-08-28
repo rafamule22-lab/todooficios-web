@@ -4331,7 +4331,7 @@ async function renderNegocio(){
             <summary>Datos de tu negocio (para el membrete del PDF)</summary>
             <div class="ng-add-body">
               <div class="field-row">
-                <div class="field"><label>Nombre fiscal / Razón social</label><input type="text" id="ng-datos-nombre" value="${escapeHtml(negocio.datos.nombreFiscal||'')}" placeholder="${escapeHtml(account.name||'')}"></div>
+                <div class="field"><label>Nombre fiscal / Razón social</label><input type="text" id="ng-datos-nombre" value="${escapeHtml(negocio.datos.nombreFiscal||account.name||'')}"></div>
                 <div class="field"><label>NIF</label><input type="text" id="ng-datos-nif" value="${escapeHtml(negocio.datos.nif||'')}" placeholder="Tu NIF"></div>
               </div>
               <div class="field-row">
