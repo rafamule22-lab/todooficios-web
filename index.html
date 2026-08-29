@@ -690,6 +690,8 @@
   #pp-partidas-table.has-coste .pp-coste-cell{display:block;}
   .pp-partidas-head{font-family:'IBM Plex Mono'; font-size:10.5px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:2px;}
   .pp-partidas-row input, .pp-partidas-row select{padding:8px 9px; font-size:13.5px; width:100%; min-width:0; box-sizing:border-box;}
+  .pp-partidas-row input::placeholder{color:#9ca3af;}
+  .pp-partidas-row select.pp-unidad:invalid{color:#9ca3af;}
   @media (max-width:640px){
     #pp-partidas-table .pp-partidas-row{grid-template-columns:repeat(3, 1fr); row-gap:6px;}
     #pp-partidas-table.has-coste .pp-partidas-row{grid-template-columns:repeat(3, 1fr);}
@@ -3919,9 +3921,12 @@ function ppPartidaRowHTML(idx, p){
   const iva = p.iva===undefined ? 21 : p.iva;
   return `<div class="pp-partidas-row" data-pidx="${idx}">
     <input type="text" class="pp-desc" value="${escapeHtml(p.descripcion)}" placeholder="Ej. Sustitución de grifería">
-    <select class="pp-unidad">${UNIDADES_PRESUPUESTO.map(u=>`<option value="${escapeHtml(u)}" ${p.unidad===u?'selected':''}>${escapeHtml(u)}</option>`).join('')}</select>
-    <input type="number" class="pp-cantidad" min="0" step="0.01" value="${p.cantidad}">
-    <input type="number" class="pp-precio" min="0" step="0.01" value="${p.precio}">
+    <select class="pp-unidad" required>
+      <option value="" disabled ${!p.unidad?'selected':''} hidden>Ud</option>
+      ${UNIDADES_PRESUPUESTO.map(u=>`<option value="${escapeHtml(u)}" ${p.unidad===u?'selected':''}>${escapeHtml(u)}</option>`).join('')}
+    </select>
+    <input type="number" class="pp-cantidad" min="0" step="0.01" value="${p.cantidad}" placeholder="1">
+    <input type="number" class="pp-precio" min="0" step="0.01" value="${p.precio}" placeholder="0,00 €">
     <select class="pp-iva" title="IVA de esta línea">${IVA_OPCIONES.map(v=>`<option value="${v}" ${Number(iva)===v?'selected':''}>${v}%</option>`).join('')}</select>
     <input type="number" class="pp-coste pp-coste-cell" min="0" step="0.01" value="${p.coste||0}">
     <span class="pp-importe-cell">${formatEUR((Number(p.cantidad)||0)*(Number(p.precio)||0))}</span>
@@ -5083,7 +5088,7 @@ function bindPresupuestoForm(){
   // uno por línea: si una partida no trae "iva" propio, se hereda de ahí al editar.
   let ppPartidas = editando
     ? editando.partidas.map(p=>({...p, iva: p.iva===undefined ? (editando.ivaPct===undefined?21:editando.ivaPct) : p.iva}))
-    : [{descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:21}];
+    : [{descripcion:'', unidad:'', cantidad:'', precio:'', coste:0, iva:21}];
 
   let ppFotos = editando ? (editando.fotos||[]).slice() : [];
   const FOTOS_MAX = 3;
@@ -5177,7 +5182,7 @@ function bindPresupuestoForm(){
   function ivaPorDefecto(){ return Number(document.getElementById('ng-pre-iva')?.value || 21); }
 
   document.getElementById('pp-add-partida').onclick = ()=>{
-    ppPartidas.push({descripcion:'', unidad:'ud', cantidad:1, precio:0, coste:0, iva:ivaPorDefecto()});
+    ppPartidas.push({descripcion:'', unidad:'', cantidad:'', precio:'', coste:0, iva:ivaPorDefecto()});
     renderRows();
   };
 
