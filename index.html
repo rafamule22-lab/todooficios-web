@@ -728,10 +728,10 @@
   .pp-draft-dismiss:hover{color:var(--ink);}
   @media (max-width:480px){.pp-draft-banner button.btn{flex:1 1 100%; order:3; margin-top:2px;}}
 
-  .mat-row{display:flex; align-items:flex-start; gap:14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:9px;}
+  .mat-row{display:flex; align-items:flex-start; gap:14px; background:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 16px; margin-bottom:9px; flex-wrap:wrap;}
   .mat-row .mat-ic{width:34px; height:34px; border-radius:9px; background:rgba(107,99,85,0.14); color:var(--c-materiales); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  .mat-row .mat-info{flex:1; min-width:0;}
-  .mat-row .mat-info strong{font-family:'Space Grotesk'; font-size:14.5px; display:block; overflow-wrap:anywhere;}
+  .mat-row .mat-info{flex:1; min-width:160px;}
+  .mat-row .mat-info strong{font-family:'Space Grotesk'; font-size:14.5px; display:block; overflow-wrap:break-word;}
   .mat-row .mat-info span{color:var(--ink-soft); font-size:12.5px; font-family:'IBM Plex Mono'; display:block;}
   .mat-row .mat-price{font-family:'IBM Plex Mono'; font-weight:700; font-size:15px; white-space:nowrap; flex-shrink:0;}
   .mat-add-form{display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; margin-top:16px; align-items:end;}
@@ -812,9 +812,9 @@
   .fin-stat .v.est{color:#8a6400;}
 
   .exp-list{margin-top:14px; display:flex; flex-direction:column; gap:8px;}
-  .exp-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--paper-light); font-size:13.5px;}
+  .exp-row{display:flex; align-items:center; gap:12px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:var(--paper-light); font-size:13.5px; flex-wrap:wrap;}
   .exp-row input[type=checkbox]{width:16px; height:16px; accent-color:var(--amber-deep);}
-  .exp-row .prov{font-weight:600; flex:1;}
+  .exp-row .prov{font-weight:600; flex:1; min-width:120px;}
   .exp-row .edate{color:var(--ink-soft); min-width:70px;}
   .exp-row .amt{font-family:'IBM Plex Mono'; font-weight:600; min-width:70px; text-align:right;}
 
