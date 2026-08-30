@@ -3207,7 +3207,7 @@ function renderDashboard(){
     <div class="panel panel-wide">
       <div class="dash-head" style="justify-content:flex-start; margin-bottom:14px;">
         ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
-        <div style="flex:1; min-width:0;">
+        <div style="flex:1; min-width:130px;">
           <h2 style="font-size:22px; margin:0;">${escapeHtml(account.name)}</h2>
           <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
         </div>
