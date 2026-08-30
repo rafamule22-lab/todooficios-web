@@ -618,7 +618,12 @@
   .ng-tab-panel[data-tab="clientes"] .panel-wide{--tab-accent:var(--c-clientes);}
   .ng-tab-panel[data-tab="gastos"] .panel-wide{--tab-accent:var(--c-gastos);}
   .ng-tab-panel[data-tab="agenda"] .panel-wide{--tab-accent:var(--c-agenda);}
-  .ng-tab-panel[data-tab="presupuestos"] .panel-wide{--tab-accent:var(--c-presupuestos);}
+  .ng-tab-panel[data-tab="presupuestos"] .panel-wide{
+    --tab-accent:var(--c-presupuestos);
+    background:var(--paper); border-top:none; border-right:none; border-bottom:none;
+    border-radius:16px; box-shadow:0 10px 28px rgba(20,20,18,0.10);
+  }
+  .ng-tab-panel[data-tab="presupuestos"] + .ng-tab-panel[data-tab="presupuestos"]{margin-top:36px;}
   .ng-tab-panel[data-tab="materiales"] .panel-wide{--tab-accent:var(--c-materiales);}
   .ng-tab-panel[data-tab="fiscal"] .panel-wide{--tab-accent:var(--c-fiscal);}
   .ng-tab-panel[data-tab="envio"] .panel-wide{--tab-accent:var(--c-envio);}
