@@ -14,8 +14,9 @@ DirectoryIndex index.html
   RewriteCond %{HTTP_COOKIE} toc_preview=1
   RewriteRule ^ - [CO=toc_preview:1:%{HTTP_HOST}:2592000:/,L]
 
-  RewriteRule ^(proximamente\.html|robots\.txt|sitemap\.xml|manifest\.json|favicon\.ico|presupuesto-publico\.html|presupuesto-publico\.js|legal-config\.js)$ - [L]
+  RewriteRule ^(proximamente\.html|robots\.txt|sitemap\.xml|manifest\.json|favicon\.ico|presupuesto-publico\.html|presupuesto-publico\.js|legal-config\.js|sw\.js)$ - [L]
   RewriteRule ^assets/ - [L]
+  RewriteRule ^\.well-known/ - [L]
 
   RewriteRule ^ /proximamente.html [L]
 </IfModule>
