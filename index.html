@@ -666,6 +666,20 @@
   .pro-dash .biz-banner .btn-amber{background:var(--ink); color:#fff;}
   .pro-dash .biz-banner .btn-amber:hover{background:#000;}
 
+  /* Cuenta de cliente: mismos paneles grises de siempre, pero con la sombra y el
+     espaciado del panel de negocio del profesional, más un acento lateral ámbar
+     para que cada bloque se lea como su propia tarjeta. */
+  .client-dash{display:flex; flex-direction:column; gap:22px;}
+  .client-dash .panel{
+    margin:0; box-shadow:0 10px 26px rgba(20,20,18,0.10);
+    padding-left:32px; position:relative;
+  }
+  .client-dash .panel::before{
+    content:''; position:absolute; left:0; top:16px; bottom:16px; width:4px;
+    border-radius:3px; background:var(--amber-deep);
+  }
+  .client-dash .section-label{text-align:left; margin-bottom:14px;}
+
   .premium-banner{display:flex; align-items:center; gap:12px; background:rgba(242,183,5,0.08); border:1px solid rgba(242,183,5,0.35); border-radius:10px; padding:12px 14px; flex-wrap:wrap;}
   .premium-banner-ic{font-size:16px; flex-shrink:0; color:var(--amber-deep);}
   .premium-banner-txt{flex:1; min-width:180px; font-size:12.5px; color:var(--ink-soft); line-height:1.45;}
@@ -2891,17 +2905,19 @@ function renderClient(){
     return `
     <div class="section-label">Cliente registrado</div>
     <h2 style="font-size:24px; margin-bottom:18px;">Bienvenido, ${escapeHtml(clientAccount.name)}</h2>
-    <div class="panel">
-      <div class="field-row">
-        <div class="field" style="flex:1;"><strong>${escapeHtml(clientAccount.email)}</strong></div>
-        <button class="btn btn-outline btn-sm" id="client-logout">Cerrar sesión</button>
+    <div class="client-dash">
+      <div class="panel">
+        <div class="field-row">
+          <div class="field" style="flex:1;"><strong>${escapeHtml(clientAccount.email)}</strong></div>
+          <button class="btn btn-outline btn-sm" id="client-logout">Cerrar sesión</button>
+        </div>
+        <div class="section-label">Mis profesionales favoritos</div>
+        <div id="client-favorites-list"></div>
       </div>
-      <div class="field"><label>Mis profesionales favoritos</label></div>
-      <div id="client-favorites-list"></div>
-    </div>
-    <div class="panel panel-wide">
-      <div class="section-label">Mis mensajes</div>
-      <div id="client-message-list">Cargando mensajes...</div>
+      <div class="panel panel-wide">
+        <div class="section-label">Mis mensajes</div>
+        <div id="client-message-list">Cargando mensajes...</div>
+      </div>
     </div>
     <div style="text-align:center; margin-top:14px;">
       <button type="button" class="danger-link" id="deleteClientAccountBtn">Eliminar mi cuenta de cliente</button>
