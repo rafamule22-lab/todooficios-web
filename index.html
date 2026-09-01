@@ -666,12 +666,13 @@
   .pro-dash .biz-banner .btn-amber{background:var(--ink); color:#fff;}
   .pro-dash .biz-banner .btn-amber:hover{background:#000;}
 
-  /* Cuenta de cliente: mismos paneles grises de siempre, pero con la sombra y el
-     espaciado del panel de negocio del profesional, más un acento lateral ámbar
-     para que cada bloque se lea como su propia tarjeta. */
+  /* Cuenta de cliente: tarjetas blancas (no el gris de los paneles de formulario)
+     con sombra suave y el espaciado del panel de negocio del profesional, más un
+     acento lateral ámbar para que cada bloque se lea como su propia tarjeta. */
   .client-dash{display:flex; flex-direction:column; gap:22px;}
   .client-dash .panel{
-    margin:0; box-shadow:0 10px 26px rgba(20,20,18,0.10);
+    margin:0; background:var(--paper); border-color:var(--line);
+    box-shadow:0 10px 26px rgba(20,20,18,0.10);
     padding-left:32px; position:relative;
   }
   .client-dash .panel::before{
@@ -896,9 +897,14 @@
     border:1.5px solid var(--ink);
     border-radius:11px;
     display:flex;
+    flex-direction:column;
     margin-bottom:18px;
     overflow:visible;
   }
+  /* Variante con talón + separador punteado (solo la ficha del profesional).
+     align-items:flex-start evita que ticket-main se estire (y quede con hueco
+     vacío) para igualar la altura del ticket-stub cuando este trae más botones. */
+  .ticket-split{flex-direction:row; align-items:flex-start;}
   .ticket-main{flex:1; padding:18px 20px; min-width:0;}
   .ticket-top{display:flex; align-items:center; gap:12px; margin-bottom:8px;}
   .ticket-photo{
@@ -915,7 +921,7 @@
     position:relative;
   }
   .ticket-divider{
-    position:relative; width:0; border-left:2px dashed var(--line); flex-shrink:0;
+    position:relative; width:0; border-left:2px dashed var(--line); flex-shrink:0; align-self:stretch;
   }
   .ticket-divider::before, .ticket-divider::after{
     content:''; position:absolute; left:50%; transform:translateX(-50%);
@@ -924,7 +930,7 @@
   .ticket-divider::before{top:-9px;}
   .ticket-divider::after{bottom:-9px;}
   @media (max-width:600px){
-    .ticket{flex-direction:column;}
+    .ticket-split{flex-direction:column;}
     .ticket-divider{width:auto; height:0; border-left:none; border-top:2px dashed var(--line); margin:0 16px;}
     .ticket-divider::before, .ticket-divider::after{top:50%; transform:translateY(-50%);}
     .ticket-divider::before{left:-9px;}
@@ -3091,7 +3097,7 @@ function bindClient(){
       getAllProfessionals().then(pros => {
         const cards = favs.map(email => pros.find(p=>p.email===email)).filter(Boolean);
         favList.innerHTML = cards.map(p => `
-          <div class="ticket" style="margin-bottom:12px;">
+          <div class="ticket" style="padding:16px; margin-bottom:12px;">
             <div><strong>${escapeHtml(p.name)}</strong> — ${escapeHtml(p.oficio)}</div>
             <div style="margin:6px 0; color:#5f5a53;">${escapeHtml(p.zona)}</div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -5815,7 +5821,7 @@ async function renderDetalle(){
 
   return `
   <a href="javascript:void(0)" class="back-link" data-view="buscar">← Volver a la búsqueda</a>
-  <div class="ticket" style="margin-bottom:26px;">
+  <div class="ticket ticket-split" style="margin-bottom:26px;">
     <div class="ticket-main">
       <div class="ticket-top">
         ${p.photo ? `<img class="ticket-photo" style="width:60px;height:60px;" src="${p.photo}">` : `<div class="ticket-photo-fallback" style="width:60px;height:60px;font-size:20px;">${(p.name||'?').charAt(0)}</div>`}
@@ -5962,6 +5968,10 @@ function bindDetalle(){
     const missing = RATING_CRITERIA.find(c => !(criteria[c.key] > 0));
     if(missing){ msgBox.innerHTML = `<div class="msg err">Puntúa "${missing.label}" de 1 a 5 estrellas.</div>`; return; }
     if(!window.__ratingRehire){ msgBox.innerHTML = '<div class="msg err">Indica si volverías a contratar a este profesional.</div>'; return; }
+    if(clientSession && RATINGS.some(r => r.proEmail === currentDetailEmail && r.clientEmail === clientSession.email)){
+      msgBox.innerHTML = '<div class="msg err">Ya dejaste una valoración para este profesional. Si quieres cambiarla, elimina la anterior más abajo y volvé a enviarla.</div>';
+      return;
+    }
 
     const overall = RATING_CRITERIA.reduce((s,c)=> s + criteria[c.key], 0) / RATING_CRITERIA.length;
     await setMyClientName(name);
