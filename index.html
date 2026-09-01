@@ -3352,7 +3352,7 @@ function bindPro(){
           list.innerHTML = '<div class="empty-state">Aún no recibiste mensajes de clientes.</div>';
           return;
         }
-        list.innerHTML = messages.sort((a,b)=>b.sentAt - a.sentAt).map(m => `
+        list.innerHTML = messages.sort((a,b)=>b.sentAt - a.sentAt).map((m,i) => `
           <div class="ticket" style="padding:14px; margin-bottom:12px;">
             <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
               <div>
@@ -3362,7 +3362,18 @@ function bindPro(){
               <span style="font-size:12px; color:#5f5a53;">${new Date(m.sentAt).toLocaleDateString('es-ES')} ${new Date(m.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
             </div>
             <div style="margin-top:10px; color:#333; white-space:pre-wrap;">${escapeHtml(m.message)}</div>
+            ${m.clientEmail ? `<div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-sm pro-msg-reply" data-msg-idx="${i}">✉ Responder</button></div>` : ''}
           </div>`).join('');
+        list.querySelectorAll('.pro-msg-reply').forEach(btn=>{
+          btn.onclick = ()=>{
+            const m = messages[Number(btn.dataset.msgIdx)];
+            if(!m || !m.clientEmail) return;
+            const subject = `Re: tu mensaje en TodoOficios.es${account.name ? ' — '+account.name : ''}`;
+            const quoted = (m.message||'').split('\n').map(l=>'> '+l).join('\n');
+            const body = `Hola ${m.clientName||''},\n\nGracias por tu mensaje. \n\n${quoted}\n\nUn saludo,\n${account.name||''}`;
+            window.location.href = `mailto:${m.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          };
+        });
       }
       renderProMessages();
       return;
