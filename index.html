@@ -1035,6 +1035,20 @@
   .star-btn{background:none; border:none; font-size:26px; color:var(--line); line-height:1; padding:2px;}
   .star-btn.filled{color:var(--amber-deep);}
 
+  /* Fila compacta de criterios en el formulario de valoración */
+  .crit-row{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:9px 0; border-bottom:1px solid var(--line);}
+  .crit-row:last-child{border-bottom:none;}
+  .crit-row .crit-label{font-size:13.5px; font-weight:600;}
+  .crit-row .stars-input{gap:3px;}
+  .crit-row .star-btn{font-size:20px; padding:1px;}
+  .rt-detail-toggle{
+    display:flex; align-items:center; justify-content:space-between; gap:6px; width:100%;
+    font-family:inherit; font-size:13px; font-weight:600; color:var(--c-clientes);
+    padding:11px 0; cursor:pointer; background:none; border:none; border-top:1px dashed var(--line); margin-top:6px; text-align:left;
+  }
+  .rt-detail-toggle .chev{font-family:'IBM Plex Mono'; font-size:12px; transition:transform .15s;}
+  .rt-detail-toggle.open .chev{transform:rotate(90deg);}
+
   .review{border-top:1px solid var(--line); padding:14px 0;}
   .review:first-child{border-top:none;}
   .review-top{display:flex; justify-content:space-between; font-size:13px; margin-bottom:4px;}
@@ -5872,17 +5886,22 @@ async function renderDetalle(){
     <div id="ratingMsg"></div>
     ${clientSession ? `
     <div class="field"><label>Tu nombre</label><input type="text" id="rt-name" placeholder="Ej. Carlos" value="${escapeHtml(prefillName)}"></div>
-    ${RATING_CRITERIA.map(c => `
-    <div class="field"><label>${c.label}</label><div class="stars-input" id="starInput-${c.key}"></div></div>`).join('')}
-    <div class="field">
+    <div class="crit-row-list">
+      ${RATING_CRITERIA.map(c => `
+      <div class="crit-row"><span class="crit-label">${c.label}</span><div class="stars-input" id="starInput-${c.key}"></div></div>`).join('')}
+    </div>
+    <div class="field" style="margin-top:14px;">
       <label>¿Volverías a contratar a este profesional?</label>
       <div class="role-toggle" style="max-width:280px;">
         <div class="role-opt" data-rehire="si">Sí</div>
         <div class="role-opt" data-rehire="no">No</div>
       </div>
     </div>
-    <div class="field"><label>Título de tu opinión <small>(opcional)</small></label><input type="text" id="rt-title" placeholder="Ej. Excelente trabajo de electricidad"></div>
-    <div class="field"><label>Cuéntanos tu experiencia <small>(opcional)</small></label><textarea id="rt-comment" placeholder="Cuéntanos qué trabajo realizó y qué tal fue la experiencia..."></textarea></div>
+    <button type="button" class="rt-detail-toggle" id="rt-detail-toggle"><span>+ Añadir un comentario (opcional)</span><span class="chev">▸</span></button>
+    <div id="rt-detail-fields" hidden>
+      <div class="field"><label>Título de tu opinión <small>(opcional)</small></label><input type="text" id="rt-title" placeholder="Ej. Excelente trabajo de electricidad"></div>
+      <div class="field"><label>Cuéntanos tu experiencia <small>(opcional)</small></label><textarea id="rt-comment" placeholder="Cuéntanos qué trabajo realizó y qué tal fue la experiencia..."></textarea></div>
+    </div>
     <button class="btn btn-primary btn-block" id="submitRatingBtn">Publicar valoración</button>
     ` : `
     <p>Debes registrarte o iniciar sesión como cliente para dejar una valoración a este profesional.</p>
@@ -5957,6 +5976,16 @@ function bindDetalle(){
       if(saved){ showToast('Reseña eliminada.'); showView('detalle'); }
     };
   });
+  const detailToggle = document.getElementById('rt-detail-toggle');
+  if(detailToggle){
+    detailToggle.onclick = ()=>{
+      const body = document.getElementById('rt-detail-fields');
+      const willOpen = body.hidden;
+      body.hidden = !willOpen;
+      detailToggle.classList.toggle('open', willOpen);
+      detailToggle.querySelector('span').textContent = willOpen ? '– Ocultar comentario' : '+ Añadir un comentario (opcional)';
+    };
+  }
   const p = window.__currentDetailPro || {};
   const btn = document.getElementById('submitRatingBtn');
   if(!btn) return;
