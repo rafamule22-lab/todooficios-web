@@ -915,11 +915,13 @@
     display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk'; font-weight:700; color:var(--ink-soft);
   }
   .ticket-stub{
-    width:150px; flex-shrink:0; padding:18px 16px;
+    width:182px; flex-shrink:0; padding:18px 16px;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
     text-align:center;
     position:relative;
   }
+  .ticket-stub-cta-row{display:flex; gap:6px; width:100%;}
+  .ticket-stub-cta-row .btn{flex:1; padding-left:4px; padding-right:4px; white-space:nowrap;}
   .ticket-divider{
     position:relative; width:0; border-left:2px dashed var(--line); flex-shrink:0; align-self:stretch;
   }
@@ -5846,8 +5848,10 @@ async function renderDetalle(){
       </div>
       ${stats.rehirePct != null ? `<span class="verified-tag">${stats.rehirePct}% volvería a contratarlo</span>` : ''}
       ${clientSession ? `
-        ${p.phone ? `<a href="tel:${escapeHtml(p.phone)}" class="btn btn-amber btn-sm">Llamar</a>` : ''}
-        ${waLink(p.phone, p.name) ? `<a href="${waLink(p.phone, p.name)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">${WA_ICON} WhatsApp</a>` : ''}
+        <div class="ticket-stub-cta-row">
+          ${p.phone ? `<a href="tel:${escapeHtml(p.phone)}" class="btn btn-amber btn-sm">Llamar</a>` : ''}
+          ${waLink(p.phone, p.name) ? `<a href="${waLink(p.phone, p.name)}" target="_blank" rel="noopener" class="btn btn-whatsapp btn-sm">${WA_ICON} WhatsApp</a>` : ''}
+        </div>
         <button class="btn btn-outline btn-sm" id="favBtn">${clientAccount?.favorites?.includes(p.email) ? 'Quitar favorito' : 'Guardar favorito'}</button>
       ` : `
         <span class="note">Regístrate o inicia sesión como cliente para ver el teléfono y contactar a este profesional.</span>
