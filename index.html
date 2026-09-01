@@ -2295,6 +2295,17 @@ async function addContactMessage(message){
   list.push(message);
   return await safeSet('contactMessages', JSON.stringify(list), true);
 }
+function contactMessageKey(m){
+  return m.id || (m.clientEmail+'|'+m.sentAt);
+}
+async function addContactReply(messageKey, replyText){
+  const list = JSON.parse(await safeGet('contactMessages', true) || '[]');
+  const msg = list.find(m => contactMessageKey(m) === messageKey);
+  if(!msg) return false;
+  msg.replies = msg.replies || [];
+  msg.replies.push({ text: replyText, sentAt: Date.now() });
+  return await safeSet('contactMessages', JSON.stringify(list), true);
+}
 async function getContactMessages(){
   const raw = await safeGet('contactMessages', true);
   return raw ? JSON.parse(raw) : [];
@@ -2873,6 +2884,10 @@ function renderClient(){
       <div class="field"><label>Mis profesionales favoritos</label></div>
       <div id="client-favorites-list"></div>
     </div>
+    <div class="panel panel-wide">
+      <div class="section-label">Mis mensajes</div>
+      <div id="client-message-list">Cargando mensajes...</div>
+    </div>
     <div style="text-align:center; margin-top:14px;">
       <button type="button" class="danger-link" id="deleteClientAccountBtn">Eliminar mi cuenta de cliente</button>
     </div>`;
@@ -3067,6 +3082,48 @@ function bindClient(){
         });
       });
     }
+  }
+  const msgList = document.getElementById('client-message-list');
+  if(msgList){
+    getContactMessages().then(async allMessages => {
+      const myMessages = allMessages.filter(m => m.clientEmail === clientAccount.email).sort((a,b)=>b.sentAt - a.sentAt);
+      if(!myMessages.length){
+        msgList.innerHTML = '<div class="empty-state">Aún no le escribiste a ningún profesional.</div>';
+        return;
+      }
+      const proCache = {};
+      for(const m of myMessages){
+        if(!(m.proEmail in proCache)){
+          const raw = await safeGet('account:'+m.proEmail, true);
+          proCache[m.proEmail] = raw ? JSON.parse(raw) : null;
+        }
+      }
+      msgList.innerHTML = myMessages.map(m => {
+        const pro = proCache[m.proEmail];
+        const replies = m.replies || [];
+        const repliesHTML = replies.map(r => `
+          <div style="margin-top:10px; padding:10px 12px; background:#f4f1ea; border-radius:8px;">
+            <div style="font-size:12px; color:#5f5a53; margin-bottom:4px;">Respuesta de ${escapeHtml(pro?.name || 'el profesional')} — ${new Date(r.sentAt).toLocaleDateString('es-ES')} ${new Date(r.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</div>
+            <div style="white-space:pre-wrap;">${escapeHtml(r.text)}</div>
+          </div>`).join('');
+        return `
+        <div class="ticket" style="padding:14px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div>
+              <strong>${escapeHtml(pro?.name || m.proEmail)}</strong>
+              ${pro?.oficio ? ` — ${escapeHtml(pro.oficio)}` : ''}
+            </div>
+            <span style="font-size:12px; color:#5f5a53;">${new Date(m.sentAt).toLocaleDateString('es-ES')} ${new Date(m.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
+          </div>
+          <div style="margin-top:10px; color:#333; white-space:pre-wrap;">${escapeHtml(m.message)}</div>
+          ${repliesHTML || '<div style="margin-top:10px; font-size:13px; color:#5f5a53;">Aún sin respuesta.</div>'}
+          ${pro ? `<div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-sm" data-open-detail="${escapeHtml(m.proEmail)}">Ver perfil</button></div>` : ''}
+        </div>`;
+      }).join('');
+      msgList.querySelectorAll('[data-open-detail]').forEach(b=>{
+        b.onclick = ()=>{ currentDetailEmail = b.dataset.openDetail; showView('detalle'); };
+      });
+    });
   }
 }
 
@@ -3352,8 +3409,16 @@ function bindPro(){
           list.innerHTML = '<div class="empty-state">Aún no recibiste mensajes de clientes.</div>';
           return;
         }
-        list.innerHTML = messages.sort((a,b)=>b.sentAt - a.sentAt).map((m,i) => `
-          <div class="ticket" style="padding:14px; margin-bottom:12px;">
+        list.innerHTML = messages.sort((a,b)=>b.sentAt - a.sentAt).map(m => {
+          const key = contactMessageKey(m);
+          const replies = m.replies || [];
+          const repliesHTML = replies.map(r => `
+            <div style="margin-top:10px; padding:10px 12px; background:#f4f1ea; border-radius:8px;">
+              <div style="font-size:12px; color:#5f5a53; margin-bottom:4px;">Tu respuesta — ${new Date(r.sentAt).toLocaleDateString('es-ES')} ${new Date(r.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</div>
+              <div style="white-space:pre-wrap;">${escapeHtml(r.text)}</div>
+            </div>`).join('');
+          return `
+          <div class="ticket" style="padding:14px; margin-bottom:12px;" data-msg-key="${escapeHtml(key)}">
             <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
               <div>
                 <strong>${escapeHtml(m.clientName || 'Cliente')}</strong>
@@ -3362,16 +3427,39 @@ function bindPro(){
               <span style="font-size:12px; color:#5f5a53;">${new Date(m.sentAt).toLocaleDateString('es-ES')} ${new Date(m.sentAt).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'})}</span>
             </div>
             <div style="margin-top:10px; color:#333; white-space:pre-wrap;">${escapeHtml(m.message)}</div>
-            ${m.clientEmail ? `<div style="margin-top:10px;"><button type="button" class="btn btn-outline btn-sm pro-msg-reply" data-msg-idx="${i}">✉ Responder</button></div>` : ''}
-          </div>`).join('');
-        list.querySelectorAll('.pro-msg-reply').forEach(btn=>{
-          btn.onclick = ()=>{
-            const m = messages[Number(btn.dataset.msgIdx)];
-            if(!m || !m.clientEmail) return;
-            const subject = `Re: tu mensaje en TodoOficios.es${account.name ? ' — '+account.name : ''}`;
-            const quoted = (m.message||'').split('\n').map(l=>'> '+l).join('\n');
-            const body = `Hola ${m.clientName||''},\n\nGracias por tu mensaje. \n\n${quoted}\n\nUn saludo,\n${account.name||''}`;
-            window.location.href = `mailto:${m.clientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            ${repliesHTML}
+            ${m.clientEmail ? `
+            <div class="pro-msg-reply-zone" style="margin-top:10px;">
+              <button type="button" class="btn btn-outline btn-sm pro-msg-reply-toggle">✉ ${replies.length ? 'Responder de nuevo' : 'Responder'}</button>
+              <div class="pro-msg-reply-form" hidden>
+                <textarea class="pro-msg-reply-text" style="min-height:80px; margin-top:8px;" placeholder="Escribe tu respuesta..."></textarea>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <button type="button" class="btn btn-primary btn-sm pro-msg-reply-send">Enviar respuesta</button>
+                  <button type="button" class="btn btn-outline btn-sm pro-msg-reply-cancel">Cancelar</button>
+                </div>
+              </div>
+            </div>` : ''}
+          </div>`;
+        }).join('');
+        list.querySelectorAll('.ticket[data-msg-key]').forEach(ticket=>{
+          const key = ticket.dataset.msgKey;
+          const toggleBtn = ticket.querySelector('.pro-msg-reply-toggle');
+          const form = ticket.querySelector('.pro-msg-reply-form');
+          const textarea = ticket.querySelector('.pro-msg-reply-text');
+          const sendBtn = ticket.querySelector('.pro-msg-reply-send');
+          const cancelBtn = ticket.querySelector('.pro-msg-reply-cancel');
+          if(!toggleBtn) return;
+          toggleBtn.onclick = ()=>{ form.hidden = false; toggleBtn.hidden = true; textarea.focus(); };
+          cancelBtn.onclick = ()=>{ form.hidden = true; toggleBtn.hidden = false; textarea.value = ''; };
+          sendBtn.onclick = async ()=>{
+            const text = textarea.value.trim();
+            if(!text) return;
+            sendBtn.disabled = true;
+            const saved = await addContactReply(key, text);
+            sendBtn.disabled = false;
+            if(!saved){ showToast('No se pudo enviar la respuesta. Inténtalo de nuevo.'); return; }
+            showToast('Respuesta enviada al cliente.');
+            renderProMessages();
           };
         });
       }
@@ -5893,11 +5981,13 @@ function bindDetalle(){
       msgBox.innerHTML = '';
       if(!msg){ msgBox.innerHTML = '<div class="msg err">Escribe un mensaje para el profesional.</div>'; return; }
       const saved = await addContactMessage({
+        id: 'msg'+Date.now()+Math.random().toString(36).slice(2,8),
         clientEmail: clientSession.email,
         clientName: clientAccount.name,
         proEmail: p.email,
         message: msg,
-        sentAt: Date.now()
+        sentAt: Date.now(),
+        replies: []
       });
       if(!saved){
         msgBox.innerHTML = '<div class="msg err">No se pudo enviar el mensaje. Inténtalo de nuevo.</div>';
