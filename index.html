@@ -2306,6 +2306,21 @@ async function addContactReply(messageKey, replyText){
   msg.replies.push({ text: replyText, sentAt: Date.now() });
   return await safeSet('contactMessages', JSON.stringify(list), true);
 }
+/* Aviso por email al cliente cuando el profesional responde. Best-effort: si falla
+   (Edge Function no desplegada, sin conexión, etc.) la respuesta ya quedó guardada
+   igualmente, solo no se manda el aviso. */
+async function notifyClientOfReply(msg, replyText){
+  try{
+    const client = await initSupabaseClient();
+    if(!client || !msg.clientEmail) return;
+    await client.functions.invoke('notify-reply', { body: {
+      toEmail: msg.clientEmail,
+      toName: msg.clientName || '',
+      proName: (account && account.name) || 'Un profesional',
+      excerpt: replyText.slice(0, 300)
+    }});
+  }catch(err){ console.error('notify-reply:', err); }
+}
 async function getContactMessages(){
   const raw = await safeGet('contactMessages', true);
   return raw ? JSON.parse(raw) : [];
@@ -3443,6 +3458,7 @@ function bindPro(){
         }).join('');
         list.querySelectorAll('.ticket[data-msg-key]').forEach(ticket=>{
           const key = ticket.dataset.msgKey;
+          const msg = messages.find(mm => contactMessageKey(mm) === key);
           const toggleBtn = ticket.querySelector('.pro-msg-reply-toggle');
           const form = ticket.querySelector('.pro-msg-reply-form');
           const textarea = ticket.querySelector('.pro-msg-reply-text');
@@ -3459,6 +3475,7 @@ function bindPro(){
             sendBtn.disabled = false;
             if(!saved){ showToast('No se pudo enviar la respuesta. Inténtalo de nuevo.'); return; }
             showToast('Respuesta enviada al cliente.');
+            if(msg) notifyClientOfReply(msg, text);
             renderProMessages();
           };
         });
