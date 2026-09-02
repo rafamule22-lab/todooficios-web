@@ -3,18 +3,21 @@ DirectoryIndex index.html
 # ============================================================
 # MODO CONSTRUCCION: muestra "proximamente.html" a todo el mundo
 # Para ver la web real mientras esta en construccion, entra en:
-#   https://todooficios.es/?preview=toc-construccion-2026
+#   https://todooficios.es/?preview=toc-552d78c52fafdb4502a16698
 # (te deja una cookie 30 dias para no tener que repetirlo)
 # Para publicar la web, borra este bloque completo.
+# El codigo se rotó (2026-09) porque el anterior quedó expuesto en texto
+# plano en el historial de git; si se vuelve a filtrar, cambialo aquí de
+# nuevo por otro aleatorio.
 # ============================================================
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  RewriteCond %{QUERY_STRING} preview=toc-construccion-2026 [OR]
+  RewriteCond %{QUERY_STRING} preview=toc-552d78c52fafdb4502a16698 [OR]
   RewriteCond %{HTTP_COOKIE} toc_preview=1
   RewriteRule ^ - [CO=toc_preview:1:%{HTTP_HOST}:2592000:/,L]
 
-  RewriteRule ^(proximamente\.html|robots\.txt|sitemap\.xml|manifest\.json|favicon\.ico)$ - [L]
+  RewriteRule ^(proximamente\.html|robots\.txt|sitemap\.xml|manifest\.json|favicon\.ico|presupuesto-publico\.html|presupuesto-publico\.js|legal-config\.js)$ - [L]
   RewriteRule ^assets/ - [L]
 
   RewriteRule ^ /proximamente.html [L]
@@ -29,9 +32,24 @@ AddDefaultCharset UTF-8
   AddCharset UTF-8 .html .css .js .json
 </IfModule>
 
-# Durante desarrollo, evita que el navegador muestre versiones antiguas
+# Cabeceras de seguridad básicas
 <IfModule mod_headers.c>
-  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+</IfModule>
+
+# HTML: siempre revalidar (para no servir una versión vieja de la SPA)
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Assets estáticos: sí se pueden cachear (antes se forzaba no-cache en todo el sitio)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
 </IfModule>

@@ -34,6 +34,11 @@
     return (raw === undefined || raw === null || raw === '') ? def : raw;
   }
   function must(cond, msg){ if(!cond) throw new Error(msg); }
+  function escapeHtml(str){
+    var d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
   function faseMul(tipo){ return tipo === 'trifasico' ? Math.sqrt(3) : (tipo === 'trifasico_ln' ? 1 : 2); }
 
   var RHO = { cobre: 0.017241, aluminio: 0.028264 }; // Ω·mm²/m a 20°C
@@ -60,26 +65,101 @@
   ];
 
   /* ---------- Categorías ---------- */
+  var ICONS = {
+    rayo: '<path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/>',
+    bricks: '<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/>',
+    wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/>',
+    house: '<path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/>',
+    ruler: '<path d="M3 21 21 3"/><path d="M7 17l2 2M11 13l2 2M15 9l2 2"/>',
+    gauge: '<circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5 9 10M8.3 13.5H7M17 13.5h-1.3M9.6 7.6l.6 1M14.4 7.6l-.6 1"/>',
+    plug: '<path d="M8 3v4M16 3v4"/><rect x="6" y="7" width="12" height="6.5" rx="2"/><path d="M12 13.5v3a3 3 0 0 1-3 3H7.5"/>',
+    chip: '<rect x="4" y="9" width="16" height="6" rx="1.3"/><path d="M4 12H1.3M22.7 12H20M7.3 9v6M10.6 9v6M13.4 9v6M16.7 9v6"/>',
+    coil: '<path d="M2.5 12c1.4 0 1.4-4.2 2.8-4.2S6.7 12 8.1 12s1.4-4.2 2.8-4.2S12.3 12 13.7 12s1.4-4.2 2.8-4.2S17.9 12 19.3 12s1.4-4.2 2.2-4.2"/>',
+    battery: '<rect x="3" y="8" width="15" height="8" rx="1.4"/><path d="M18 10.3h2.7v3.4H18"/><path d="M7 12h6"/>',
+    tiles: '<path d="M3 8h18M3 16h18M8 3v18M16 3v18"/>',
+    brush: '<path d="M20 4c-4 0-9 1-12.5 4.5S3 16 3 20c4 0 9-1 12.5-4.5S20 8 20 4Z"/><circle cx="8.5" cy="15.5" r="1.4"/>'
+  };
   var GRUPOS = [
-    {id:'electricidad', nombre:'⚡ Electricidad'},
-    {id:'construccion', nombre:'🧱 Materiales y construcción'},
-    {id:'instalaciones', nombre:'🚿 Instalaciones'},
-    {id:'reformas', nombre:'🏠 Reformas'},
-    {id:'geometria', nombre:'📐 Geometría y conversores'}
+    {id:'electricidad', nombre:'Electricidad', icon:'rayo', color:'#C77C1E'},
+    {id:'construccion', nombre:'Materiales y construcción', icon:'bricks', color:'#7458C2'},
+    {id:'instalaciones', nombre:'Instalaciones', icon:'wrench', color:'#C05A3A'},
+    {id:'reformas', nombre:'Reformas', icon:'house', color:'#2E8F6E'},
+    {id:'geometria', nombre:'Geometría y conversores', icon:'ruler', color:'#3E5FBF'},
+    {id:'avanzado', nombre:'Electrónica avanzada (opcional)', icon:'chip', color:'#8f8878', colapsado:true}
   ];
   var CATEGORIAS = [
-    {id:'fundamentales', grupo:'electricidad', nombre:'Fundamentales', icono:'Ω', desc:'Ley de Ohm, potencias, resistencia e impedancia'},
-    {id:'instalacion', grupo:'electricidad', nombre:'Instalación y conductores', icono:'⏚', desc:'Dimensionamiento, caídas de tensión, cortocircuitos y protecciones'},
-    {id:'componentes', grupo:'electricidad', nombre:'Componentes electrónicos', icono:'▭', desc:'Códigos de colores, SMD, condensadores, fusibles y más'},
-    {id:'transformadores', grupo:'electricidad', nombre:'Transformadores y potencia', icono:'◈', desc:'Relación de transformación y corrección del factor de potencia'},
-    {id:'utilidades', grupo:'electricidad', nombre:'Utilidades', icono:'✦', desc:'Baterías, antenas, CCTV, sensores y efecto Joule'},
-    {id:'materiales', grupo:'construccion', nombre:'Materiales de obra', icono:'🧱', desc:'Ladrillos, mortero, cemento, hormigón, yeso, pladur y aislamiento'},
-    {id:'suelos', grupo:'construccion', nombre:'Suelos y revestimientos', icono:'▦', desc:'Baldosas, tarima, rodapié, mortero cola y juntas'},
-    {id:'pintura', grupo:'construccion', nombre:'Pintura', icono:'🎨', desc:'Superficie a pintar, litros necesarios y coste orientativo'},
-    {id:'fontaneria', grupo:'instalaciones', nombre:'Fontanería', icono:'🚿', desc:'Tuberías, puntos de agua, pendientes y depósitos'},
-    {id:'reformas', grupo:'reformas', nombre:'Reformas', icono:'🏠', desc:'Estimación de materiales completa para una estancia'},
-    {id:'geometria', grupo:'geometria', nombre:'Geometría y conversores', icono:'📐', desc:'Áreas, volúmenes, escaleras, pendientes y conversión de unidades'}
+    {id:'fundamentales', grupo:'electricidad', nombre:'Fundamentales', icon:'gauge', desc:'Ley de Ohm, potencias, resistencia e impedancia'},
+    {id:'instalacion', grupo:'electricidad', nombre:'Instalación y conductores', icon:'plug', desc:'Dimensionamiento, caídas de tensión, cortocircuitos y protecciones'},
+    {id:'componentes', grupo:'avanzado', nombre:'Componentes electrónicos', icon:'chip', desc:'Códigos de colores, SMD, condensadores, fusibles y más'},
+    {id:'transformadores', grupo:'avanzado', nombre:'Transformadores y potencia', icon:'coil', desc:'Relación de transformación y corrección del factor de potencia'},
+    {id:'utilidades', grupo:'avanzado', nombre:'Utilidades', icon:'battery', desc:'Baterías, antenas, CCTV, sensores y efecto Joule'},
+    {id:'materiales', grupo:'construccion', nombre:'Materiales de obra', icon:'bricks', desc:'Ladrillos, mortero, cemento, hormigón, yeso, pladur y aislamiento'},
+    {id:'suelos', grupo:'construccion', nombre:'Suelos y revestimientos', icon:'tiles', desc:'Baldosas, tarima, rodapié, mortero cola y juntas'},
+    {id:'pintura', grupo:'construccion', nombre:'Pintura', icon:'brush', desc:'Superficie a pintar, litros necesarios y coste orientativo'},
+    {id:'fontaneria', grupo:'instalaciones', nombre:'Fontanería', icon:'wrench', desc:'Tuberías, puntos de agua, pendientes y depósitos'},
+    {id:'reformas', grupo:'reformas', nombre:'Reformas', icon:'house', desc:'Estimación de materiales completa para una estancia'},
+    {id:'geometria', grupo:'geometria', nombre:'Geometría y conversores', icon:'ruler', desc:'Áreas, volúmenes, escaleras, pendientes y conversión de unidades'}
   ];
+  /* Taxonomía por oficio: agrupa categorías técnicas tal y como las
+     piensa un profesional (no por rama de física/materiales). Solo
+     Electricista tiene suficiente volumen para justificar pestañas
+     por modo de uso; el resto muestra sus calculadoras en una lista
+     única. Las categorías que no encajan en ningún oficio concreto
+     (electrónica avanzada, geometría) siguen accesibles como
+     "categorías técnicas" en la portada. */
+  var OFICIOS = [
+    {id:'electricista', nombre:'Electricista', icon:'rayo', color:'#C77C1E', cats:['fundamentales','instalacion'],
+      desc:'Sección de cable, caídas de tensión, protecciones y cuadros REBT.'},
+    {id:'fontanero', nombre:'Fontanero', icon:'wrench', color:'#2E6FA6', cats:['fontaneria'],
+      desc:'Tuberías, puntos de agua, pendientes y depósitos.'},
+    {id:'albanil', nombre:'Albañil', icon:'bricks', color:'#7458C2', cats:['materiales','suelos'],
+      desc:'Ladrillos, mortero, cemento, hormigón, suelos y revestimientos.'},
+    {id:'reformista', nombre:'Reformista', icon:'house', color:'#2E8F6E', cats:['reformas','pintura'],
+      desc:'Pintura, estimación de materiales y reforma completa de una estancia.'}
+  ];
+  function catsDeOficio(of){ return CATEGORIAS.filter(function(c){ return of.cats.indexOf(c.id) !== -1; }); }
+  function oficioDeCategoria(catId){ return OFICIOS.filter(function(of){ return of.cats.indexOf(catId) !== -1; })[0]; }
+
+  /* Pestañas por modo de uso, solo para Electricista: separan las
+     calculadoras de uso diario en obra de las de cálculo normativo
+     avanzado y de las puramente teóricas, para no mezclarlas en una
+     única lista de 30+ resultados. */
+  var TABS_ELECTRICISTA = [
+    {id:'diario', nombre:'Uso diario', calcs:['dimensionamiento_conductores','instalacion_completa','caida_tension','longitud_max_dv','capacidad_corriente_aislados','dimensionamiento_protecciones','cuadro_mando_general','corriente_empleo','corriente']},
+    {id:'normativo', nombre:'Cálculo normativo', calcs:['dimensionamiento_conductores_protecciones','longitud_max_icc','capacidad_corriente_barras','dimensionamiento_conductos_bandejas','proteccion_cortocircuito','energia_especifica_cable','temperatura_cable','perdidas_potencia_cables','corriente_neutro','caida_tension_cargas_distribuidas','dimensionamiento_cargas_distribuidas','puesta_tierra','cortocircuito_minimo','cortocircuito_punto_especifico','cortocircuito_subestacion','riesgo_sobretension','proteccion_alumbrado_emergencia']},
+    {id:'teoria', nombre:'Teoría y fórmulas', calcs:['ohm','tension','resistencia','potencia_activa','potencia_aparente','potencia_reactiva','factor_potencia','impedancia','reactancia']}
+  ];
+  /* Albañil tiene volumen suficiente (13 calculadoras) para separar
+     materiales de obra de suelos y revestimientos. Fontanero (6) y
+     Reformista (4, con la estimación combinada ya destacada) se quedan
+     con una lista única: dividirlas en pestañas no aportaría nada con
+     tan pocas calculadoras. */
+  var TABS_ALBANIL = [
+    {id:'materiales', nombre:'Materiales de obra', calcs:['tabique_completo','ladrillos_bloques','mortero_albanileria','cemento_arena','hormigon','grava_arido','yeso_enlucido','pladur','aislamiento']},
+    {id:'suelos', nombre:'Suelos y revestimientos', calcs:['baldosas_azulejos','tarima_parquet','rodapie','mortero_cola','juntas_alicatado']}
+  ];
+
+  function tabsDeOficio(ofId){
+    if(ofId === 'electricista') return TABS_ELECTRICISTA;
+    if(ofId === 'albanil') return TABS_ALBANIL;
+    return null;
+  }
+
+  function grupoDe(cat){ return GRUPOS.filter(function(g){ return g.id === cat.grupo; })[0]; }
+  function catIconHTML(cat, size){
+    var g = grupoDe(cat);
+    var s = size || 32;
+    return '<span class="cec-mic" style="background:' + g.color + '; width:' + s + 'px; height:' + s + 'px;"><svg viewBox="0 0 24 24">' + ICONS[cat.icon] + '</svg></span>';
+  }
+  function grupoIconHTML(g, size){
+    var s = size || 26;
+    return '<span class="cec-mic" style="background:' + g.color + '; width:' + s + 'px; height:' + s + 'px;"><svg viewBox="0 0 24 24">' + ICONS[g.icon] + '</svg></span>';
+  }
+  function calcIconHTML(c, size){
+    if(c.icono) return '<span class="cec-mic-formula">' + c.icono + '</span>';
+    var cat = CATEGORIAS.filter(function(x){ return x.id === c.cat; })[0];
+    return catIconHTML(cat, size);
+  }
 
   /* ============================================================
      CATEGORÍA: FUNDAMENTALES
@@ -280,6 +360,98 @@
      ============================================================ */
   var INSTALACION = [
     {
+      id:'cuadro_mando_general', cat:'instalacion', icono:'⏚', titulo:'Cuadro de mando general de la vivienda (REBT)',
+      contieneMaterial:true,
+      info:'Lista de protecciones (IGA, diferenciales, automáticos) y metros de cable por circuito según el grado de electrificación de la ITC-BT-25. Valores orientativos y editables: comprueba siempre el proyecto y la normativa vigente antes de comprar el material.',
+      fields:[
+        {key:'suministro', label:'Tipo de suministro', type:'select', options:[
+          {value:'mono', label:'Monofásico (230V)'}, {value:'tri', label:'Trifásico (400V)'}
+        ], def:'mono'},
+        {key:'grado', label:'Grado de electrificación', type:'select', options:[
+          {value:'basica', label:'Básica (mín. 5.750 W) — circuitos C1 a C5'},
+          {value:'elevada', label:'Elevada (mín. 9.200 W) — C1 a C5 + circuitos adicionales'}
+        ], def:'basica'},
+        {key:'m_c1', label:'C1 · Iluminación', unit:'m', type:'number', def:25},
+        {key:'m_c2', label:'C2 · Tomas de uso general y frigorífico', unit:'m', type:'number', def:40},
+        {key:'m_c3', label:'C3 · Cocina y horno', unit:'m', type:'number', def:6},
+        {key:'m_c4', label:'C4 · Lavadora, lavavajillas y termo eléctrico', unit:'m', type:'number', def:8},
+        {key:'m_c5', label:'C5 · Baño y auxiliar de cocina', unit:'m', type:'number', def:10},
+        {key:'m_c7', label:'C7 · Calefacción (solo si es grado elevado; 0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c8', label:'C8 · Aire acondicionado (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c9', label:'C9 · Secadora independiente (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c10', label:'C10 · Automatización y seguridad (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c11', label:'C11 · Punto adicional de tomas/baño (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'m_c12', label:'C12 · Punto adicional de cocina/electrodomésticos (0 = no incluir)', unit:'m', type:'number', def:0},
+        {key:'dps', label:'Protección contra sobretensiones (DPS, ITC-BT-23)', type:'select', options:[
+          {value:'no', label:'No incluir'}, {value:'si', label:'Incluir'}
+        ], def:'no'}
+      ],
+      compute:function(v){
+        var suministro = gv(v,'suministro','mono'), grado = gv(v,'grado','basica'), dps = gv(v,'dps','no');
+        var esElevada = grado === 'elevada';
+        var polosPrincipal = suministro === 'tri' ? '4P (tetrapolar)' : '2P (bipolar)';
+        var polosCircuito = '2P (bipolar)'; // los circuitos de una vivienda son monofásicos aunque el suministro general sea trifásico
+
+        var CIRCUITOS = [
+          {id:'C1', nombre:'Iluminación', pia:10, mm2:1.5, key:'m_c1', siempre:true},
+          {id:'C2', nombre:'Tomas de uso general y frigorífico', pia:16, mm2:2.5, key:'m_c2', siempre:true},
+          {id:'C3', nombre:'Cocina y horno', pia:25, mm2:6, key:'m_c3', siempre:true},
+          {id:'C4', nombre:'Lavadora, lavavajillas y termo eléctrico', pia:20, mm2:4, key:'m_c4', siempre:true},
+          {id:'C5', nombre:'Baño y auxiliar de cocina', pia:16, mm2:2.5, key:'m_c5', siempre:true},
+          {id:'C7', nombre:'Calefacción', pia:16, mm2:2.5, key:'m_c7'},
+          {id:'C8', nombre:'Aire acondicionado', pia:25, mm2:6, key:'m_c8'},
+          {id:'C9', nombre:'Secadora independiente', pia:16, mm2:2.5, key:'m_c9'},
+          {id:'C10', nombre:'Automatización y seguridad', pia:10, mm2:1.5, key:'m_c10'},
+          {id:'C11', nombre:'Punto adicional de tomas/baño', pia:16, mm2:2.5, key:'m_c11'},
+          {id:'C12', nombre:'Punto adicional de cocina/electrodomésticos', pia:20, mm2:4, key:'m_c12'}
+        ];
+
+        // Los circuitos C1-C5 siempre se incluyen; los C7-C12 solo si tienen metros > 0 y el grado es elevado
+        var incluidos = CIRCUITOS.map(function(def){
+          var metros = gnOpt(v, def.key, 0);
+          if(!def.siempre){
+            if(!esElevada || metros <= 0) return null;
+          }
+          return {id:def.id, nombre:def.nombre, pia:def.pia, mm2:def.mm2, metros:metros};
+        }).filter(Boolean);
+
+        must(incluidos.some(function(c){ return c.metros > 0; }), 'Indica al menos los metros de cable de un circuito');
+
+        var igaA = esElevada ? 63 : 40;
+        var numDiferenciales = esElevada ? 2 : 1;
+
+        var res = [];
+        res.push({label:'Suministro', value: suministro === 'tri' ? 'Trifásico (400V)' : 'Monofásico (230V)', unit:''});
+        res.push({label:'Grado de electrificación', value: esElevada ? 'Elevada' : 'Básica', unit:''});
+        res.push({label:'IGA (interruptor general automático)', value: igaA + 'A, ' + polosPrincipal, unit:''});
+        res.push({label:'Diferencial(es) 30mA (tipo AC/A)', value: numDiferenciales + ' × 40A, ' + polosPrincipal, unit:''});
+        if(esElevada) res.push({label:'Distribución habitual de diferenciales', value:'1º: C1, C2, C5, C7, C8, C10, C11 · 2º: C3, C4, C9, C12', unit:''});
+        if(dps === 'si') res.push({label:'Protector de sobretensiones (DPS tipo 2)', value:'1', unit:'ud, ITC-BT-23'});
+
+        var porAmperaje = {};
+        incluidos.forEach(function(c){
+          if(c.metros <= 0) return;
+          porAmperaje[c.pia] = (porAmperaje[c.pia]||0) + 1;
+        });
+        Object.keys(porAmperaje).map(Number).sort(function(a,b){ return a-b; }).forEach(function(a){
+          res.push({label:'Automático (PIA) ' + polosCircuito + ' · ' + a + 'A', value: porAmperaje[a], unit:'uds'});
+        });
+
+        var porSeccion = {};
+        incluidos.forEach(function(c){
+          if(c.metros <= 0) return;
+          porSeccion[c.mm2] = (porSeccion[c.mm2]||0) + c.metros;
+        });
+        Object.keys(porSeccion).map(Number).sort(function(a,b){ return a-b; }).forEach(function(s){
+          res.push({label:'Cable ' + s + 'mm²', value: fmt(porSeccion[s],1), unit:'m'});
+        });
+
+        res.push({label:'Circuitos incluidos', value: incluidos.filter(function(c){ return c.metros>0; }).map(function(c){ return c.id + ' ' + c.nombre; }).join(' · '), unit:''});
+
+        return res;
+      }
+    },
+    {
       id:'dimensionamiento_conductores', cat:'instalacion', icono:'⏚', titulo:'Dimensionamiento de conductores',
       info:'Sección orientativa por densidad de corriente admisible según material y método de instalación (valores simplificados; verifica siempre con las tablas de tu normativa vigente).',
       fields:[
@@ -302,6 +474,57 @@
         return [
           {label:'Sección mínima calculada', value: fmt(S,2), unit:'mm²'},
           {label:'Sección normalizada recomendada', value: fmt(Snorm,2), unit:'mm²'}
+        ];
+      }
+    },
+    {
+      id:'instalacion_completa', cat:'instalacion', titulo:'Instalación completa (sección + caída + protección)',
+      destacada:true,
+      info:'Asistente que encadena tres cálculos a partir de los datos de tu instalación: corriente de empleo, sección de cable recomendada, caída de tensión resultante y protección normalizada.',
+      fields:[
+        {key:'P', label:'Potencia', unit:'W', type:'number'},
+        {key:'V', label:'Tensión', unit:'V', type:'number', def:230},
+        {key:'L', label:'Longitud del cable (un sentido)', unit:'m', type:'number'},
+        {key:'cosphi', label:'Factor de potencia (cosφ)', unit:'', type:'number', def:1},
+        {key:'tipo', label:'Tipo de suministro', type:'select', options:[
+          {value:'monofasico', label:'Monofásico'}, {value:'trifasico', label:'Trifásico'}
+        ], def:'monofasico'},
+        {key:'material', label:'Material del conductor', type:'select', options:[{value:'cobre',label:'Cobre'},{value:'aluminio',label:'Aluminio'}], def:'cobre'},
+        {key:'metodo', label:'Método de instalación', type:'select', options:[
+          {value:'enterrado', label:'Enterrado / bajo tubo empotrado'},
+          {value:'bandeja', label:'Al aire / bandeja perforada'},
+          {value:'tubo_superficie', label:'Bajo tubo en superficie'}
+        ], def:'bandeja'}
+      ],
+      compute:function(v){
+        var corrienteCalc = CALCULADORAS.filter(function(c){ return c.id === 'corriente'; })[0];
+        var seccionCalc = CALCULADORAS.filter(function(c){ return c.id === 'dimensionamiento_conductores'; })[0];
+        var caidaCalc = CALCULADORAS.filter(function(c){ return c.id === 'caida_tension'; })[0];
+        var proteccionCalc = CALCULADORAS.filter(function(c){ return c.id === 'dimensionamiento_protecciones'; })[0];
+
+        var resCorriente = corrienteCalc.compute(v);
+        var Ib = gn(resCorriente[0], 'value');
+
+        var resSeccion = seccionCalc.compute({Ib: Ib, material: v.material, metodo: v.metodo});
+        var Snorm = gn(resSeccion[1], 'value');
+
+        var resCaida = caidaCalc.compute({L: v.L, I: Ib, S: Snorm, V: v.V, cosphi: v.cosphi, material: v.material, tipo: v.tipo});
+        var dUp = gn(resCaida[1], 'value');
+
+        // Iz estimada con la misma densidad de corriente orientativa que usa
+        // "Dimensionamiento de conductores" — no sustituye las tablas de ampacidad
+        // oficiales de tu normativa (ver aviso en esa calculadora).
+        var densidad = { enterrado: 5, tubo_superficie: 6, bandeja: 8 }[v.metodo || 'bandeja'];
+        if((v.material || 'cobre') === 'aluminio') densidad *= 0.78;
+        var IzEstimada = Snorm * densidad;
+        var resProteccion = proteccionCalc.compute({Ib: Ib, Iz: IzEstimada});
+
+        return [
+          {label:'Corriente de empleo (Ib)', value: fmt(Ib,2), unit:'A'},
+          {label:'Sección de cable recomendada', value: fmt(Snorm,2), unit:'mm²'},
+          {label:'Caída de tensión', value: fmt(dUp,2), unit:'%'},
+          {label:'¿Cumple caída máxima admitida (3%)?', value: dUp <= 3 ? 'Sí' : 'No — revisa sección o longitud', unit:''},
+          {label:'Protección recomendada', value: resProteccion[0].value, unit:'A'}
         ];
       }
     },
@@ -669,7 +892,7 @@
       }
     },
     {
-      id:'riesgo_sobretension', cat:'instalacion', icono:'⚡', titulo:'Evaluación del riesgo de sobretensiones de origen atmosférico',
+      id:'riesgo_sobretension', cat:'instalacion', titulo:'Evaluación del riesgo de sobretensiones de origen atmosférico',
       info:'Estimación simplificada del riesgo relativo según densidad de rayos de la zona y nivel de protección; solo orientativa — el cálculo completo de riesgo conforme a IEC 62305-2 requiere un estudio detallado por un técnico.',
       fields:[
         {key:'Ng', label:'Densidad de rayos de la zona', unit:'rayos/km²/año', type:'number', def:2.5},
@@ -1081,7 +1304,7 @@
      ============================================================ */
   var UTILIDADES = [
     {
-      id:'duracion_bateria', cat:'utilidades', icono:'🔋', titulo:'Duración de la batería',
+      id:'duracion_bateria', cat:'utilidades', titulo:'Duración de la batería',
       info:'t = (Capacidad · Vbat · eficiencia) / Pconsumo',
       fields:[
         {key:'capacidad', label:'Capacidad de la batería', unit:'Ah', type:'number'},
@@ -1097,7 +1320,7 @@
       }
     },
     {
-      id:'longitud_antena', cat:'utilidades', icono:'📡', titulo:'Longitud de la antena',
+      id:'longitud_antena', cat:'utilidades', titulo:'Longitud de la antena',
       info:'Antena de cuarto de onda: L = c/(4·f). Antena de media onda: L = c/(2·f). c = 3×10⁸ m/s',
       fields:[
         {key:'f', label:'Frecuencia', unit:'MHz', type:'number'},
@@ -1114,7 +1337,7 @@
       }
     },
     {
-      id:'cctv_disco_duro', cat:'utilidades', icono:'💾', titulo:'CCTV: dimensionamiento de disco duro',
+      id:'cctv_disco_duro', cat:'utilidades', titulo:'CCTV: dimensionamiento de disco duro',
       info:'Almacenamiento(GB) = bitrate(Mbps) × canales × horas/día × días de grabación / 8',
       fields:[
         {key:'bitrate', label:'Bitrate por cámara', unit:'Mbps', type:'number', def:4},
@@ -1148,7 +1371,7 @@
       }
     },
     {
-      id:'sensores_temperatura', cat:'utilidades', icono:'🌡', titulo:'Sensores de temperatura (PT100/PT1000/Ni/Cu, NTC)',
+      id:'sensores_temperatura', cat:'utilidades', titulo:'Sensores de temperatura (PT100/PT1000/Ni/Cu, NTC)',
       info:'Aproximación lineal R = R0·(1 + α·ΔT), válida en un rango moderado alrededor de 0°C',
       fields:[
         {key:'tipo', label:'Tipo de sensor', type:'select', options:[
@@ -1194,7 +1417,41 @@
      ============================================================ */
   var MATERIALES = [
     {
-      id:'ladrillos_bloques', cat:'materiales', icono:'🧱', titulo:'Ladrillos / bloques necesarios',
+      id:'tabique_completo', cat:'materiales', titulo:'Tabique completo (ladrillos + mortero + enlucido)',
+      destacada:true,
+      info:'Asistente que encadena tres cálculos a partir de la superficie del tabique: piezas necesarias, mortero de asiento y yeso de enlucido.',
+      fields:[
+        {key:'area', label:'Superficie del tabique', unit:'m²', type:'number'},
+        {key:'tipo', label:'Tipo de pieza', type:'select', options:[
+          {value:'50', label:'Ladrillo hueco doble (≈50 uds/m²)'},
+          {value:'27', label:'Ladrillo perforado/tochana (≈27 uds/m²)'},
+          {value:'12.5', label:'Bloque de hormigón 40×20×20 (≈12.5 uds/m²)'},
+          {value:'9', label:'Bloque termoarcilla (≈9 uds/m²)'}
+        ], def:'50'},
+        {key:'espesor_mortero', label:'Espesor de la capa de mortero de asiento', unit:'cm', type:'number', def:1.5},
+        {key:'espesor_yeso', label:'Espesor de la capa de yeso de enlucido', unit:'mm', type:'number', def:15},
+        {key:'merma', label:'Merma general', unit:'%', type:'number', def:10}
+      ],
+      compute:function(v){
+        var ladrillosCalc = CALCULADORAS.filter(function(c){ return c.id === 'ladrillos_bloques'; })[0];
+        var morteroCalc = CALCULADORAS.filter(function(c){ return c.id === 'mortero_albanileria'; })[0];
+        var yesoCalc = CALCULADORAS.filter(function(c){ return c.id === 'yeso_enlucido'; })[0];
+
+        var resLadrillos = ladrillosCalc.compute({area: v.area, tipo: v.tipo, merma: v.merma});
+        var resMortero = morteroCalc.compute({area: v.area, espesor: v.espesor_mortero, merma: v.merma});
+        var resYeso = yesoCalc.compute({area: v.area, espesor: v.espesor_yeso, merma: v.merma});
+
+        return [
+          {label:'Piezas necesarias', value: resLadrillos[0].value, unit:'uds'},
+          {label:'Mortero de asiento', value: resMortero[0].value, unit:'kg'},
+          {label:'Sacos de mortero (25 kg)', value: resMortero[1].value, unit:'sacos'},
+          {label:'Yeso de enlucido', value: resYeso[0].value, unit:'kg'},
+          {label:'Sacos de yeso (25 kg)', value: resYeso[1].value, unit:'sacos'}
+        ];
+      }
+    },
+    {
+      id:'ladrillos_bloques', cat:'materiales', titulo:'Ladrillos / bloques necesarios',
       info:'Unidades = superficie de pared × piezas por m² × (1 + merma). Piezas/m² orientativas según tipo de fábrica.',
       fields:[
         {key:'area', label:'Superficie de pared', unit:'m²', type:'number'},
@@ -1213,33 +1470,35 @@
       }
     },
     {
-      id:'mortero_albanileria', cat:'materiales', icono:'🧱', titulo:'Mortero de albañilería',
-      info:'kg = superficie × espesor(cm) × consumo por cm de espesor (orientativo ≈17 kg/m²/cm)',
+      id:'mortero_albanileria', cat:'materiales', titulo:'Mortero de albañilería',
+      info:'kg = superficie × espesor(cm) × consumo por cm de espesor (orientativo ≈17 kg/m²/cm), con merma por mermado/derrame',
       fields:[
         {key:'area', label:'Superficie a asentar/enlucir', unit:'m²', type:'number'},
         {key:'espesor', label:'Espesor de la capa', unit:'cm', type:'number', def:1.5},
-        {key:'consumo', label:'Consumo por cm de espesor', unit:'kg/m²/cm', type:'number', def:17}
+        {key:'consumo', label:'Consumo por cm de espesor', unit:'kg/m²/cm', type:'number', def:17},
+        {key:'merma', label:'Merma por derrame/mermado', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), esp = gn(v,'espesor'), cons = gnOpt(v,'consumo',17);
-        var kg = area*esp*cons;
+        var area = gn(v,'area'), esp = gn(v,'espesor'), cons = gnOpt(v,'consumo',17), merma = gnOpt(v,'merma',10);
+        var kg = area*esp*cons*(1+merma/100);
         return [{label:'Mortero necesario', value: fmt(kg,1), unit:'kg'},
                 {label:'Sacos de 25 kg', value: fmt(Math.ceil(kg/25),0), unit:'sacos'}];
       }
     },
     {
-      id:'cemento_arena', cat:'materiales', icono:'🧱', titulo:'Cemento y arena (dosificación)',
-      info:'A partir del volumen total de mezcla y la proporción cemento:arena en volumen (densidades orientativas: cemento 1400 kg/m³, arena 1500 kg/m³)',
+      id:'cemento_arena', cat:'materiales', titulo:'Cemento y arena (dosificación)',
+      info:'A partir del volumen total de mezcla y la proporción cemento:arena en volumen (densidades orientativas: cemento 1400 kg/m³, arena 1500 kg/m³), con merma por derrame',
       fields:[
         {key:'volumen', label:'Volumen total de mezcla', unit:'m³', type:'number'},
         {key:'proporcion', label:'Proporción cemento:arena', type:'select', options:[
           {value:'2', label:'1:2 (muy resistente)'}, {value:'3', label:'1:3 (habitual)'},
           {value:'4', label:'1:4'}, {value:'5', label:'1:5 (poco exigente)'}
-        ], def:'3'}
+        ], def:'3'},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var vol = gn(v,'volumen'), r = gn(v,'proporcion');
-        var volCemento = vol/(1+r), volArena = vol*r/(1+r);
+        var vol = gn(v,'volumen'), r = gn(v,'proporcion'), merma = gnOpt(v,'merma',5);
+        var volCemento = vol/(1+r)*(1+merma/100), volArena = vol*r/(1+r)*(1+merma/100);
         var kgCemento = volCemento*1400, kgArena = volArena*1500;
         return [
           {label:'Cemento', value: fmt(kgCemento,0), unit:'kg'},
@@ -1249,16 +1508,17 @@
       }
     },
     {
-      id:'hormigon', cat:'materiales', icono:'🧱', titulo:'Hormigón necesario',
-      info:'Volumen = largo × ancho × profundidad. Cemento orientativo ≈300 kg/m³ para hormigón en masa tipo HM-20',
+      id:'hormigon', cat:'materiales', titulo:'Hormigón necesario',
+      info:'Volumen = largo × ancho × profundidad, con margen por irregularidades del encofrado/terreno. Cemento orientativo ≈300 kg/m³ para hormigón en masa tipo HM-20',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
         {key:'ancho', label:'Ancho', unit:'m', type:'number'},
-        {key:'profundidad', label:'Profundidad / espesor', unit:'m', type:'number'}
+        {key:'profundidad', label:'Profundidad / espesor', unit:'m', type:'number'},
+        {key:'merma', label:'Margen por encofrado/terreno irregular', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad');
-        var vol = l*a*p;
+        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad'), merma = gnOpt(v,'merma',5);
+        var vol = l*a*p*(1+merma/100);
         return [
           {label:'Volumen de hormigón', value: fmt(vol,3), unit:'m³'},
           {label:'Cemento orientativo (≈300 kg/m³)', value: fmt(vol*300,0), unit:'kg'}
@@ -1266,16 +1526,17 @@
       }
     },
     {
-      id:'grava_arido', cat:'materiales', icono:'🪨', titulo:'Grava / árido necesario',
-      info:'Volumen = largo × ancho × profundidad. Densidad orientativa del árido ≈1.5 t/m³',
+      id:'grava_arido', cat:'materiales', titulo:'Grava / árido necesario',
+      info:'Volumen = largo × ancho × profundidad, con margen por asentamiento/irregularidades. Densidad orientativa del árido ≈1.5 t/m³',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
         {key:'ancho', label:'Ancho', unit:'m', type:'number'},
-        {key:'profundidad', label:'Profundidad de la capa', unit:'m', type:'number'}
+        {key:'profundidad', label:'Profundidad de la capa', unit:'m', type:'number'},
+        {key:'merma', label:'Margen por asentamiento', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad');
-        var vol = l*a*p;
+        var l = gn(v,'largo'), a = gn(v,'ancho'), p = gn(v,'profundidad'), merma = gnOpt(v,'merma',10);
+        var vol = l*a*p*(1+merma/100);
         return [
           {label:'Volumen de árido', value: fmt(vol,3), unit:'m³'},
           {label:'Peso orientativo (≈1.5 t/m³)', value: fmt(vol*1.5,2), unit:'t'}
@@ -1283,28 +1544,30 @@
       }
     },
     {
-      id:'yeso_enlucido', cat:'materiales', icono:'🧱', titulo:'Yeso / enlucido',
-      info:'kg ≈ superficie × espesor(mm) × 1 kg/m²/mm (regla orientativa habitual)',
+      id:'yeso_enlucido', cat:'materiales', titulo:'Yeso / enlucido',
+      info:'kg ≈ superficie × espesor(mm) × 1 kg/m²/mm (regla orientativa habitual), con merma por derrame',
       fields:[
         {key:'area', label:'Superficie a enlucir', unit:'m²', type:'number'},
-        {key:'espesor', label:'Espesor de la capa', unit:'mm', type:'number', def:15}
+        {key:'espesor', label:'Espesor de la capa', unit:'mm', type:'number', def:15},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), esp = gn(v,'espesor');
-        var kg = area*esp;
+        var area = gn(v,'area'), esp = gn(v,'espesor'), merma = gnOpt(v,'merma',10);
+        var kg = area*esp*(1+merma/100);
         return [{label:'Yeso necesario', value: fmt(kg,0), unit:'kg'},
                 {label:'Sacos de 25 kg', value: fmt(Math.ceil(kg/25),0), unit:'sacos'}];
       }
     },
     {
-      id:'pladur', cat:'materiales', icono:'🧱', titulo:'Pladur / placas de yeso laminado',
-      info:'Placa estándar 1.2×2.4 m ≈2.88 m², con 10% de merma para cortes',
+      id:'pladur', cat:'materiales', titulo:'Pladur / placas de yeso laminado',
+      info:'Placa estándar 1.2×2.4 m ≈2.88 m², con merma editable para cortes',
       fields:[
-        {key:'area', label:'Superficie a cubrir (ambas caras si aplica)', unit:'m²', type:'number'}
+        {key:'area', label:'Superficie a cubrir (ambas caras si aplica)', unit:'m²', type:'number'},
+        {key:'merma', label:'Merma para cortes', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area');
-        var placas = Math.ceil((area*1.1)/2.88);
+        var area = gn(v,'area'), merma = gnOpt(v,'merma',10);
+        var placas = Math.ceil((area*(1+merma/100))/2.88);
         return [
           {label:'Placas necesarias', value: fmt(placas,0), unit:'uds'},
           {label:'Perfilería orientativa', value: fmt(Math.round(area*0.9),0), unit:'m lineales'},
@@ -1313,16 +1576,17 @@
       }
     },
     {
-      id:'aislamiento', cat:'materiales', icono:'🧱', titulo:'Aislamiento (paneles / rollos)',
-      info:'Nº de paquetes = superficie × 1.05 (merma) / superficie que cubre cada paquete',
+      id:'aislamiento', cat:'materiales', titulo:'Aislamiento (paneles / rollos)',
+      info:'Nº de paquetes = superficie × (1 + merma) / superficie que cubre cada paquete',
       fields:[
         {key:'area', label:'Superficie a aislar', unit:'m²', type:'number'},
-        {key:'cobertura', label:'Superficie que cubre cada rollo/panel', unit:'m²', type:'number', def:8}
+        {key:'cobertura', label:'Superficie que cubre cada rollo/panel', unit:'m²', type:'number', def:8},
+        {key:'merma', label:'Merma por solapes/recortes', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var area = gn(v,'area'), cob = gn(v,'cobertura');
+        var area = gn(v,'area'), cob = gn(v,'cobertura'), merma = gnOpt(v,'merma',5);
         must(cob > 0, 'La cobertura debe ser mayor que 0');
-        return [{label:'Rollos / paneles necesarios', value: fmt(Math.ceil((area*1.05)/cob),0), unit:'uds'}];
+        return [{label:'Rollos / paneles necesarios', value: fmt(Math.ceil((area*(1+merma/100))/cob),0), unit:'uds'}];
       }
     }
   ];
@@ -1332,7 +1596,7 @@
      ============================================================ */
   var PINTURA = [
     {
-      id:'superficie_pintura', cat:'pintura', icono:'🎨', titulo:'Superficie a pintar',
+      id:'superficie_pintura', cat:'pintura', titulo:'Superficie a pintar',
       info:'Área de paredes = perímetro × altura − huecos de puertas/ventanas. Techo opcional aparte.',
       fields:[
         {key:'largo', label:'Largo de la habitación', unit:'m', type:'number'},
@@ -1352,17 +1616,18 @@
       }
     },
     {
-      id:'litros_pintura', cat:'pintura', icono:'🎨', titulo:'Litros de pintura necesarios',
-      info:'Litros = superficie × nº de manos / rendimiento del producto',
+      id:'litros_pintura', cat:'pintura', titulo:'Litros de pintura necesarios',
+      info:'Litros = superficie × nº de manos / rendimiento del producto, con margen para retoques',
       fields:[
         {key:'area', label:'Superficie a pintar', unit:'m²', type:'number'},
         {key:'rendimiento', label:'Rendimiento de la pintura', unit:'m²/litro', type:'number', def:6},
-        {key:'manos', label:'Número de manos', unit:'', type:'number', def:2}
+        {key:'manos', label:'Número de manos', unit:'', type:'number', def:2},
+        {key:'merma', label:'Margen para retoques', unit:'%', type:'number', def:5}
       ],
       compute:function(v){
-        var area = gn(v,'area'), rend = gnOpt(v,'rendimiento',6), manos = gnOpt(v,'manos',2);
+        var area = gn(v,'area'), rend = gnOpt(v,'rendimiento',6), manos = gnOpt(v,'manos',2), merma = gnOpt(v,'merma',5);
         must(rend > 0, 'El rendimiento debe ser mayor que 0');
-        var litros = (area*manos)/rend;
+        var litros = (area*manos)/rend*(1+merma/100);
         return [
           {label:'Litros necesarios', value: fmt(litros,2), unit:'L'},
           {label:'Botes de 4 L recomendados', value: fmt(Math.ceil(litros/4),0), unit:'uds'}
@@ -1370,7 +1635,7 @@
       }
     },
     {
-      id:'coste_pintura', cat:'pintura', icono:'🎨', titulo:'Coste estimado de pintura',
+      id:'coste_pintura', cat:'pintura', titulo:'Coste estimado de pintura',
       info:'Coste = litros necesarios × precio por litro',
       fields:[
         {key:'litros', label:'Litros necesarios', unit:'L', type:'number'},
@@ -1388,7 +1653,7 @@
      ============================================================ */
   var SUELOS = [
     {
-      id:'baldosas_azulejos', cat:'suelos', icono:'▦', titulo:'Baldosas / azulejos necesarios',
+      id:'baldosas_azulejos', cat:'suelos', titulo:'Baldosas / azulejos necesarios',
       info:'Piezas = superficie × (1 + merma) / superficie de cada pieza',
       fields:[
         {key:'area', label:'Superficie a alicatar/pavimentar', unit:'m²', type:'number'},
@@ -1408,7 +1673,7 @@
       }
     },
     {
-      id:'tarima_parquet', cat:'suelos', icono:'▦', titulo:'Tarima / parquet necesario',
+      id:'tarima_parquet', cat:'suelos', titulo:'Tarima / parquet necesario',
       info:'Superficie a comprar = superficie real × (1 + % de desperdicio)',
       fields:[
         {key:'area', label:'Superficie del suelo', unit:'m²', type:'number'},
@@ -1420,7 +1685,7 @@
       }
     },
     {
-      id:'rodapie', cat:'suelos', icono:'▦', titulo:'Rodapié necesario',
+      id:'rodapie', cat:'suelos', titulo:'Rodapié necesario',
       info:'Metros = perímetro de la habitación − huecos de puertas, con margen de desperdicio',
       fields:[
         {key:'largo', label:'Largo de la habitación', unit:'m', type:'number'},
@@ -1435,35 +1700,37 @@
       }
     },
     {
-      id:'mortero_cola', cat:'suelos', icono:'▦', titulo:'Mortero cola necesario',
-      info:'kg = superficie × consumo por m² (según llana/tamaño de pieza)',
+      id:'mortero_cola', cat:'suelos', titulo:'Mortero cola necesario',
+      info:'kg = superficie × consumo por m² (según llana/tamaño de pieza), con merma por derrame',
       fields:[
         {key:'area', label:'Superficie a alicatar/pavimentar', unit:'m²', type:'number'},
-        {key:'consumo', label:'Consumo', unit:'kg/m²', type:'number', def:4}
+        {key:'consumo', label:'Consumo', unit:'kg/m²', type:'number', def:4},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), cons = gnOpt(v,'consumo',4);
-        var kg = area*cons;
+        var area = gn(v,'area'), cons = gnOpt(v,'consumo',4), merma = gnOpt(v,'merma',10);
+        var kg = area*cons*(1+merma/100);
         return [{label:'Mortero cola necesario', value: fmt(kg,1), unit:'kg'},
                 {label:'Sacos de 25 kg', value: fmt(Math.ceil(kg/25),0), unit:'sacos'}];
       }
     },
     {
-      id:'juntas_alicatado', cat:'suelos', icono:'▦', titulo:'Material de juntas necesario',
-      info:'kg/m² ≈ ((L+A)/(L·A)) × espesor de pieza × ancho de junta × densidad del material',
+      id:'juntas_alicatado', cat:'suelos', titulo:'Material de juntas necesario',
+      info:'kg/m² ≈ ((L+A)/(L·A)) × espesor de pieza × ancho de junta × densidad del material, con merma por derrame',
       fields:[
         {key:'area', label:'Superficie alicatada', unit:'m²', type:'number'},
         {key:'lado_l', label:'Largo de la pieza', unit:'cm', type:'number', def:33},
         {key:'lado_a', label:'Ancho de la pieza', unit:'cm', type:'number', def:33},
         {key:'espesor_pieza', label:'Espesor de la pieza', unit:'mm', type:'number', def:8},
         {key:'ancho_junta', label:'Ancho de junta', unit:'mm', type:'number', def:3},
-        {key:'densidad', label:'Densidad del material de juntas', unit:'kg/m³', type:'number', def:1600}
+        {key:'densidad', label:'Densidad del material de juntas', unit:'kg/m³', type:'number', def:1600},
+        {key:'merma', label:'Merma por derrame', unit:'%', type:'number', def:10}
       ],
       compute:function(v){
-        var area = gn(v,'area'), L = gn(v,'lado_l')/100, A = gn(v,'lado_a')/100, esp = gn(v,'espesor_pieza')/1000, junta = gn(v,'ancho_junta')/1000, dens = gnOpt(v,'densidad',1600);
+        var area = gn(v,'area'), L = gn(v,'lado_l')/100, A = gn(v,'lado_a')/100, esp = gn(v,'espesor_pieza')/1000, junta = gn(v,'ancho_junta')/1000, dens = gnOpt(v,'densidad',1600), merma = gnOpt(v,'merma',10);
         must(L > 0 && A > 0, 'Las dimensiones de la pieza deben ser mayores que 0');
         var kgM2 = ((L+A)/(L*A))*esp*junta*dens;
-        var kg = kgM2*area;
+        var kg = kgM2*area*(1+merma/100);
         return [
           {label:'Consumo estimado', value: fmt(kgM2,3), unit:'kg/m²'},
           {label:'Material de juntas necesario', value: fmt(kg,2), unit:'kg'}
@@ -1477,7 +1744,7 @@
      ============================================================ */
   var FONTANERIA = [
     {
-      id:'metros_tuberia', cat:'fontaneria', icono:'🚿', titulo:'Metros de tubería a comprar',
+      id:'metros_tuberia', cat:'fontaneria', titulo:'Metros de tubería a comprar',
       info:'Total = longitud del recorrido × (1 + % de merma por conexiones y cortes)',
       fields:[
         {key:'longitud', label:'Longitud estimada del recorrido', unit:'m', type:'number'},
@@ -1489,7 +1756,7 @@
       }
     },
     {
-      id:'puntos_agua', cat:'fontaneria', icono:'🚿', titulo:'Puntos de agua recomendados',
+      id:'puntos_agua', cat:'fontaneria', titulo:'Puntos de agua recomendados',
       info:'Referencia orientativa de puntos de agua y desagüe habituales según tipo de estancia',
       fields:[
         {key:'estancia', label:'Tipo de estancia', type:'select', options:[
@@ -1512,7 +1779,7 @@
       }
     },
     {
-      id:'diametro_tuberia', cat:'fontaneria', icono:'🚿', titulo:'Diámetro de tubería según caudal',
+      id:'diametro_tuberia', cat:'fontaneria', titulo:'Diámetro de tubería según caudal',
       info:'A partir del caudal y la velocidad recomendada del agua: d = √(4·Q / (π·v))',
       fields:[
         {key:'caudal', label:'Caudal', unit:'L/min', type:'number'},
@@ -1526,7 +1793,7 @@
       }
     },
     {
-      id:'pendiente_desague', cat:'fontaneria', icono:'🚿', titulo:'Pendiente de desagües',
+      id:'pendiente_desague', cat:'fontaneria', titulo:'Pendiente de desagües',
       info:'Desnivel = longitud del tramo × pendiente (%). Pendiente recomendada habitual: 1-4%',
       fields:[
         {key:'longitud', label:'Longitud del tramo', unit:'m', type:'number'},
@@ -1538,7 +1805,7 @@
       }
     },
     {
-      id:'volumen_deposito', cat:'fontaneria', icono:'🚿', titulo:'Volumen de depósito de agua',
+      id:'volumen_deposito', cat:'fontaneria', titulo:'Volumen de depósito de agua',
       info:'Volumen = consumo por persona y día × nº de personas × días de autonomía deseados',
       fields:[
         {key:'consumo', label:'Consumo por persona y día', unit:'L', type:'number', def:150},
@@ -1553,7 +1820,7 @@
       }
     },
     {
-      id:'consumo_agua', cat:'fontaneria', icono:'🚿', titulo:'Consumo aproximado de agua',
+      id:'consumo_agua', cat:'fontaneria', titulo:'Consumo aproximado de agua',
       info:'Consumo diario = nº de personas × consumo medio por persona',
       fields:[
         {key:'personas', label:'Número de personas', unit:'', type:'number'},
@@ -1576,9 +1843,18 @@
      ============================================================ */
   var REFORMAS = [
     {
-      id:'estimacion_reforma', cat:'reformas', icono:'🏠', titulo:'Calcula cuánto material necesitas para tu reforma',
-      info:'Estimación orientativa de materiales para una estancia completa: suelo, paredes, adhesivo, juntas, pintura y rodapié, con un 10% de desperdicio.',
+      id:'estimacion_reforma', cat:'reformas', titulo:'Calcula cuánto material necesitas para tu reforma',
+      destacada:true,
+      info:'Asistente por alcance: marca qué vas a reformar y solo verás los materiales de esa parte de la obra, con un 10% de desperdicio donde aplica.',
       fields:[
+        {key:'head_alcance', type:'heading', label:'Paso 1 — ¿Qué vas a reformar? (marca todo lo que aplique)'},
+        {key:'scope_suelo', type:'checkbox', label:'Suelo (baldosa/gres)'},
+        {key:'scope_alicatado', type:'checkbox', label:'Alicatado (azulejo en pared)'},
+        {key:'scope_pintura', type:'checkbox', label:'Pintura (paredes y techo)'},
+        {key:'scope_fontaneria', type:'checkbox', label:'Fontanería (puntos de agua)'},
+        {key:'scope_electricidad', type:'checkbox', label:'Electricidad (puntos de luz)'},
+        {key:'scope_carpinteria', type:'checkbox', label:'Carpintería (puertas/ventanas)'},
+        {key:'head_medidas', type:'heading', label:'Paso 2 — Medidas de la estancia'},
         {key:'estancia', label:'Tipo de estancia', type:'select', options:[
           {value:'bano', label:'Baño'}, {value:'cocina', label:'Cocina'}, {value:'salon', label:'Salón'},
           {value:'dormitorio', label:'Dormitorio'}, {value:'terraza', label:'Terraza'}
@@ -1587,43 +1863,113 @@
         {key:'ancho', label:'Ancho de la estancia', unit:'m', type:'number'},
         {key:'alto', label:'Altura', unit:'m', type:'number', def:2.5},
         {key:'puertas', label:'Número de puertas', unit:'', type:'number', def:1},
-        {key:'lado_baldosa', label:'Lado de la baldosa (cuadrada)', unit:'cm', type:'number', def:33},
-        {key:'piezas_caja', label:'Piezas por caja', unit:'', type:'number', def:11},
-        {key:'rendimiento_pintura', label:'Rendimiento de la pintura', unit:'m²/L', type:'number', def:6},
-        {key:'manos_pintura', label:'Manos de pintura', unit:'', type:'number', def:2}
+        {key:'head_suelo_alicatado', type:'heading', label:'Suelo y alicatado',
+          showIf:function(v){ return !!v.scope_suelo || !!v.scope_alicatado; }},
+        {key:'lado_baldosa', label:'Lado de la baldosa (cuadrada)', unit:'cm', type:'number', def:33,
+          showIf:function(v){ return !!v.scope_suelo || !!v.scope_alicatado; }},
+        {key:'piezas_caja', label:'Piezas por caja', unit:'', type:'number', def:11,
+          showIf:function(v){ return !!v.scope_suelo || !!v.scope_alicatado; }},
+        {key:'head_pintura', type:'heading', label:'Pintura', showIf:function(v){ return !!v.scope_pintura; }},
+        {key:'rendimiento_pintura', label:'Rendimiento de la pintura', unit:'m²/L', type:'number', def:6,
+          showIf:function(v){ return !!v.scope_pintura; }},
+        {key:'manos_pintura', label:'Manos de pintura', unit:'', type:'number', def:2,
+          showIf:function(v){ return !!v.scope_pintura; }},
+        {key:'head_fontaneria', type:'heading', label:'Fontanería', showIf:function(v){ return !!v.scope_fontaneria; }},
+        {key:'puntos_agua', label:'Puntos de agua a instalar', unit:'uds', type:'number', def:2,
+          showIf:function(v){ return !!v.scope_fontaneria; }},
+        {key:'head_electricidad', type:'heading', label:'Electricidad', showIf:function(v){ return !!v.scope_electricidad; }},
+        {key:'puntos_luz', label:'Puntos de luz a instalar', unit:'uds', type:'number', def:3,
+          showIf:function(v){ return !!v.scope_electricidad; }},
+        {key:'enchufes', label:'Enchufes a instalar', unit:'uds', type:'number', def:4,
+          showIf:function(v){ return !!v.scope_electricidad; }},
+        {key:'head_carpinteria', type:'heading', label:'Carpintería', showIf:function(v){ return !!v.scope_carpinteria; }},
+        {key:'num_puertas_ventanas', label:'Puertas/ventanas a reformar', unit:'uds', type:'number', def:1,
+          showIf:function(v){ return !!v.scope_carpinteria; }}
       ],
       compute:function(v){
-        var estancia = gv(v,'estancia','bano'), l = gn(v,'largo'), a = gn(v,'ancho'), h = gnOpt(v,'alto',2.5);
-        var puertas = gnOpt(v,'puertas',1), lado = gn(v,'lado_baldosa')/100, pc = gnOpt(v,'piezas_caja',11);
-        var rendPintura = gnOpt(v,'rendimiento_pintura',6), manos = gnOpt(v,'manos_pintura',2);
+        var scopeSuelo = !!gv(v,'scope_suelo',false), scopeAlicatado = !!gv(v,'scope_alicatado',false);
+        var scopePintura = !!gv(v,'scope_pintura',false), scopeFontaneria = !!gv(v,'scope_fontaneria',false);
+        var scopeElectricidad = !!gv(v,'scope_electricidad',false), scopeCarpinteria = !!gv(v,'scope_carpinteria',false);
+        if(!scopeSuelo && !scopeAlicatado && !scopePintura && !scopeFontaneria && !scopeElectricidad && !scopeCarpinteria){
+          return [{label:'Selecciona el alcance de la reforma', unit:'',
+            value:'Marca arriba, en el Paso 1, qué vas a reformar (suelo, alicatado, pintura, fontanería, electricidad o carpintería) para calcular los materiales.'}];
+        }
+        var estancia = gv(v,'estancia','bano');
         var nombres = {bano:'Baño', cocina:'Cocina', salon:'Salón', dormitorio:'Dormitorio', terraza:'Terraza'};
         var merma = 0.10;
-        var areaSuelo = l*a;
-        var perimetro = 2*(l+a);
-        var areaParedes = Math.max(0, perimetro*h - puertas*1.6);
-        var areaPieza = lado*lado;
-        must(areaPieza > 0, 'El lado de la baldosa debe ser mayor que 0');
-        var piezas = Math.ceil((areaSuelo*(1+merma))/areaPieza);
-        var cajas = Math.ceil(piezas/pc);
-        var adhesivoKg = areaSuelo*4;
-        var adhesivoSacos = Math.ceil(adhesivoKg/25);
-        var juntaKg = areaSuelo*0.5;
-        must(rendPintura > 0, 'El rendimiento de pintura debe ser mayor que 0');
-        var pinturaLitros = (areaParedes*manos)/rendPintura;
-        var rodapieM = Math.max(0, perimetro - puertas*0.8)*(1+merma);
-        return [
-          {label:'Estancia', value: nombres[estancia] || estancia, unit:''},
-          {label:'Área de suelo', value: fmt(areaSuelo,2), unit:'m²'},
-          {label:'Área de paredes', value: fmt(areaParedes,2), unit:'m²'},
-          {label:'Baldosas necesarias', value: fmt(piezas,0), unit:'uds'},
-          {label:'Cajas de baldosas', value: fmt(cajas,0), unit:'cajas'},
-          {label:'Adhesivo / mortero cola', value: fmt(adhesivoSacos,0), unit:'sacos de 25 kg'},
-          {label:'Material de juntas', value: fmt(juntaKg,1), unit:'kg'},
-          {label:'Pintura para paredes', value: fmt(pinturaLitros,2), unit:'L'},
-          {label:'Rodapié', value: fmt(rodapieM,2), unit:'m'},
-          {label:'Desperdicio aplicado', value: fmt(merma*100,0), unit:'%'},
-          {link:true, label:'¿Necesitas un profesional para esta obra? → Buscar en TodoOficios.es', href:'index.html'}
-        ];
+        var res = [{label:'Estancia', value: nombres[estancia] || estancia, unit:''}];
+
+        var necesitaMedidas = scopeSuelo || scopeAlicatado || scopePintura;
+        var areaSuelo, areaParedes;
+        if(necesitaMedidas){
+          var l = gn(v,'largo'), a = gn(v,'ancho'), h = gnOpt(v,'alto',2.5), puertas = gnOpt(v,'puertas',1);
+          var perimetro = 2*(l+a);
+          areaSuelo = l*a;
+          areaParedes = Math.max(0, perimetro*h - puertas*1.6);
+        }
+
+        if(scopeSuelo || scopeAlicatado){
+          var lado = gn(v,'lado_baldosa')/100, pc = gnOpt(v,'piezas_caja',11);
+          var areaPieza = lado*lado;
+          must(areaPieza > 0, 'El lado de la baldosa debe ser mayor que 0');
+          if(scopeSuelo){
+            var piezasSuelo = Math.ceil((areaSuelo*(1+merma))/areaPieza);
+            res.push({label:'Área de suelo', value: fmt(areaSuelo,2), unit:'m²'});
+            res.push({label:'Baldosas de suelo necesarias', value: fmt(piezasSuelo,0), unit:'uds'});
+            res.push({label:'Cajas de baldosas de suelo', value: fmt(Math.ceil(piezasSuelo/pc),0), unit:'cajas'});
+            res.push({label:'Adhesivo / mortero cola (suelo)', value: fmt(Math.ceil((areaSuelo*4)/25),0), unit:'sacos de 25 kg'});
+            res.push({label:'Material de juntas (suelo)', value: fmt(areaSuelo*0.5,1), unit:'kg'});
+            var rodapieM = Math.max(0, perimetro - puertas*0.8)*(1+merma);
+            res.push({label:'Rodapié', value: fmt(rodapieM,2), unit:'m'});
+          }
+          if(scopeAlicatado){
+            var piezasAlicatado = Math.ceil((areaParedes*(1+merma))/areaPieza);
+            res.push({label:'Área de paredes a alicatar', value: fmt(areaParedes,2), unit:'m²'});
+            res.push({label:'Azulejos de pared necesarios', value: fmt(piezasAlicatado,0), unit:'uds'});
+            res.push({label:'Cajas de azulejos', value: fmt(Math.ceil(piezasAlicatado/pc),0), unit:'cajas'});
+            res.push({label:'Adhesivo / mortero cola (alicatado)', value: fmt(Math.ceil((areaParedes*4)/25),0), unit:'sacos de 25 kg'});
+            res.push({label:'Material de juntas (alicatado)', value: fmt(areaParedes*0.5,1), unit:'kg'});
+          }
+        }
+
+        if(scopePintura){
+          var rendPintura = gnOpt(v,'rendimiento_pintura',6), manos = gnOpt(v,'manos_pintura',2);
+          must(rendPintura > 0, 'El rendimiento de pintura debe ser mayor que 0');
+          var pinturaLitros = (areaParedes*manos)/rendPintura;
+          res.push({label:'Área de paredes a pintar', value: fmt(areaParedes,2), unit:'m²'});
+          res.push({label:'Pintura necesaria', value: fmt(pinturaLitros,2), unit:'L'});
+        }
+
+        if(scopeFontaneria){
+          var puntosAgua = gnOpt(v,'puntos_agua',2);
+          var tuberiaFontaneria = puntosAgua*3*(1+merma);
+          res.push({label:'Puntos de agua a instalar', value: fmt(puntosAgua,0), unit:'uds'});
+          res.push({label:'Tubería estimada', value: fmt(tuberiaFontaneria,1), unit:'m'});
+        }
+
+        if(scopeElectricidad){
+          var puntosLuz = gnOpt(v,'puntos_luz',3), enchufes = gnOpt(v,'enchufes',4);
+          var totalPuntosElec = puntosLuz + enchufes;
+          var cableElectricidad = totalPuntosElec*6*(1+merma);
+          res.push({label:'Puntos de luz a instalar', value: fmt(puntosLuz,0), unit:'uds'});
+          res.push({label:'Enchufes a instalar', value: fmt(enchufes,0), unit:'uds'});
+          res.push({label:'Cable estimado', value: fmt(cableElectricidad,1), unit:'m'});
+          res.push({label:'Cajas de mecanismo empotrar', value: fmt(totalPuntosElec,0), unit:'uds'});
+        }
+
+        if(scopeCarpinteria){
+          var numPV = gnOpt(v,'num_puertas_ventanas',1);
+          var tapajuntas = numPV*5.6*(1+merma);
+          res.push({label:'Puertas/ventanas a instalar', value: fmt(numPV,0), unit:'uds'});
+          res.push({label:'Tapajuntas/molduras estimadas', value: fmt(tapajuntas,1), unit:'m'});
+        }
+
+        if(scopeSuelo || scopeAlicatado || scopeCarpinteria){
+          res.push({label:'Desperdicio aplicado', value: fmt(merma*100,0), unit:'%'});
+        }
+
+        res.push({link:true, label:'¿Necesitas un profesional para esta obra? → Buscar en TodoOficios.es', href:'index.html'});
+        return res;
       }
     }
   ];
@@ -1638,19 +1984,19 @@
 
   var GEOMETRIA = [
     {
-      id:'area_habitacion', cat:'geometria', icono:'📐', titulo:'m² de una habitación',
+      id:'area_habitacion', cat:'geometria', titulo:'m² de una habitación',
       info:'Área = largo × ancho',
       fields:[{key:'largo', label:'Largo', unit:'m', type:'number'}, {key:'ancho', label:'Ancho', unit:'m', type:'number'}],
       compute:function(v){ return [{label:'Área', value: fmt(gn(v,'largo')*gn(v,'ancho'),2), unit:'m²'}]; }
     },
     {
-      id:'area_pared', cat:'geometria', icono:'📐', titulo:'m² de una pared',
+      id:'area_pared', cat:'geometria', titulo:'m² de una pared',
       info:'Área = largo × altura',
       fields:[{key:'largo', label:'Largo de la pared', unit:'m', type:'number'}, {key:'alto', label:'Altura', unit:'m', type:'number'}],
       compute:function(v){ return [{label:'Área', value: fmt(gn(v,'largo')*gn(v,'alto'),2), unit:'m²'}]; }
     },
     {
-      id:'volumen_habitacion', cat:'geometria', icono:'📐', titulo:'m³ de una habitación',
+      id:'volumen_habitacion', cat:'geometria', titulo:'m³ de una habitación',
       info:'Volumen = largo × ancho × alto',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'}, {key:'ancho', label:'Ancho', unit:'m', type:'number'}, {key:'alto', label:'Alto', unit:'m', type:'number'}
@@ -1658,7 +2004,7 @@
       compute:function(v){ return [{label:'Volumen', value: fmt(gn(v,'largo')*gn(v,'ancho')*gn(v,'alto'),3), unit:'m³'}]; }
     },
     {
-      id:'volumen_piscina', cat:'geometria', icono:'📐', titulo:'Volumen de una piscina',
+      id:'volumen_piscina', cat:'geometria', titulo:'Volumen de una piscina',
       info:'Rectangular: largo×ancho×profundidad media. Redonda: π×radio²×profundidad media',
       fields:[
         {key:'forma', label:'Forma', type:'select', options:[{value:'rectangular',label:'Rectangular'},{value:'redonda',label:'Redonda'}], def:'rectangular'},
@@ -1676,19 +2022,19 @@
       }
     },
     {
-      id:'area_circulo', cat:'geometria', icono:'📐', titulo:'Área de un círculo',
+      id:'area_circulo', cat:'geometria', titulo:'Área de un círculo',
       info:'Área = π × radio²',
       fields:[{key:'radio', label:'Radio', unit:'m', type:'number'}],
       compute:function(v){ var r = gn(v,'radio'); return [{label:'Área', value: fmt(Math.PI*r*r,3), unit:'m²'}]; }
     },
     {
-      id:'area_triangulo', cat:'geometria', icono:'📐', titulo:'Área de un triángulo',
+      id:'area_triangulo', cat:'geometria', titulo:'Área de un triángulo',
       info:'Área = (base × altura) / 2',
       fields:[{key:'base', label:'Base', unit:'m', type:'number'}, {key:'altura', label:'Altura', unit:'m', type:'number'}],
       compute:function(v){ return [{label:'Área', value: fmt((gn(v,'base')*gn(v,'altura'))/2,3), unit:'m²'}]; }
     },
     {
-      id:'escaleras', cat:'geometria', icono:'📐', titulo:'Cálculo de escaleras',
+      id:'escaleras', cat:'geometria', titulo:'Cálculo de escaleras',
       info:'Nº de peldaños = altura total / contrahuella. Confort (regla de Blondel): 2×contrahuella + huella entre 57 y 64 cm',
       fields:[
         {key:'altura_total', label:'Altura total a subir', unit:'m', type:'number'},
@@ -1709,7 +2055,7 @@
       }
     },
     {
-      id:'pendientes', cat:'geometria', icono:'📐', titulo:'Cálculo de pendientes',
+      id:'pendientes', cat:'geometria', titulo:'Cálculo de pendientes',
       info:'Pendiente(%) = desnivel / longitud horizontal × 100',
       fields:[
         {key:'desnivel', label:'Desnivel', unit:'m', type:'number'},
@@ -1725,7 +2071,7 @@
       }
     },
     {
-      id:'diagonales', cat:'geometria', icono:'📐', titulo:'Longitud de diagonales',
+      id:'diagonales', cat:'geometria', titulo:'Longitud de diagonales',
       info:'2D: √(largo² + ancho²). 3D (opcional, con altura): √(largo² + ancho² + alto²)',
       fields:[
         {key:'largo', label:'Largo', unit:'m', type:'number'},
@@ -1785,23 +2131,612 @@
 
   var CALCULADORAS = FUNDAMENTALES.concat(INSTALACION, COMPONENTES, TRANSFORMADORES, UTILIDADES, MATERIALES, PINTURA, SUELOS, FONTANERIA, REFORMAS, GEOMETRIA);
 
+  /* Sinónimos de búsqueda: términos que el usuario puede escribir aunque no aparezcan
+     literalmente en el título de la calculadora. */
+  var SINONIMOS = {
+    cuadro_mando_general: ['cuadro electrico', 'cuadro de luz', 'icp', 'magnetotermico', 'diferencial', 'automaticos', 'pia', 'protecciones'],
+    dimensionamiento_conductores: ['cable', 'calibre de cable', 'seccion de cable', 'grosor de cable'],
+    dimensionamiento_conductores_protecciones: ['cable', 'calibre de cable'],
+    caida_tension: ['cable', 'voltaje que se pierde'],
+    hormigon: ['concreto'],
+    yeso_enlucido: ['escayola', 'guarnecido'],
+    pladur: ['tabique', 'carton yeso', 'panel de yeso'],
+    ladrillos_bloques: ['tabique', 'bloque de hormigon'],
+    cemento_arena: ['mortero'],
+    mortero_albanileria: ['mortero de cemento'],
+    baldosas_azulejos: ['gres', 'alicatado', 'ceramica'],
+    juntas_alicatado: ['lechada'],
+    metros_tuberia: ['canerias', 'pvc', 'multicapa'],
+    coste_pintura: ['gotele', 'presupuesto de pintura'],
+    color_resistencia_bandas: ['codigo de colores resistencias'],
+    puesta_tierra: ['toma de tierra'],
+    estimacion_reforma: ['reforma integral', 'reforma de bano', 'reforma de cocina']
+  };
+
+  function coincideBusqueda(c, t){
+    if(normaliza(c.titulo).indexOf(t) !== -1) return true;
+    var alias = SINONIMOS[c.id];
+    if(!alias) return false;
+    return alias.some(function(a){ return normaliza(a).indexOf(t) !== -1; });
+  }
+
   /* ============================================================
      MOTOR: renderizado y navegación
      ============================================================ */
-  var elHome, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate;
+  var elHome, elOfc, elCat, elCalc, elSearch, elSearchResults, elBack, elBackLabel, elGate, elHero;
 
   function isRegistered(){
+    // La cuenta (account:/client:) puede vivir solo en Supabase cuando el sitio
+    // usa backend en la nube, así que basta con que exista el token de sesión local.
     try {
-      var proEmail = localStorage.getItem('session-email');
-      if(proEmail && localStorage.getItem('account:'+proEmail)) return true;
-      var cliEmail = localStorage.getItem('session-email-client');
-      if(cliEmail && localStorage.getItem('client:'+cliEmail)) return true;
-    } catch(e){}
+      if(localStorage.getItem('session-email')) return true;
+      if(localStorage.getItem('session-email-client')) return true;
+    } catch(e){ console.warn('No se pudo leer la sesión de localStorage:', e); }
     return false;
   }
 
   function showRegisterGate(){ if(elGate) elGate.classList.add('open'); }
   function hideRegisterGate(){ if(elGate) elGate.classList.remove('open'); }
+
+  function isProfessionalLoggedIn(){
+    try {
+      return !!localStorage.getItem('session-email');
+    } catch(e){ return false; }
+  }
+
+  /* ============================================================
+     MATERIALES FAVORITOS: conexión mínima con Supabase (misma tabla
+     kv_store y namespace que index.html) para que la lista de precios
+     guardados sea la misma en las calculadoras y en el Panel de negocio.
+     ============================================================ */
+  var CLOUD_NAMESPACE = 'todooficios:v1';
+  var cloudClient = null;
+  var cloudEnabled = false;
+  var cloudInitPromise = null;
+  var materialesCache = [];
+  var calcFavoritasCache = [];
+  var calcActualId = null;
+
+  function proEmailActual(){
+    try { return localStorage.getItem('session-email') || ''; } catch(e){ return ''; }
+  }
+
+  function hasCloudConfig(){
+    var cfg = window.TODOOFICIOS_LEGAL || {};
+    if(!window.supabase || !window.supabase.createClient) return false;
+    if(!cfg.supabaseUrl || cfg.supabaseUrl.indexOf('PENDIENTE_') === 0) return false;
+    if(!cfg.supabaseAnonKey || cfg.supabaseAnonKey.indexOf('PENDIENTE_') === 0) return false;
+    return true;
+  }
+
+  function initCloudClient(){
+    if(cloudInitPromise) return cloudInitPromise;
+    cloudInitPromise = (function(){
+      if(!hasCloudConfig()) return Promise.resolve(null);
+      var cfg = window.TODOOFICIOS_LEGAL;
+      try {
+        var client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+        return client.from('kv_store').select('key').limit(1).then(function(res){
+          if(res.error) return null;
+          cloudClient = client;
+          cloudEnabled = true;
+          return client;
+        }).catch(function(){ return null; });
+      } catch(e){ return Promise.resolve(null); }
+    })();
+    return cloudInitPromise;
+  }
+
+  function cloudGet(key){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return null;
+      return client.from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', key).maybeSingle()
+        .then(function(res){ return (res.error || !res.data) ? null : res.data.value; })
+        .catch(function(){ return null; });
+    });
+  }
+
+  function cloudSet(key, value){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      var payload = {namespace: CLOUD_NAMESPACE, key: key, value: value, updated_at: new Date().toISOString()};
+      return client.from('kv_store').upsert(payload, {onConflict: 'namespace,key'})
+        .then(function(res){ return !res.error; })
+        .catch(function(){ return false; });
+    });
+  }
+
+  /* negocio:/materiales:/calc-favoritas:<email> están bloqueados para anon en
+     kv_store (ver supabase/functions/account-auth): solo su dueño puede leerlas o
+     escribirlas. session-token lo guarda index.html en localStorage al iniciar
+     sesión (se comparte entre páginas del mismo sitio); si la cuenta es de Google,
+     no hay token propio, pero sí una sesión real de Supabase Auth persistida por el
+     propio cliente de Supabase, que sirve como prueba alternativa de identidad. */
+  function proTokenActual(){
+    try { return localStorage.getItem('session-token') || ''; } catch(e){ return ''; }
+  }
+
+  function getSupabaseAuthTokenCalc(client){
+    return client.auth.getSession().then(function(res){
+      return (res.data && res.data.session && res.data.session.access_token) || null;
+    }).catch(function(){ return null; });
+  }
+
+  function secureCloudGet(key){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return null;
+      var token = proTokenActual();
+      return (token ? Promise.resolve(null) : getSupabaseAuthTokenCalc(client)).then(function(authToken){
+        if(!token && !authToken) return cloudGet(key);
+        return client.functions.invoke('account-auth', {body: {action: 'get', key: key, token: token, authToken: authToken}})
+          .then(function(res){
+            if(!res.error && res.data && res.data.ok) return res.data.value;
+            return cloudGet(key);
+          })
+          .catch(function(){ return cloudGet(key); });
+      });
+    });
+  }
+
+  function secureCloudSet(key, value){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      var token = proTokenActual();
+      return (token ? Promise.resolve(null) : getSupabaseAuthTokenCalc(client)).then(function(authToken){
+        if(!token && !authToken) return cloudSet(key, value);
+        return client.functions.invoke('account-auth', {body: {action: 'save', key: key, token: token, authToken: authToken, value: value}})
+          .then(function(res){
+            if(!res.error && res.data && res.data.ok) return true;
+            if(!res.error && res.data && !res.data.ok) return false;
+            return cloudSet(key, value);
+          })
+          .catch(function(){ return cloudSet(key, value); });
+      });
+    });
+  }
+
+  function cargarMaterialesFavoritos(){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve([]);
+    return secureCloudGet('materiales:'+email).then(function(raw){
+      if(!raw) return [];
+      try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
+    });
+  }
+
+  function guardarMaterialFavorito(nombre, unidad, precio){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(false);
+    materialesCache = materialesCache.concat([{id:'m'+Date.now(), nombre:nombre, unidad:unidad||'ud', precio:precio||0}]);
+    return secureCloudSet('materiales:'+email, JSON.stringify(materialesCache));
+  }
+
+  /* ============================================================
+     CALCULADORAS FAVORITAS: acceso rápido a las calculadoras que
+     usa habitualmente el profesional, guardadas en la misma nube.
+     ============================================================ */
+  function cargarCalcFavoritas(){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve([]);
+    return secureCloudGet('calc-favoritas:'+email).then(function(raw){
+      if(!raw) return [];
+      try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
+    });
+  }
+
+  function esCalcFavorita(id){ return calcFavoritasCache.indexOf(id) !== -1; }
+
+  function toggleCalcFavorita(id){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(false);
+    if(esCalcFavorita(id)) calcFavoritasCache = calcFavoritasCache.filter(function(x){ return x !== id; });
+    else calcFavoritasCache = calcFavoritasCache.concat([id]);
+    return secureCloudSet('calc-favoritas:'+email, JSON.stringify(calcFavoritasCache));
+  }
+
+  function favoritaStarHTML(id){
+    var on = esCalcFavorita(id);
+    return '<button type="button" class="cec-fav-star' + (on ? ' is-fav' : '') + '" data-fav-calc="' + id + '" title="' +
+      (on ? 'Quitar de favoritas' : 'Añadir a favoritas') + '" aria-label="' + (on ? 'Quitar de favoritas' : 'Añadir a favoritas') + '">' +
+      (on ? '★' : '☆') + '</button>';
+  }
+
+  function chipsHTML(fieldKey){
+    if(!materialesCache.length) return '';
+    return '<span class="mat-chips">' + materialesCache.map(function(m){
+      return '<span class="mat-chip" data-fill-key="' + fieldKey + '" data-fill-val="' + m.precio + '">' + m.nombre + ' · ' + fmt(m.precio,2) + ' €</span>';
+    }).join('') + '</span>';
+  }
+
+  function refrescarChipsFavoritos(){
+    if(!calcActualId || !elCalc) return;
+    var calc = CALCULADORAS.filter(function(c){ return c.id === calcActualId; })[0];
+    if(!calc) return;
+    calc.fields.forEach(function(f){
+      if(!(f.unit && f.unit.indexOf('€') !== -1)) return;
+      var saveBtn = elCalc.querySelector('[data-save-fav-key="' + f.key + '"]');
+      if(!saveBtn) return;
+      var previo = saveBtn.previousElementSibling;
+      if(previo && previo.classList.contains('mat-chips')) return;
+      if(!materialesCache.length) return;
+      saveBtn.insertAdjacentHTML('beforebegin', chipsHTML(f.key));
+    });
+  }
+
+  function leerBorradorPresupuesto(){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(!proEmail) return [];
+      return JSON.parse(localStorage.getItem('presupuesto-draft:'+proEmail) || '[]');
+    } catch(e){ return []; }
+  }
+
+  function guardarEnBorradorPresupuesto(lineas){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(!proEmail || !lineas.length) return 0;
+      var lista = leerBorradorPresupuesto();
+      lineas.forEach(function(l, i){
+        lista.push({id:'cd'+Date.now()+'-'+i, descripcion:l.descripcion, unidad:l.unidad||'ud', cantidad:l.cantidad||0, precio:l.precio||0});
+      });
+      localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
+      return lista.length;
+    } catch(e){ return 0; }
+  }
+
+  function quitarDelBorradorPresupuesto(id){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(!proEmail) return;
+      var lista = leerBorradorPresupuesto().filter(function(d){ return d.id !== id; });
+      localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
+    } catch(e){ console.warn('No se pudo actualizar el borrador de presupuesto:', e); }
+  }
+
+  function actualizarLineaBorrador(id, patch){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(!proEmail) return;
+      var lista = leerBorradorPresupuesto().map(function(d){
+        if(d.id !== id) return d;
+        var actualizado = {};
+        for(var k in d){ actualizado[k] = d[k]; }
+        for(var k2 in patch){ actualizado[k2] = patch[k2]; }
+        return actualizado;
+      });
+      localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
+    } catch(e){ console.warn('No se pudo guardar el borrador de presupuesto:', e); }
+  }
+
+  function vaciarBorradorPresupuesto(){
+    try {
+      var proEmail = localStorage.getItem('session-email');
+      if(proEmail) localStorage.removeItem('presupuesto-draft:'+proEmail);
+    } catch(e){ console.warn('No se pudo borrar el borrador de presupuesto:', e); }
+  }
+
+  /* Indicador persistente en la barra superior: cuántas partidas van
+     acumuladas para el próximo presupuesto, aunque se navegue entre
+     varias calculadoras distintas antes de crearlo. */
+  function totalBorradorPresupuesto(lista){
+    return lista.reduce(function(s, d){ return s + (Number(d.cantidad)||0) * (Number(d.precio)||0); }, 0);
+  }
+
+  function renderDraftIndicator(){
+    var wrap = document.getElementById('cecDraftWrap');
+    var pill = document.getElementById('cecDraftPill');
+    var menu = document.getElementById('cecDraftMenu');
+    if(!wrap || !pill || !menu) return;
+    var lista = leerBorradorPresupuesto();
+    if(!isProfessionalLoggedIn() || !lista.length){
+      wrap.style.display = 'none';
+      menu.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    var total = totalBorradorPresupuesto(lista);
+    pill.textContent = '🧾 ' + lista.length + (lista.length === 1 ? ' partida · ' : ' partidas · ') + fmt(total,2) + ' €';
+    menu.innerHTML = lista.map(function(d){
+      var desc = d.descripcion || d.concepto || '';
+      var subtotal = (Number(d.cantidad)||0) * (Number(d.precio)||0);
+      return '<div class="cec-draft-item" data-draft-id="' + d.id + '">' +
+        '<div class="cec-draft-item-top"><span title="' + escapeHtml(desc) + '">' + escapeHtml(desc) + '</span>' +
+        '<button type="button" data-remove-draft="' + d.id + '" title="Quitar" aria-label="Quitar">✕</button></div>' +
+        '<div class="cec-draft-item-nums">' +
+        '<input type="number" class="cec-draft-num" step="any" min="0" data-edit-cantidad value="' + (d.cantidad===undefined?'':d.cantidad) + '" aria-label="Cantidad"> ' + escapeHtml(d.unidad||'ud') + ' × ' +
+        '<input type="number" class="cec-draft-num" step="0.01" min="0" data-edit-precio value="' + (d.precio===undefined?'':d.precio) + '" aria-label="Precio"> € = ' +
+        '<span class="cec-draft-subtotal">' + fmt(subtotal,2) + ' €</span>' +
+        '</div></div>';
+    }).join('') +
+      '<div class="cec-draft-total">Total <strong id="cecDraftTotal">' + fmt(total,2) + ' €</strong></div>' +
+      '<a class="btn-link" href="index.html?view=negocio">🧾 Convertir en presupuesto →</a>';
+  }
+
+  function actualizarTotalesMenuDraft(){
+    var menu = document.getElementById('cecDraftMenu');
+    var pill = document.getElementById('cecDraftPill');
+    if(!menu) return;
+    var items = menu.querySelectorAll('[data-draft-id]');
+    var total = 0;
+    items.forEach(function(itemEl){
+      var c = parseFloat(itemEl.querySelector('[data-edit-cantidad]').value) || 0;
+      var p = parseFloat(itemEl.querySelector('[data-edit-precio]').value) || 0;
+      total += c * p;
+    });
+    var totalEl = document.getElementById('cecDraftTotal');
+    if(totalEl) totalEl.textContent = fmt(total,2) + ' €';
+    if(pill) pill.textContent = '🧾 ' + items.length + (items.length === 1 ? ' partida · ' : ' partidas · ') + fmt(total,2) + ' €';
+  }
+
+  function bindDraftIndicator(){
+    var pill = document.getElementById('cecDraftPill');
+    var menu = document.getElementById('cecDraftMenu');
+    if(!pill || !menu) return;
+    pill.addEventListener('click', function(){
+      menu.style.display = menu.style.display === 'none' ? '' : 'none';
+    });
+    menu.addEventListener('click', function(e){
+      var btn = e.target.closest('[data-remove-draft]');
+      if(!btn) return;
+      quitarDelBorradorPresupuesto(btn.getAttribute('data-remove-draft'));
+      renderDraftIndicator();
+      var menuAfter = document.getElementById('cecDraftMenu');
+      if(menuAfter) menuAfter.style.display = '';
+    });
+    menu.addEventListener('input', function(e){
+      var itemEl = e.target.closest('[data-draft-id]');
+      if(!itemEl) return;
+      var id = itemEl.getAttribute('data-draft-id');
+      if(e.target.hasAttribute('data-edit-cantidad')) actualizarLineaBorrador(id, {cantidad: e.target.value});
+      else if(e.target.hasAttribute('data-edit-precio')) actualizarLineaBorrador(id, {precio: e.target.value});
+      else return;
+      var cant = parseFloat(itemEl.querySelector('[data-edit-cantidad]').value) || 0;
+      var precio = parseFloat(itemEl.querySelector('[data-edit-precio]').value) || 0;
+      var subtotalEl = itemEl.querySelector('.cec-draft-subtotal');
+      if(subtotalEl) subtotalEl.textContent = fmt(cant*precio,2) + ' €';
+      actualizarTotalesMenuDraft();
+    });
+    document.addEventListener('click', function(e){
+      if(menu.style.display === 'none') return;
+      if(!menu.contains(e.target) && e.target !== pill) menu.style.display = 'none';
+    });
+  }
+
+  /* ============================================================
+     LISTA DE LA REFORMA: acumula resultados de varias calculadoras
+     (distintas estancias u oficios) antes de pedir presupuesto.
+     A diferencia del borrador de presupuesto (solo profesional, con
+     precios e IVA para el Gestor de negocio), esta lista es para
+     cualquier cuenta registrada -cliente o profesional- y solo junta
+     materiales/cantidades para compartir con quien vaya a hacer la obra.
+     ============================================================ */
+  function emailCuentaActual(){
+    try { return localStorage.getItem('session-email') || localStorage.getItem('session-email-client') || ''; } catch(e){ return ''; }
+  }
+
+  function detalleDeResultado(res){
+    return res.filter(function(r){ return !r.link; }).map(function(r){
+      return r.label + ': ' + r.value + (r.unit ? ' ' + r.unit : '');
+    });
+  }
+
+  function leerListaObra(){
+    try {
+      var email = emailCuentaActual();
+      if(!email) return [];
+      return JSON.parse(localStorage.getItem('obra-lista:'+email) || '[]');
+    } catch(e){ return []; }
+  }
+
+  function guardarEnListaObra(concepto, detalle){
+    try {
+      var email = emailCuentaActual();
+      if(!email) return 0;
+      var lista = leerListaObra();
+      lista.push({id:'ob'+Date.now(), concepto:concepto, detalle:detalle||[]});
+      localStorage.setItem('obra-lista:'+email, JSON.stringify(lista));
+      return lista.length;
+    } catch(e){ return 0; }
+  }
+
+  function quitarDeListaObra(id){
+    try {
+      var email = emailCuentaActual();
+      if(!email) return;
+      var lista = leerListaObra().filter(function(x){ return x.id !== id; });
+      localStorage.setItem('obra-lista:'+email, JSON.stringify(lista));
+    } catch(e){ console.warn('No se pudo actualizar la lista de obra:', e); }
+  }
+
+  function resumenListaObraTexto(){
+    var lista = leerListaObra();
+    if(!lista.length) return '';
+    var partes = lista.map(function(item){
+      return '- ' + item.concepto + (item.detalle.length ? ': ' + item.detalle.join(', ') : '');
+    });
+    return 'Hola, quiero pedir presupuesto para esta reforma:\n\n' + partes.join('\n');
+  }
+
+  /* Deja la lista lista para que index.html la recoja al contactar con
+     un profesional (WhatsApp o mensaje), sin backend propio de por medio. */
+  function guardarSolicitudPresupuestoAlcance(texto){
+    try {
+      if(!texto) return;
+      localStorage.setItem('solicitud-presupuesto-alcance', JSON.stringify({resumen: texto, creadoEn: Date.now()}));
+    } catch(e){ console.warn('No se pudo guardar la solicitud de presupuesto por alcance:', e); }
+  }
+
+  function renderListaObraIndicator(){
+    var wrap = document.getElementById('cecObraWrap');
+    var pill = document.getElementById('cecObraPill');
+    var menu = document.getElementById('cecObraMenu');
+    if(!wrap || !pill || !menu) return;
+    var lista = leerListaObra();
+    if(!isRegistered() || isProfessionalLoggedIn() || !lista.length){
+      wrap.style.display = 'none';
+      menu.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    pill.textContent = '🧱 ' + lista.length + (lista.length === 1 ? ' partida en tu lista' : ' partidas en tu lista');
+    menu.innerHTML = lista.map(function(it){
+      return '<div class="cec-draft-item"><span title="' + escapeHtml(it.concepto) + '">' + escapeHtml(it.concepto) + '</span>' +
+        '<button type="button" data-remove-obra="' + it.id + '" title="Quitar" aria-label="Quitar">✕</button></div>';
+    }).join('') +
+      '<button type="button" class="btn-link" id="cecObraCopiar" style="width:100%;border:none;cursor:pointer;">📋 Copiar lista para pedir presupuesto</button>' +
+      (isProfessionalLoggedIn() ? '' : '<a class="btn-link" href="index.html?view=buscar" id="cecObraBuscar" style="margin-top:6px;">Buscar profesionales verificados →</a>');
+  }
+
+  function bindListaObraIndicator(){
+    var pill = document.getElementById('cecObraPill');
+    var menu = document.getElementById('cecObraMenu');
+    if(!pill || !menu) return;
+    pill.addEventListener('click', function(){
+      menu.style.display = menu.style.display === 'none' ? '' : 'none';
+    });
+    menu.addEventListener('click', function(e){
+      var btnQuitar = e.target.closest('[data-remove-obra]');
+      if(btnQuitar){
+        quitarDeListaObra(btnQuitar.getAttribute('data-remove-obra'));
+        renderListaObraIndicator();
+        var menuAfter = document.getElementById('cecObraMenu');
+        if(menuAfter) menuAfter.style.display = '';
+        return;
+      }
+      if(e.target.closest('#cecObraCopiar')){
+        var texto = resumenListaObraTexto();
+        guardarSolicitudPresupuestoAlcance(texto);
+        var avisar = function(){ window.alert('Lista copiada. Pégala al contactar con un profesional, o pulsa "Buscar profesionales verificados" para que se rellene sola.'); };
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(texto).then(avisar).catch(function(){ window.alert(texto); });
+        } else {
+          window.alert(texto);
+        }
+        return;
+      }
+      if(e.target.closest('#cecObraBuscar')){
+        guardarSolicitudPresupuestoAlcance(resumenListaObraTexto());
+      }
+    });
+    document.addEventListener('click', function(e){
+      if(menu.style.display === 'none') return;
+      if(!menu.contains(e.target) && e.target !== pill) menu.style.display = 'none';
+    });
+  }
+
+  var UNIDADES_PARTIDA_MAP = {
+    'uds':'ud', 'ud':'ud', 'm²':'m²', 'm³':'m³', 'm':'m', 'kg':'kg', 'L':'L', 'h':'h',
+    'cajas':'caja', 'caja':'caja', 'sacos de 25 kg':'saco', 'saco':'saco'
+  };
+  function mapUnidadPartida(unit){
+    return UNIDADES_PARTIDA_MAP[unit] || 'ud';
+  }
+  function numeroDe(value){
+    var n = parseFloat(String(value).replace(',', '.'));
+    return Number.isFinite(n) ? n : null;
+  }
+  /* Convierte el resultado de una calculadora en líneas de presupuesto
+     independientes (una por cantidad calculada), en vez de un único
+     texto con todo junto. La primera fila sin cantidad numérica (p.ej.
+     "Estancia: Baño") se usa como prefijo de contexto y se descarta
+     como línea; si no hay ninguna, se usa el título de la calculadora. */
+  function resumenPartida(calc, res){
+    var relevantes = res.filter(function(r){ return !r.link; });
+    var filaContexto = relevantes.filter(function(r){ return numeroDe(r.value) === null; })[0];
+    var contexto = filaContexto ? filaContexto.value : calc.titulo;
+    return relevantes.filter(function(r){
+      if(r === filaContexto) return false;
+      if(r.unit === '%') return false;
+      return numeroDe(r.value) !== null;
+    }).map(function(r){
+      if(r.unit === '€'){
+        return {descripcion: contexto + ' — ' + r.label, unidad:'ud', cantidad:1, precio: numeroDe(r.value) || 0};
+      }
+      return {descripcion: contexto + ' — ' + r.label, unidad: mapUnidadPartida(r.unit), cantidad: numeroDe(r.value)};
+    });
+  }
+
+  function cargarNegocioCompleto(){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(null);
+    return secureCloudGet('negocio:'+email).then(function(raw){
+      if(!raw) return null;
+      try { return JSON.parse(raw); } catch(e){ return null; }
+    });
+  }
+
+  function guardarNegocioCompleto(negocio){
+    var email = proEmailActual();
+    if(!email) return Promise.resolve(false);
+    return secureCloudSet('negocio:'+email, JSON.stringify(negocio));
+  }
+
+  function cargarPresupuestosPendientes(){
+    return cargarNegocioCompleto().then(function(negocio){
+      if(!negocio || !Array.isArray(negocio.presupuestos)) return [];
+      return negocio.presupuestos
+        .filter(function(p){ return !p.estado || p.estado === 'Pendiente'; })
+        .slice().reverse();
+    });
+  }
+
+  function ivaMasFrecuente(partidas, ivaPctLegacy){
+    var conteo = {};
+    (partidas||[]).forEach(function(x){
+      var pct = x.iva===undefined ? ivaPctLegacy : Number(x.iva);
+      if(pct===undefined || pct===null || isNaN(pct)) return;
+      conteo[pct] = (conteo[pct]||0) + 1;
+    });
+    var mejor = null, mejorN = -1;
+    Object.keys(conteo).forEach(function(k){ if(conteo[k] > mejorN){ mejorN = conteo[k]; mejor = Number(k); } });
+    return mejor===null ? 21 : mejor;
+  }
+
+  function anadirPartidaAPresupuestoExistente(presupuestoId, lineas){
+    return cargarNegocioCompleto().then(function(negocio){
+      if(!negocio || !Array.isArray(negocio.presupuestos)) return null;
+      var p = negocio.presupuestos.filter(function(x){ return x.id === presupuestoId; })[0];
+      if(!p) return null;
+      if(!Array.isArray(p.partidas)) p.partidas = [];
+      var ivaLinea = ivaMasFrecuente(p.partidas, Number(p.ivaPct));
+      lineas.forEach(function(l){
+        p.partidas.push({descripcion: l.descripcion, unidad: l.unidad||'ud', cantidad: l.cantidad||0, precio: l.precio||0, coste:0, iva: ivaLinea});
+      });
+      var subtotal = p.partidas.reduce(function(s,x){ return s + (Number(x.cantidad)||0)*(Number(x.precio)||0); }, 0);
+      var porTipo = {};
+      p.partidas.forEach(function(x){
+        var pct = x.iva===undefined ? (Number(p.ivaPct)||0) : Number(x.iva);
+        var base = (Number(x.cantidad)||0)*(Number(x.precio)||0);
+        porTipo[pct] = (porTipo[pct]||0) + base;
+      });
+      var ivaDesglose = Object.keys(porTipo).map(Number).sort(function(a,b){ return b-a; }).map(function(pct){
+        return {pct: pct, base: Math.round(porTipo[pct]*100)/100, cuota: Math.round(porTipo[pct]*pct)/100};
+      });
+      var cuota = ivaDesglose.reduce(function(s,d){ return s + d.cuota; }, 0);
+      var irpfPct = Number(p.irpfPct)||0;
+      var irpfImporte = p.irpfAplica ? subtotal * irpfPct/100 : 0;
+      var total = subtotal + cuota - irpfImporte;
+      p.base = Math.round(subtotal*100)/100;
+      p.ivaDesglose = ivaDesglose;
+      p.cuota = Math.round(cuota*100)/100;
+      p.irpfImporte = Math.round(irpfImporte*100)/100;
+      p.total = Math.round(total*100)/100;
+      return guardarNegocioCompleto(negocio).then(function(ok){ return ok ? p : null; });
+    });
+  }
+
+  function fmtEUR(n){
+    return (Number(n)||0).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  }
+
+  function pickerListHTML(presupuestos){
+    if(!presupuestos.length) return '<div class="cec-add-picker-empty">Todavía no tienes presupuestos pendientes creados.</div>';
+    return presupuestos.map(function(p){
+      return '<button type="button" class="cec-pp-opt" data-pid="' + escapeHtml(p.id) + '">' +
+        '<span><span class="cec-pp-num">' + escapeHtml(p.numero) + '</span><span class="cec-pp-cli">' + escapeHtml(p.cliente) + '</span></span>' +
+        '<span class="cec-pp-amt">' + fmtEUR(p.total) + '</span></button>';
+    }).join('');
+  }
 
   function normaliza(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
 
@@ -1813,44 +2748,173 @@
       '</div>';
   }
 
+  function attachFavStarHandlers(container, afterToggle){
+    Array.prototype.forEach.call(container.querySelectorAll('[data-fav-calc]'), function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var id = btn.getAttribute('data-fav-calc');
+        toggleCalcFavorita(id).then(afterToggle);
+      });
+    });
+  }
+
   function renderHome(){
     var html = '';
-    GRUPOS.forEach(function(g){
-      var cats = CATEGORIAS.filter(function(c){ return c.grupo === g.id; });
-      if(cats.length === 0) return;
-      html += '<div class="cec-group"><h2 class="cec-group-title">' + g.nombre + '</h2><div class="cec-grid">';
-      cats.forEach(function(c){
-        var n = CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length;
-        html += '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
-          '<div class="cec-card-icon">' + c.icono + '</div>' +
-          '<div class="cec-card-title">' + c.nombre + '</div>' +
-          '<div class="cec-card-sub">' + c.desc + ' · ' + n + ' calculadoras</div></div>';
-      });
-      html += '</div></div>';
-    });
+    if(isProfessionalLoggedIn() && calcFavoritasCache.length){
+      var favCalcs = calcFavoritasCache.map(function(id){ return CALCULADORAS.filter(function(x){ return x.id === id; })[0]; }).filter(Boolean);
+      if(favCalcs.length){
+        html += '<div class="cec-group cec-group-fav"><h2 class="cec-group-title">★ Tus calculadoras</h2><div class="cec-grid">' +
+          favCalcs.map(function(c){
+            return '<div class="cec-card" data-calc="' + c.id + '" tabindex="0" role="button">' + favoritaStarHTML(c.id) +
+              '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>';
+          }).join('') + '</div></div>';
+      }
+    }
+
+    html += '<h2 class="cec-section-title">Elige tu oficio</h2>' +
+      '<p class="cec-section-sub">Cada oficio agrupa sus calculadoras por cómo las usas, no por rama técnica.</p>' +
+      '<div class="cec-oficio-grid">' + OFICIOS.map(function(of){
+        var n = catsDeOficio(of).reduce(function(sum, c){ return sum + CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length; }, 0);
+        return '<div class="cec-oficio-card" data-oficio="' + of.id + '" tabindex="0" role="button">' +
+          '<span class="cec-oficio-icon" style="background:' + of.color + ';"><svg viewBox="0 0 24 24">' + ICONS[of.icon] + '</svg></span>' +
+          '<div class="cec-oficio-title">' + of.nombre + '</div>' +
+          '<div class="cec-oficio-desc">' + of.desc + '</div>' +
+          '<span class="cec-oficio-count">' + n + ' calculadoras</span></div>';
+      }).join('') + '</div>';
+
+    var catsTecnicas = CATEGORIAS.filter(function(c){ return !oficioDeCategoria(c.id); });
+    if(catsTecnicas.length){
+      html += '<details class="cec-group cec-group-advanced"><summary class="cec-group-title">' + catIconHTML(catsTecnicas[0], 22) + 'Categorías técnicas (geometría, conversores, electrónica…)</summary><div class="cec-grid">' +
+        catsTecnicas.map(function(c){
+          var n = CALCULADORAS.filter(function(x){ return x.cat === c.id; }).length;
+          return '<div class="cec-card cec-cat" data-cat="' + c.id + '" tabindex="0" role="button">' +
+            '<div class="cec-card-icon">' + catIconHTML(c, 40) + '</div>' +
+            '<div class="cec-card-title">' + c.nombre + '</div>' +
+            '<div class="cec-card-sub">' + c.desc + ' · ' + n + ' calculadoras</div></div>';
+        }).join('') + '</div></details>';
+    }
+
     elHome.innerHTML = html;
+    Array.prototype.forEach.call(elHome.querySelectorAll('[data-oficio]'), function(node){
+      node.addEventListener('click', function(){ goToOficio(node.getAttribute('data-oficio')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToOficio(node.getAttribute('data-oficio')); });
+    });
     Array.prototype.forEach.call(elHome.querySelectorAll('[data-cat]'), function(node){
       node.addEventListener('click', function(){ goToCategory(node.getAttribute('data-cat')); });
       node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCategory(node.getAttribute('data-cat')); });
     });
+    Array.prototype.forEach.call(elHome.querySelectorAll('[data-calc]'), function(node){
+      node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+    });
+    attachFavStarHandlers(elHome, renderHome);
+  }
+
+  var oficioActualId = null, oficioActualTab = null;
+
+  function renderBreadcrumb(target, parts){
+    target.innerHTML = parts.map(function(p, i){
+      var isLast = i === parts.length - 1;
+      if(isLast || !p.onClick) return '<span class="cec-crumb-current">' + p.label + '</span>';
+      return '<button type="button" class="cec-crumb-link" data-crumb-i="' + i + '">' + p.label + '</button>';
+    }).join('<span class="cec-crumb-sep">›</span>');
+    Array.prototype.forEach.call(target.querySelectorAll('[data-crumb-i]'), function(btn){
+      var p = parts[Number(btn.getAttribute('data-crumb-i'))];
+      btn.addEventListener('click', p.onClick);
+    });
+  }
+
+  function renderOficioCalcCard(c){
+    var destacada = c.destacada ? ' cec-card-featured' : '';
+    return '<div class="cec-card' + destacada + '" data-calc="' + c.id + '" tabindex="0" role="button">' +
+      (isProfessionalLoggedIn() ? favoritaStarHTML(c.id) : '') +
+      (c.destacada ? '<span class="cec-card-badge">Recomendado</span>' : '') +
+      '<div class="cec-card-body"><div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div></div>';
+  }
+
+  function renderOficio(oficioId, tabId){
+    var of = OFICIOS.filter(function(x){ return x.id === oficioId; })[0];
+    if(!of) return;
+    var tabs = tabsDeOficio(oficioId);
+    oficioActualId = oficioId;
+    oficioActualTab = tabs ? (tabId || tabs[0].id) : null;
+
+    var lista;
+    if(tabs){
+      var tab = tabs.filter(function(t){ return t.id === oficioActualTab; })[0] || tabs[0];
+      lista = tab.calcs.map(function(id){ return CALCULADORAS.filter(function(c){ return c.id === id; })[0]; }).filter(Boolean);
+    } else {
+      var catIds = of.cats;
+      lista = CALCULADORAS.filter(function(c){ return catIds.indexOf(c.cat) !== -1; });
+    }
+    // destacadas primero
+    lista = lista.filter(function(c){ return c.destacada; }).concat(lista.filter(function(c){ return !c.destacada; }));
+
+    var html = '<div class="cec-crumb" id="cecOfcCrumb"></div>' +
+      '<div class="cec-ofc-head"><span class="cec-ofc-head-icon" style="background:' + of.color + ';"><svg viewBox="0 0 24 24">' + ICONS[of.icon] + '</svg></span>' +
+      '<div><h1>' + of.nombre + '</h1><p>' + of.desc + '</p></div></div>';
+
+    if(tabs){
+      html += '<div class="cec-tabs">' + tabs.map(function(t){
+        var n = t.calcs.length;
+        var active = t.id === oficioActualTab ? ' active' : '';
+        return '<div class="cec-tab' + active + '" data-tab="' + t.id + '">' + t.nombre + ' <span class="cec-tab-count">' + n + '</span></div>';
+      }).join('') + '</div>';
+    }
+
+    html += '<div class="cec-grid">' + lista.map(renderOficioCalcCard).join('') + '</div>';
+
+    elOfc.innerHTML = html;
+
+    renderBreadcrumb(document.getElementById('cecOfcCrumb'), [
+      {label:'Calculadoras', onClick:function(){ showView('home'); history.replaceState(null,'','#'); }},
+      {label: of.nombre}
+    ]);
+
+    if(tabs){
+      Array.prototype.forEach.call(elOfc.querySelectorAll('[data-tab]'), function(node){
+        node.addEventListener('click', function(){ goToOficio(oficioId, node.getAttribute('data-tab')); });
+      });
+    }
+    Array.prototype.forEach.call(elOfc.querySelectorAll('[data-calc]'), function(node){
+      node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+    });
+    attachFavStarHandlers(elOfc, function(){ renderOficio(oficioId, oficioActualTab); });
+  }
+
+  function goToOficio(oficioId, tabId){
+    if(!isRegistered()){ showRegisterGate(); return; }
+    renderOficio(oficioId, tabId);
+    showView('ofc');
+    history.replaceState(null, '', '#of-' + oficioId + (tabId ? '-' + tabId : ''));
   }
 
   function renderCategoria(catId){
     var cat = CATEGORIAS.filter(function(c){ return c.id === catId; })[0];
     var lista = CALCULADORAS.filter(function(c){ return c.cat === catId; });
-    var html = '<h2 class="cec-section-title">' + cat.icono + ' ' + cat.nombre + '</h2><div class="cec-grid">';
+    var html = '<h2 class="cec-section-title">' + catIconHTML(cat, 28) + cat.nombre + '</h2><div class="cec-grid">';
     lista.forEach(function(c){ html += '<div class="cec-card" data-calc="' + c.id + '" tabindex="0" role="button">' +
-      '<div class="cec-card-icon">' + c.icono + '</div><div class="cec-card-title">' + c.titulo + '</div></div>'; });
+      (isProfessionalLoggedIn() ? favoritaStarHTML(c.id) : '') +
+      '<div class="cec-card-icon">' + calcIconHTML(c, 40) + '</div><div class="cec-card-title">' + c.titulo + '</div></div>'; });
     html += '</div>';
     elCat.innerHTML = html;
     Array.prototype.forEach.call(elCat.querySelectorAll('[data-calc]'), function(node){
       node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
       node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
     });
+    attachFavStarHandlers(elCat, function(){ renderCategoria(catId); });
   }
 
   function fieldHTML(f){
     var id = 'f_' + f.key;
+    if(f.type === 'heading'){
+      return '<div class="cec-form-heading" id="' + id + '">' + f.label + '</div>';
+    }
+    if(f.type === 'checkbox'){
+      var checkedAttr = f.def ? ' checked' : '';
+      return '<label class="cec-field cec-field-checkbox"><input type="checkbox" id="' + id + '" data-key="' + f.key + '"' + checkedAttr + '><span>' + f.label + '</span></label>';
+    }
     if(f.type === 'select'){
       var opciones = f.options.map(function(o){
         var sel = (f.def === o.value) ? ' selected' : '';
@@ -1861,8 +2925,13 @@
     if(f.type === 'text'){
       return '<label class="cec-field"><span>' + f.label + '</span><input type="text" id="' + id + '" data-key="' + f.key + '" value="' + (f.def !== undefined ? f.def : '') + '"></label>';
     }
+    var esPrecio = f.unit && f.unit.indexOf('€') !== -1;
+    var extra = '';
+    if(esPrecio && isProfessionalLoggedIn()){
+      extra = chipsHTML(f.key) + '<button type="button" class="calc-save-fav-link" data-save-fav-key="' + f.key + '">+ Guardar este precio como material favorito</button>';
+    }
     return '<label class="cec-field"><span>' + f.label + (f.unit ? ' (' + f.unit + ')' : '') + '</span>' +
-      '<input type="number" step="any" id="' + id + '" data-key="' + f.key + '" value="' + (f.def !== undefined ? f.def : '') + '"></label>';
+      '<input type="number" step="any" id="' + id + '" data-key="' + f.key + '" value="' + (f.def !== undefined ? f.def : '') + '">' + extra + '</label>';
   }
 
   function goToCategory(catId){
@@ -1878,23 +2947,183 @@
     if(!isRegistered()){ showRegisterGate(); return; }
     var calc = CALCULADORAS.filter(function(c){ return c.id === calcId; })[0];
     if(!calc) return;
-    var html = '<h2 class="cec-section-title">' + calc.icono + ' ' + calc.titulo + '</h2>' +
+    calcActualId = calc.id;
+    var html = '<div class="cec-crumb" id="cecCalcCrumb"></div>' +
+      '<h2 class="cec-section-title">' + calcIconHTML(calc, 28) + calc.titulo + (isProfessionalLoggedIn() ? favoritaStarHTML(calc.id) : '') + '</h2>' +
       (calc.info ? '<p class="cec-info">' + calc.info + '</p>' : '') +
       '<div class="cec-form">' + calc.fields.map(fieldHTML).join('') + '</div>' +
-      '<div class="cec-result" id="cecResult"></div>';
+      '<div class="cec-result" id="cecResult"></div>' +
+      ((isRegistered() && !isProfessionalLoggedIn()) ?
+        '<div id="cecObraActionWrap" style="display:none;margin-top:10px;">' +
+          '<button type="button" class="cec-add-budget-btn" id="cecAddObra">🧱 Añadir a mi lista de la reforma</button>' +
+          '<div class="cec-add-toast" id="cecAddObraToast" style="display:none;"></div>' +
+        '</div>' : '') +
+      (isProfessionalLoggedIn() ?
+        '<div id="cecAddBudgetWrap" style="display:none;margin-top:10px;">' +
+          '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">➕ Añadir a un presupuesto</button>' +
+          '<div class="cec-add-toast" id="cecAddToast" style="display:none;"></div>' +
+          '<div class="cec-add-picker" id="cecAddPicker" style="display:none;">' +
+            '<button type="button" class="cec-add-draft-btn" id="cecAddDraftBtn">Guardar para mi próximo presupuesto</button>' +
+            '<div class="cec-add-picker-sep">o añade directamente a uno ya creado</div>' +
+            '<div id="cecAddPickerList" class="cec-add-picker-list"><div class="cec-add-picker-loading">Cargando tus presupuestos…</div></div>' +
+          '</div>' +
+        '</div>' : '');
     elCalc.innerHTML = html;
+
+    var ofBread = oficioDeCategoria(calc.cat);
+    var crumbParts = [{label:'Calculadoras', onClick:function(){ showView('home'); history.replaceState(null,'','#'); }}];
+    if(ofBread){
+      var tabsBread = tabsDeOficio(ofBread.id);
+      var tabBread = tabsBread ? tabsBread.filter(function(t){ return t.calcs.indexOf(calc.id) !== -1; })[0] : null;
+      crumbParts.push({label: ofBread.nombre, onClick:function(){ goToOficio(ofBread.id, tabBread ? tabBread.id : null); }});
+      if(tabBread) crumbParts.push({label: tabBread.nombre, onClick:function(){ goToOficio(ofBread.id, tabBread.id); }});
+    } else {
+      var catBread = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0];
+      crumbParts.push({label: catBread.nombre, onClick:function(){ goToCategory(calc.cat); }});
+    }
+    crumbParts.push({label: calc.titulo});
+    renderBreadcrumb(document.getElementById('cecCalcCrumb'), crumbParts);
+    var favStarBtn = elCalc.querySelector('[data-fav-calc]');
+    if(favStarBtn){
+      favStarBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        toggleCalcFavorita(calc.id).then(function(){
+          var on = esCalcFavorita(calc.id);
+          favStarBtn.classList.toggle('is-fav', on);
+          favStarBtn.textContent = on ? '★' : '☆';
+          favStarBtn.title = on ? 'Quitar de favoritas' : 'Añadir a favoritas';
+          favStarBtn.setAttribute('aria-label', favStarBtn.title);
+        });
+      });
+    }
+    var addObraBtn = document.getElementById('cecAddObra');
+    if(addObraBtn){
+      addObraBtn.addEventListener('click', function(){
+        var n = guardarEnListaObra(calc.titulo, detalleDeResultado(ultimoResultado));
+        var toastObra = document.getElementById('cecAddObraToast');
+        if(toastObra && n > 0){
+          toastObra.style.display = '';
+          toastObra.textContent = 'Añadido — llevas ' + n + (n === 1 ? ' partida' : ' partidas') + ' en tu lista de la reforma';
+        }
+        renderListaObraIndicator();
+      });
+    }
+    var addBtn = document.getElementById('cecAddBudget');
+    var picker = document.getElementById('cecAddPicker');
+    var pickerListEl = document.getElementById('cecAddPickerList');
+    var pickerLoaded = false;
+    if(addBtn && picker){
+      addBtn.addEventListener('click', function(){
+        var open = picker.style.display !== 'none';
+        picker.style.display = open ? 'none' : '';
+        if(!open && !pickerLoaded){
+          pickerLoaded = true;
+          cargarPresupuestosPendientes().then(function(lista){
+            if(pickerListEl) pickerListEl.innerHTML = pickerListHTML(lista);
+          });
+        }
+      });
+    }
+    var draftBtn = document.getElementById('cecAddDraftBtn');
+    if(draftBtn){
+      draftBtn.addEventListener('click', function(){
+        var lineas = resumenPartida(calc, ultimoResultado);
+        var n = guardarEnBorradorPresupuesto(lineas);
+        var toast = document.getElementById('cecAddToast');
+        if(toast){
+          toast.style.display = '';
+          toast.textContent = n > 0
+            ? 'Añadido — llevas ' + n + (n === 1 ? ' partida guardada' : ' partidas guardadas') + ' para tu próximo presupuesto'
+            : 'Este resultado no tiene cantidades que añadir a un presupuesto.';
+        }
+        if(picker) picker.style.display = 'none';
+        renderDraftIndicator();
+      });
+    }
+    if(pickerListEl){
+      pickerListEl.addEventListener('click', function(e){
+        var opt = e.target.closest('.cec-pp-opt');
+        if(!opt) return;
+        var pid = opt.getAttribute('data-pid');
+        var lineas = resumenPartida(calc, ultimoResultado);
+        var toastVacio = document.getElementById('cecAddToast');
+        if(!lineas.length){
+          if(toastVacio){
+            toastVacio.style.display = '';
+            toastVacio.textContent = 'Este resultado no tiene cantidades que añadir a un presupuesto.';
+          }
+          return;
+        }
+        opt.disabled = true;
+        anadirPartidaAPresupuestoExistente(pid, lineas).then(function(p){
+          var toast = document.getElementById('cecAddToast');
+          if(!toast) return;
+          if(p){
+            toast.style.display = '';
+            toast.textContent = 'Añadida al presupuesto ' + p.numero + ' — ' + p.cliente + '. Nuevo total: ' + fmtEUR(p.total);
+            if(picker) picker.style.display = 'none';
+          } else {
+            toast.style.display = '';
+            toast.textContent = 'No se pudo añadir al presupuesto. Inténtalo de nuevo.';
+            opt.disabled = false;
+          }
+        });
+      });
+    }
+    elCalc.onclick = function(e){
+      var chip = e.target.closest('.mat-chip');
+      if(chip){
+        var key = chip.getAttribute('data-fill-key');
+        var input = document.getElementById('f_' + key);
+        if(input){ input.value = chip.getAttribute('data-fill-val'); input.dispatchEvent(new Event('input', {bubbles:true})); }
+        return;
+      }
+      var saveBtn = e.target.closest('.calc-save-fav-link');
+      if(saveBtn){
+        var fkey = saveBtn.getAttribute('data-save-fav-key');
+        var fInput = document.getElementById('f_' + fkey);
+        var precio = fInput ? parseFloat(fInput.value) : NaN;
+        if(!fInput || !Number.isFinite(precio) || precio < 0){ window.alert('Escribe primero un precio válido en el campo.'); return; }
+        var nombre = window.prompt('¿Cómo quieres llamar a este material?', calc.titulo);
+        if(!nombre || !nombre.trim()) return;
+        var fieldDef = calc.fields.filter(function(x){ return x.key === fkey; })[0];
+        var unidad = (fieldDef && fieldDef.unit) ? fieldDef.unit.replace('€','').replace('/','').trim() : '';
+        guardarMaterialFavorito(nombre.trim(), unidad || 'ud', precio).then(function(ok){
+          if(ok) refrescarChipsFavoritos();
+        });
+      }
+    };
     var inputs = elCalc.querySelectorAll('[data-key]');
+    var ultimoResultado = [];
+    function actualizarVisibilidadCampos(values){
+      calc.fields.forEach(function(f){
+        if(typeof f.showIf !== 'function') return;
+        var el = document.getElementById('f_' + f.key);
+        if(!el) return;
+        var target = el.classList.contains('cec-form-heading') ? el : (el.closest('.cec-field') || el);
+        target.style.display = f.showIf(values) ? '' : 'none';
+      });
+    }
     function recalcular(){
       var values = {};
-      Array.prototype.forEach.call(inputs, function(inp){ values[inp.getAttribute('data-key')] = inp.value; });
+      Array.prototype.forEach.call(inputs, function(inp){
+        values[inp.getAttribute('data-key')] = inp.type === 'checkbox' ? inp.checked : inp.value;
+      });
+      actualizarVisibilidadCampos(values);
       var out = document.getElementById('cecResult');
       try {
         var res = calc.compute(values);
+        ultimoResultado = res;
         out.innerHTML = res.map(function(r){
           if(r.link) return '<a class="cec-result-cta" href="' + r.href + '">' + r.label + '</a>';
           return '<div class="cec-result-row"><span>' + r.label + '</span><strong>' + r.value + (r.unit ? ' ' + r.unit : '') + '</strong></div>';
         }).join('');
         out.classList.remove('cec-error');
+        var hayResultado = res.some(function(r){ return !r.link; });
+        var obraActionWrap = document.getElementById('cecObraActionWrap');
+        if(obraActionWrap) obraActionWrap.style.display = hayResultado ? '' : 'none';
+        var addBudgetWrap = document.getElementById('cecAddBudgetWrap');
+        if(addBudgetWrap) addBudgetWrap.style.display = hayResultado ? '' : 'none';
       } catch(e){
         out.innerHTML = '<div class="cec-error-msg">⚠ ' + e.message + '</div>';
         out.classList.add('cec-error');
@@ -1906,27 +3135,27 @@
     });
     recalcular();
     showView('calc');
-    elBackLabel.textContent = CATEGORIAS.filter(function(c){ return c.id === calc.cat; })[0].nombre;
-    elBack.onclick = function(){ goToCategory(calc.cat); };
     history.replaceState(null, '', '#calc-' + calc.id);
   }
 
   function showView(name){
     elHome.style.display = name === 'home' ? '' : 'none';
+    elOfc.style.display = name === 'ofc' ? '' : 'none';
     elCat.style.display = name === 'cat' ? '' : 'none';
     elCalc.style.display = name === 'calc' ? '' : 'none';
-    elBack.style.display = name === 'home' ? 'none' : '';
+    elBack.style.display = name === 'cat' ? '' : 'none';
+    if(elHero) elHero.style.display = name === 'home' ? '' : 'none';
     window.scrollTo(0,0);
   }
 
   function renderBusqueda(term){
     var t = normaliza(term);
     if(!t){ elSearchResults.style.display = 'none'; elSearchResults.innerHTML=''; return; }
-    var res = CALCULADORAS.filter(function(c){ return normaliza(c.titulo).indexOf(t) !== -1; }).slice(0, 20);
+    var res = CALCULADORAS.filter(function(c){ return coincideBusqueda(c, t); }).slice(0, 20);
     if(res.length === 0){ elSearchResults.style.display=''; elSearchResults.innerHTML = '<div class="cec-no-results">Sin resultados</div>'; return; }
     elSearchResults.style.display = '';
     elSearchResults.innerHTML = res.map(function(c){
-      return '<div class="cec-search-item" data-calc="' + c.id + '">' + c.icono + ' ' + c.titulo + '</div>';
+      return '<div class="cec-search-item" data-calc="' + c.id + '">' + calcIconHTML(c, 20) + c.titulo + '</div>';
     }).join('');
     Array.prototype.forEach.call(elSearchResults.querySelectorAll('[data-calc]'), function(node){
       node.addEventListener('click', function(){
@@ -1939,6 +3168,7 @@
 
   function init(){
     elHome = document.getElementById('cecHome');
+    elOfc = document.getElementById('cecOfc');
     elCat = document.getElementById('cecCat');
     elCalc = document.getElementById('cecCalc');
     elSearch = document.getElementById('cecSearch');
@@ -1946,16 +3176,64 @@
     elBack = document.getElementById('cecBack');
     elBackLabel = document.getElementById('cecBackLabel');
     elGate = document.getElementById('cecGate');
+    elHero = document.getElementById('cecHero');
     renderHome();
     showView('home');
-    elSearch.addEventListener('input', function(){ renderBusqueda(elSearch.value); });
+    if(elSearch) elSearch.addEventListener('input', function(){ renderBusqueda(elSearch.value); });
     var gateClose = document.getElementById('cecGateClose');
     if(gateClose) gateClose.addEventListener('click', hideRegisterGate);
     if(elGate) elGate.addEventListener('click', function(e){ if(e.target === elGate) hideRegisterGate(); });
 
+    var darkToggle = document.getElementById('cecDarkToggle');
+    if(darkToggle){
+      var darkOn = false;
+      try { darkOn = localStorage.getItem('cec-modo-obra') === '1'; } catch(e){ console.warn('No se pudo leer el modo obra:', e); }
+      function aplicarModoObra(on){
+        document.body.classList.toggle('cec-dark', on);
+        darkToggle.classList.toggle('on', on);
+        try { localStorage.setItem('cec-modo-obra', on ? '1' : '0'); } catch(e){ console.warn('No se pudo guardar el modo obra:', e); }
+      }
+      aplicarModoObra(darkOn);
+      darkToggle.addEventListener('click', function(){ aplicarModoObra(!document.body.classList.contains('cec-dark')); });
+    }
+
     var hash = location.hash.replace('#','');
-    if(hash.indexOf('calc-') === 0) goToCalculadora(hash.slice(5));
-    else if(hash) { var c = CATEGORIAS.filter(function(x){return x.id===hash;})[0]; if(c) goToCategory(hash); }
+    if(hash.indexOf('calc-') === 0){
+      goToCalculadora(hash.slice(5));
+    } else if(hash.indexOf('of-') === 0){
+      var rest = hash.slice(3);
+      var ofHash = OFICIOS.filter(function(x){ return rest === x.id || rest.indexOf(x.id + '-') === 0; })[0];
+      if(ofHash){
+        var tabHash = rest.length > ofHash.id.length ? rest.slice(ofHash.id.length + 1) : null;
+        goToOficio(ofHash.id, tabHash);
+      }
+    } else if(hash){
+      // Compatibilidad con enlaces antiguos a categorías (p.ej. #fundamentales,
+      // #materiales) que ahora viven dentro de la vista de un oficio.
+      var c = CATEGORIAS.filter(function(x){ return x.id === hash; })[0];
+      if(c){
+        var ofLegacy = oficioDeCategoria(hash);
+        if(ofLegacy) goToOficio(ofLegacy.id); else goToCategory(hash);
+      }
+    }
+
+    if(isProfessionalLoggedIn()){
+      cargarMaterialesFavoritos().then(function(lista){
+        materialesCache = lista;
+        refrescarChipsFavoritos();
+      });
+      cargarCalcFavoritas().then(function(lista){
+        calcFavoritasCache = lista;
+        if(elHome && elHome.style.display !== 'none') renderHome();
+      });
+      bindDraftIndicator();
+      renderDraftIndicator();
+    }
+
+    if(isRegistered()){
+      bindListaObraIndicator();
+      renderListaObraIndicator();
+    }
   }
 
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

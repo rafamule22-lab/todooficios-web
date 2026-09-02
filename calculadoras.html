@@ -6,7 +6,9 @@
 <title>Calculadoras Online Gratis: Electricidad, Reformas y Construcción | TodoOficios.es</title>
 <meta name="description" content="Más de 90 calculadoras online gratuitas para reformas, construcción, electricidad, pintura, suelos y fontanería: materiales, cortes, presupuestos orientativos y más. Gratis con cuenta de cliente o profesional.">
 <link rel="canonical" href="https://todooficios.es/calculadoras.html">
-<link rel="icon" href="assets/logo.png" type="image/png">
+<link rel="icon" href="assets/icon-192.png" type="image/png" sizes="192x192">
+<link rel="icon" href="assets/icon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="assets/icon-512.png">
 <meta name="robots" content="index,follow">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Calculadoras Online Gratis: Electricidad, Reformas y Construcción | TodoOficios.es">
@@ -23,10 +25,12 @@
   body{margin:0;font-family:'IBM Plex Sans',sans-serif;background:var(--paper-light);color:var(--ink);line-height:1.5;}
   h1,h2{font-family:'Space Grotesk',sans-serif;margin:0;}
   a{color:inherit;}
-  .cec-top{background:var(--ink);color:var(--paper-light);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+  .cec-top{background:var(--ink);color:var(--paper-light);padding:16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;}
   .cec-top a.cec-home{text-decoration:none;border:1px solid rgba(247,245,240,0.25);border-radius:7px;padding:8px 12px;font-size:13px;white-space:nowrap;}
   .cec-top a.cec-home:hover{background:rgba(247,245,240,0.1);}
-  .cec-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;}
+  .cec-brand{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;display:inline-flex;align-items:center;gap:9px;}
+  .cec-brand .mic{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;width:26px;height:26px;background:var(--amber);flex-shrink:0;}
+  .cec-brand .mic svg{width:14px;height:14px;stroke:var(--ink);color:var(--ink);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
   .cec-wrap{max-width:960px;margin:0 auto;padding:20px 16px 60px;}
   .cec-hero{text-align:center;padding:20px 8px 26px;}
   .cec-hero h1{font-size:1.6rem;margin-bottom:8px;}
@@ -41,19 +45,33 @@
   .cec-no-results{padding:12px 14px;color:var(--ink-soft);font-size:14px;}
   .cec-back{display:inline-flex;align-items:center;gap:6px;margin:18px 0 6px;background:none;border:none;color:var(--ink-soft);font-size:14px;cursor:pointer;padding:6px 0;font-family:inherit;}
   .cec-back:hover{color:var(--ink);}
-  .cec-section-title{font-size:1.25rem;margin:6px 0 14px;}
+  .cec-section-title{font-size:1.25rem;margin:6px 0 14px;display:flex;align-items:center;gap:10px;}
   .cec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;}
-  .cec-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;transition:transform .12s, box-shadow .12s;}
+  .cec-card{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 12px;text-align:center;cursor:pointer;transition:transform .12s, box-shadow .12s;}
+  .cec-fav-star{position:absolute;top:6px;right:6px;background:none;border:none;font-size:17px;line-height:1;cursor:pointer;color:var(--line);padding:4px;z-index:2;}
+  .cec-fav-star:hover{color:var(--amber-deep);}
+  .cec-fav-star.is-fav{color:var(--amber-deep);}
+  .cec-section-title .cec-fav-star{position:static;font-size:20px;margin-left:auto;}
+  .cec-group-fav .cec-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .cec-card:hover, .cec-card:focus-visible{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.10);outline:2px solid var(--amber);}
-  .cec-card-icon{font-family:'IBM Plex Mono',monospace;font-size:1.5rem;font-weight:600;color:var(--amber-deep);margin-bottom:8px;height:32px;display:flex;align-items:center;justify-content:center;}
+  .cec-card-icon{margin-bottom:8px;height:40px;display:flex;align-items:center;justify-content:center;}
   .cec-card-title{font-size:13.5px;font-weight:600;line-height:1.3;}
   .cec-card-sub{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
-  .cec-cat .cec-card-icon{font-size:1.8rem;}
+  .cec-mic{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0;}
+  .cec-mic svg{width:55%;height:55%;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .cec-mic-formula{font-family:'IBM Plex Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--amber-deep);display:inline-flex;align-items:center;justify-content:center;min-width:32px;}
+  .cec-group-title .cec-mic-formula, .cec-section-title .cec-mic-formula{font-size:1.05rem;}
+  .cec-search-item .cec-mic{margin-right:4px;vertical-align:-4px;}
+  .cec-search-item .cec-mic-formula{font-size:1rem;min-width:20px;margin-right:2px;}
   .cec-info{background:var(--paper-light);border-left:3px solid var(--amber);padding:10px 14px;border-radius:8px;font-size:13.5px;color:var(--ink-soft);margin-bottom:18px;}
   .cec-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;}
-  .cec-field{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600;}
-  .cec-field input, .cec-field select{font-family:'IBM Plex Mono',monospace;padding:9px 10px;border-radius:8px;border:1px solid var(--line);font-size:14px;background:var(--paper-light);}
+  .cec-field{display:flex;flex-direction:column;gap:6px;font-size:13.5px;font-weight:600;min-width:0;}
+  .cec-field input, .cec-field select{font-family:'IBM Plex Mono',monospace;padding:8px 9px;border-radius:8px;border:1px solid var(--line);font-size:13px;background:var(--paper-light);width:100%;min-width:0;max-width:100%;}
   .cec-field input:focus, .cec-field select:focus{outline:2px solid var(--amber);background:#fff;}
+  .cec-field-checkbox{flex-direction:row;align-items:center;gap:8px;}
+  .cec-field-checkbox input{width:auto;flex:0 0 auto;accent-color:var(--amber-deep);}
+  .cec-form-heading{grid-column:1/-1;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:12px;margin-top:2px;}
+  .cec-form-heading:first-child{border-top:none;padding-top:0;margin-top:0;}
   .cec-result{margin-top:16px;background:var(--ink);border-radius:12px;padding:16px 18px;}
   .cec-result-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(247,245,240,0.12);font-family:'IBM Plex Mono',monospace;color:var(--paper-light);font-size:14.5px;}
   .cec-result-row:last-child{border-bottom:none;}
@@ -61,6 +79,13 @@
   .cec-error-msg{color:#ffb4b4;font-size:13.5px;font-family:'IBM Plex Sans',sans-serif;}
   .cec-group{margin-bottom:28px;}
   .cec-group-title{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .cec-group-advanced{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fff;}
+  .cec-group-advanced .cec-group-title{cursor:pointer;list-style:none;margin:0;color:var(--ink-soft);}
+  .cec-group-advanced .cec-group-title::-webkit-details-marker{display:none;}
+  .cec-group-advanced .cec-group-title::after{content:'▸';margin-left:auto;color:var(--ink-soft);font-size:13px;}
+  .cec-group-advanced[open] .cec-group-title::after{content:'▾';}
+  .cec-group-advanced[open] .cec-group-title{margin-bottom:14px;color:var(--ink);}
+  .cec-group-advanced .cec-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .cec-result-cta{margin-top:6px;display:block;background:var(--amber);color:var(--ink);text-align:center;font-weight:600;padding:12px 14px;border-radius:8px;text-decoration:none;font-family:'IBM Plex Sans',sans-serif;font-size:14px;}
   .cec-result-cta:hover{background:var(--amber-deep);}
   .cec-gate{position:fixed;inset:0;background:rgba(20,20,18,0.6);display:none;align-items:center;justify-content:center;z-index:100;padding:16px;}
@@ -74,28 +99,117 @@
   .cec-gate-btn-outline{background:transparent;border:1px solid var(--line);color:var(--ink);}
   .cec-gate-btn-outline:hover{background:var(--paper-light);}
   .cec-gate-close{position:absolute;top:8px;right:10px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--ink-soft);line-height:1;padding:6px;}
+  .cec-add-budget-btn{margin-top:14px;width:100%;padding:12px 14px;border-radius:8px;border:none;background:var(--amber);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;cursor:pointer;}
+  .cec-add-budget-btn:hover{background:var(--amber-deep);}
+  .cec-add-toast{margin-top:10px;background:rgba(46,143,110,0.1);border:1px solid rgba(46,143,110,0.35);color:#1f6b52;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:600;}
+  .cec-add-picker{margin-top:10px;border:1.5px solid var(--line);border-radius:10px;padding:12px;background:#fff;}
+  .cec-add-draft-btn{width:100%;background:var(--ink);color:#fff;border:none;border-radius:8px;padding:10px;font-weight:600;font-size:13px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;}
+  .cec-add-picker-sep{font-size:11.5px;color:var(--ink-soft);text-align:center;margin:10px 0 8px;}
+  .cec-add-picker-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto;}
+  .cec-add-picker-loading,.cec-add-picker-empty{font-size:12.5px;color:var(--ink-soft);text-align:center;padding:8px 0;}
+  .cec-pp-opt{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border:1.5px solid var(--line);border-radius:8px;cursor:pointer;font-size:12.5px;background:#fff;text-align:left;font-family:'IBM Plex Sans',sans-serif;width:100%;}
+  .cec-pp-opt:hover{border-color:#7458C2;}
+  .cec-pp-opt .cec-pp-num{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:11.5px;display:block;}
+  .cec-pp-opt .cec-pp-cli{color:var(--ink-soft);font-size:11.5px;display:block;}
+  .cec-pp-opt .cec-pp-amt{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:12px;white-space:nowrap;}
+  .mat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .mat-chip{font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:999px;background:rgba(107,99,85,0.12);color:#6B6355;border:1px solid rgba(107,99,85,0.3);cursor:pointer;}
+  .mat-chip:hover{background:rgba(107,99,85,0.22);}
+  .calc-save-fav-link{font-size:12px;color:var(--ink-soft);text-decoration:underline;background:none;border:none;padding:0;cursor:pointer;margin-top:6px;display:inline-block;font-family:'IBM Plex Sans',sans-serif;}
+  .cec-draft-wrap{position:static;}
+  .cec-draft-pill{display:inline-flex;align-items:center;gap:6px;background:var(--amber);color:var(--ink);border:none;border-radius:999px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;}
+  .cec-draft-pill:hover{background:var(--amber-deep);}
+  .cec-draft-menu{position:absolute;top:calc(100% + 8px);right:0;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,0.18);width:300px;max-width:85vw;padding:10px;z-index:20;}
+  .cec-draft-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 4px;font-size:12.5px;border-bottom:1px solid var(--line);}
+  .cec-draft-item:last-child{border-bottom:none;}
+  .cec-draft-item span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cec-draft-item button{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 4px;flex-shrink:0;}
+  .cec-draft-item[data-draft-id]{display:block;padding:8px 4px;}
+  .cec-draft-item-top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .cec-draft-item-top span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .cec-draft-item-top button{background:none;border:none;color:var(--ink-soft);cursor:pointer;font-size:15px;padding:2px 4px;flex-shrink:0;}
+  .cec-draft-item-nums{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:5px;color:var(--ink-soft);font-size:11.5px;}
+  .cec-draft-num{width:48px;padding:3px 4px;font-size:12px;border:1px solid var(--line);border-radius:6px;font-family:inherit;}
+  .cec-draft-subtotal{font-weight:600;color:var(--ink);}
+  .cec-draft-total{display:flex;justify-content:space-between;padding:8px 4px 4px;font-size:13px;font-weight:600;border-top:1px solid var(--line);margin-top:2px;}
+  .cec-draft-menu a.btn-link{display:block;margin-top:8px;text-align:center;background:var(--ink);color:#fff;border-radius:8px;padding:9px;text-decoration:none;font-size:12.5px;font-weight:600;}
+  .cec-dark-toggle{background:none;border:1px solid rgba(247,245,240,0.25);border-radius:7px;padding:8px 12px;font-size:13px;color:var(--paper-light);cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .cec-dark-toggle:hover{background:rgba(247,245,240,0.1);}
+  .cec-dark-toggle.on{background:var(--amber);border-color:var(--amber);color:var(--ink);font-weight:600;}
+
+  .cec-section-sub{font-size:13px;color:var(--ink-soft);margin:-8px 0 16px;}
+
+  .cec-oficio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:8px;}
+  .cec-oficio-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px 18px;text-align:left;cursor:pointer;transition:transform .12s, box-shadow .12s;}
+  .cec-oficio-card:hover, .cec-oficio-card:focus-visible{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,0.10);outline:2px solid var(--amber);}
+  .cec-oficio-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+  .cec-oficio-icon svg{width:23px;height:23px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .cec-oficio-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.02rem;margin-bottom:6px;}
+  .cec-oficio-desc{font-size:12.5px;color:var(--ink-soft);margin-bottom:12px;line-height:1.4;}
+  .cec-oficio-count{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--amber-deep);background:rgba(217,164,0,0.1);padding:4px 9px;border-radius:999px;}
+
+  .cec-crumb{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:4px;}
+  .cec-crumb-link{background:none;border:none;padding:0;font:inherit;color:var(--ink-soft);text-decoration:underline;cursor:pointer;}
+  .cec-crumb-link:hover{color:var(--ink);}
+  .cec-crumb-sep{color:var(--line);margin:0 2px;}
+  .cec-crumb-current{color:var(--ink);font-weight:600;}
+
+  .cec-ofc-head{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+  .cec-ofc-head-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .cec-ofc-head-icon svg{width:22px;height:22px;stroke:#fff;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
+  .cec-ofc-head h1{font-size:1.35rem;}
+  .cec-ofc-head p{font-size:13px;color:var(--ink-soft);margin-top:3px;}
+
+  .cec-tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap;}
+  .cec-tab{padding:10px 14px;font-size:13px;font-weight:600;color:var(--ink-soft);border-bottom:3px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+  .cec-tab:hover{color:var(--ink);}
+  .cec-tab.active{color:var(--ink);border-bottom-color:var(--amber);}
+  .cec-tab-count{font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;background:rgba(20,20,18,0.08);color:var(--ink-soft);padding:2px 6px;border-radius:999px;}
+  .cec-tab.active .cec-tab-count{background:rgba(217,164,0,0.15);color:var(--amber-deep);}
+
+  .cec-card-body{display:contents;}
+  .cec-card-featured{grid-column:1 / -1;display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;background:linear-gradient(0deg,#fff,#fff), var(--paper-light);border-color:var(--amber);}
+  .cec-card-featured .cec-card-body{display:flex;align-items:center;gap:14px;}
+  .cec-card-featured .cec-card-icon{margin-bottom:0;}
+  .cec-card-badge{position:static;font-size:10px;font-weight:700;color:var(--amber-deep);background:rgba(217,164,0,0.12);padding:3px 8px;border-radius:999px;}
+
+  body.cec-dark{background:var(--ink);color:var(--paper-light);}
+  body.cec-dark .cec-wrap :is(h1,h2){color:var(--paper-light);}
+  body.cec-dark .cec-hero p, body.cec-dark .cec-section-sub, body.cec-dark .cec-ofc-head p, body.cec-dark .cec-oficio-desc, body.cec-dark .cec-card-sub, body.cec-dark .cec-crumb, body.cec-dark .cec-crumb-link, body.cec-dark .cec-tab{color:#B7B2A6;}
+  body.cec-dark .cec-crumb-current, body.cec-dark .cec-tab.active{color:var(--paper-light);}
+  body.cec-dark #cecSearch, body.cec-dark .cec-card, body.cec-dark .cec-oficio-card, body.cec-dark .cec-form, body.cec-dark .cec-group-advanced{background:#211F1B;border-color:rgba(247,245,240,0.16);color:var(--paper-light);}
+  body.cec-dark .cec-card-title{color:var(--paper-light);}
+  body.cec-dark .cec-field input, body.cec-dark .cec-field select{background:#141210;border-color:rgba(247,245,240,0.2);color:var(--paper-light);}
+  body.cec-dark .cec-info{background:#211F1B;color:#B7B2A6;}
+  body.cec-dark .cec-form-heading{color:#B7B2A6;border-color:rgba(247,245,240,0.16);}
+  body.cec-dark .cec-result{border:1px solid rgba(242,183,5,0.25);}
+  body.cec-dark .cec-tabs{border-bottom-color:rgba(247,245,240,0.16);}
+
   @media (max-width:520px){
     .cec-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+    .cec-oficio-grid{grid-template-columns:1fr;}
     .cec-form{grid-template-columns:1fr;}
   }
 </style>
 </head>
 <body>
   <div class="cec-top">
-    <span class="cec-brand">🧮 Calculadoras TodoOficios</span>
+    <span class="cec-brand"><span class="mic"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></span>Calculadoras TodoOficios</span>
+    <div id="cecObraWrap" class="cec-draft-wrap" style="display:none;">
+      <button type="button" class="cec-draft-pill" id="cecObraPill"></button>
+      <div class="cec-draft-menu" id="cecObraMenu" style="display:none;"></div>
+    </div>
+    <div id="cecDraftWrap" class="cec-draft-wrap" style="display:none;">
+      <button type="button" class="cec-draft-pill" id="cecDraftPill"></button>
+      <div class="cec-draft-menu" id="cecDraftMenu" style="display:none;"></div>
+    </div>
+    <button type="button" class="cec-dark-toggle" id="cecDarkToggle" title="Modo obra: alto contraste para usar en obra">Modo obra</button>
     <a class="cec-home" href="index.html">← Volver a TodoOficios.es</a>
   </div>
   <main class="cec-wrap">
-    <div class="cec-hero">
-      <h1>Calculadoras online gratis para tu reforma u obra</h1>
-      <p>Más de 90 herramientas: materiales de construcción, pintura, suelos, fontanería, electricidad y geometría. Gratis, sin anuncios ni funciones bloqueadas — solo necesitas una cuenta gratuita de cliente o profesional.</p>
-      <div class="cec-search-wrap">
-        <input type="text" id="cecSearch" placeholder="Buscar una calculadora… (ej. caída de tensión, baldosas, hormigón)" autocomplete="off">
-        <div id="cecSearchResults"></div>
-      </div>
-    </div>
     <button class="cec-back" id="cecBack" style="display:none;">← <span id="cecBackLabel">Volver</span></button>
     <div id="cecHome"></div>
+    <div id="cecOfc" style="display:none;"></div>
     <div id="cecCat" style="display:none;"></div>
     <div id="cecCalc" style="display:none;"></div>
     <p style="margin-top:40px;font-size:12px;color:var(--ink-soft);text-align:center;">
@@ -114,6 +228,8 @@
       </div>
     </div>
   </div>
-  <script src="calculadoras.js?v=3"></script>
+  <script src="legal-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="calculadoras.js?v=9"></script>
 </body>
 </html>
