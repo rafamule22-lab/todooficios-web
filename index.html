@@ -2314,33 +2314,6 @@ async function getAllProfessionals(){
   }
   return list;
 }
-async function seedDemoIfNeeded(){
-  const seeded = await safeGet('seeded-v2', true);
-  if(seeded) return;
-  const demo = [
-    {name:'Franco Medina', oficio:'Electricista', zona:'Madrid Centro', bio:'Instalaciones eléctricas domiciliarias e industriales. 12 años de experiencia.', photo:'', phone:'+34 600 000 001', email:'demo-franco@todooficios.es', verificado:true, lat:40.4168, lng:-3.7038},
-    {name:'Cecilia Basle', oficio:'Gasista', zona:'Madrid Este', bio:'Instalación y reparación de gas natural y envasado. Certificaciones al día.', photo:'', phone:'+34 600 000 002', email:'demo-cecilia@todooficios.es', verificado:true, lat:40.4300, lng:-3.6800},
-    {name:'Matías Servant', oficio:'Fontanero', zona:'Madrid Norte', bio:'Destapaciones, cañerías y arreglos urgentes. Presupuesto sin cargo.', photo:'', phone:'+34 600 000 003', email:'demo-matias@todooficios.es', verificado:true, lat:40.4500, lng:-3.6900},
-    {name:'Pedro Salatic', oficio:'Instalador de aire acondicionado', zona:'Madrid Sur', bio:'Instalación y service de equipos split y central. Atención el mismo día.', photo:'', phone:'+34 600 000 004', email:'demo-pedro@todooficios.es', verificado:false, lat:40.3900, lng:-3.7100},
-    {name:'Ricardo Hidalgo', oficio:'Albañil', zona:'Madrid Centro', bio:'Refacciones, ampliaciones y obra nueva. Trabajo prolijo y con referencias.', photo:'', phone:'+34 600 000 005', email:'demo-ricardo@todooficios.es', verificado:true, lat:40.4200, lng:-3.7200},
-    {name:'Eduardo Sara', oficio:'Pintor', zona:'Madrid Este', bio:'Pintura interior y exterior, impermeabilizaciones. Presupuesto en el día.', photo:'', phone:'+34 600 000 006', email:'demo-eduardo@todooficios.es', verificado:false, lat:40.4350, lng:-3.6700},
-  ];
-  let index = [];
-  for(const d of demo){
-    await safeSet('account:'+d.email, JSON.stringify(d), true);
-    index.push(d.email);
-  }
-  await safeSet('accounts-index', JSON.stringify(index), true);
-  const demoRatings = [
-    {proEmail:'demo-franco@todooficios.es', stars:5, comment:'Vino el mismo día y solucionó el corte en minutos.', clientName:'Laura M.', createdAt:Date.now()-86400000*3},
-    {proEmail:'demo-franco@todooficios.es', stars:4, comment:'Buen trabajo, un poco de demora en llegar.', clientName:'Iván R.', createdAt:Date.now()-86400000*10},
-    {proEmail:'demo-cecilia@todooficios.es', stars:5, comment:'Muy prolija y con toda la documentación al día.', clientName:'Sofía P.', createdAt:Date.now()-86400000*5},
-    {proEmail:'demo-matias@todooficios.es', stars:5, comment:'Destapó una cañería complicada, quedó impecable.', clientName:'Diego F.', createdAt:Date.now()-86400000*2},
-    {proEmail:'demo-ricardo@todooficios.es', stars:4, comment:'Buena terminación en la ampliación de la cocina.', clientName:'Marta G.', createdAt:Date.now()-86400000*15},
-  ];
-  await safeSet('ratings', JSON.stringify(demoRatings), true);
-  await safeSet('seeded-v2', 'true', true);
-}
 
 /* ======================= RESEÑAS ======================= */
 const RATING_CRITERIA = [
@@ -6521,7 +6494,6 @@ function renderFeaturedPaypalButtons(){
 /* ======================= INIT ======================= */
 async function init(){
   await initSupabaseClient();
-  await seedDemoIfNeeded();
   await loadSession();
   setActiveNav('home');
   applyLegalProfileToFooter();
