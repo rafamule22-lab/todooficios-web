@@ -11,9 +11,11 @@ Se usa Supabase (Postgres gestionado + API REST autogenerada) como almacén comp
 
 ## Consecuencias
 - Cero backend propio que mantener; el sitio sigue siendo estático.
-- **La seguridad de acceso depende enteramente de las políticas RLS de `kv_store`**, no de una capa de autenticación real — el login se verifica en el cliente (`verifyPasswordRecord` en `index.html`). Esto es el punto más delicado de toda la arquitectura y debe revisarse antes de escalar el número de usuarios reales.
-- Cualquier cambio de "quién puede leer/escribir qué" requiere replantear las políticas RLS por `key`, no por usuario, porque no hay identidad de sesión en la base de datos.
-- Las operaciones que sí necesitan privilegios elevados (leer todos los posts en borrador, notificar respuestas) se hacen desde Edge Functions con `SUPABASE_SERVICE_ROLE_KEY`, nunca desde el cliente.
+- **La seguridad de acceso depende de las políticas RLS de `kv_store`**, no de una capa de autenticación real — no hay sesión ni JWT: el navegador simplemente recuerda un email en `localStorage` como "sesión". Esto es el punto más delicado de toda la arquitectura.
+- (2026-09) Se cerró la parte más grave: las contraseñas (`passwordHash`/`passwordSalt`) vivían dentro del mismo objeto público (`client:<email>` / `account:<email>`) que cualquiera podía leer y sobrescribir con la anon key — permitía tanto exfiltrar todos los hashes como tomar cualquier cuenta reescribiéndolos. Ahora viven en `credentials:<email-key>`, con RLS que bloquea ese prefijo para `anon` por completo, y la verificación/alta de contraseña se hace en la Edge Function `account-auth` con `SUPABASE_SERVICE_ROLE_KEY`. Se retiró también el fallback que aceptaba contraseñas en texto plano sin hash.
+- **Lo que queda sin resolver:** el resto de cada perfil (fotos, bio, precios, `featuredUntil`, mensajes, presupuestos) sigue siendo de lectura Y escritura pública para `anon` — cualquiera con la anon key puede seguir editando el perfil público de otra persona (aunque ya no puede robarle ni cambiarle la contraseña). Cerrar eso del todo requeriría extender el mismo patrón (gatekeeper server-side) a cada operación de escritura del panel de negocio, que es una superficie mucho más grande y no se abordó en este cambio.
+- Cualquier cambio de "quién puede leer/escribir qué" requiere replantear las políticas RLS por `key` (prefijo), no por usuario, porque no hay identidad de sesión en la base de datos.
+- Las operaciones que necesitan privilegios elevados (leer todos los posts en borrador, notificar respuestas, verificar contraseñas) se hacen desde Edge Functions con `SUPABASE_SERVICE_ROLE_KEY`, nunca desde el cliente.
 
 ## Alternativas consideradas
 No hay evidencia en el repo de que se evaluaran alternativas (Firebase, backend propio en un VPS) antes de esta decisión.

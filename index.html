@@ -1898,7 +1898,37 @@ async function verifyPasswordRecord(record, password){
     const hash = await sha256Hex(password + '|' + record.passwordSalt);
     return hash === record.passwordHash;
   }
-  return record.password === password;
+  return false;
+}
+/* La contraseña de client:<email> / account:<email> se verifica y se guarda en el
+   servidor (Edge Function account-auth) cuando hay conexión a Supabase, para que el
+   hash+salt no viva dentro del mismo objeto público que cualquiera puede leer con la
+   anon key. Si no hay cloud disponible (modo local/desarrollo, o la función todavía no
+   está desplegada), se usa el comportamiento anterior como respaldo: el hash queda
+   embebido en el propio perfil. */
+async function verifyAccountPassword(key, record, password){
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'login', key, password } });
+        if(!error && data) return !!data.ok;
+      }
+    } catch(e){ console.warn('No se pudo verificar la contraseña en el servidor, se usa la verificación local:', e); }
+  }
+  return await verifyPasswordRecord(record, password);
+}
+async function registerAccountCredentials(key, password){
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'register', key, password } });
+        if(!error && data) return { ok: !!data.ok, serverSide: true };
+      }
+    } catch(e){ console.warn('No se pudo registrar la contraseña en el servidor, se guarda solo localmente:', e); }
+  }
+  return { ok: true, serverSide: false };
 }
 function legalConsentCopy(){
   return 'He leído y acepto el Aviso Legal, la Política de Privacidad y la Política de Cookies';
@@ -3035,18 +3065,25 @@ function bindClient(){
           msgBox.innerHTML = '<div class="msg err">Ya existe un cliente con ese email.</div>';
           return;
         }
-        const pw = await buildPasswordRecord(password);
+        const cred = await registerAccountCredentials('client:'+email, password);
+        if(!cred.ok){
+          msgBox.innerHTML = '<div class="msg err">Ya existe una cuenta con ese email.</div>';
+          return;
+        }
         const client = {
           name,
           email,
           phone,
-          passwordHash: pw.passwordHash,
-          passwordSalt: pw.passwordSalt,
           favorites: [],
           createdAt: Date.now(),
           legalAcceptedAt: Date.now(),
           contactVerified: false
         };
+        if(!cred.serverSide){
+          const pw = await buildPasswordRecord(password);
+          client.passwordHash = pw.passwordHash;
+          client.passwordSalt = pw.passwordSalt;
+        }
         const savedClient = await saveClientAccount(client);
         if(!savedClient){
           msgBox.innerHTML = '<div class="msg err">No se pudo crear la cuenta. Revisa el almacenamiento del navegador e inténtalo de nuevo.</div>';
@@ -3064,16 +3101,9 @@ function bindClient(){
         return;
       }
       const existing = await getClientByEmail(email);
-      if(!existing || !(await verifyPasswordRecord(existing, password))){
+      if(!existing || !(await verifyAccountPassword('client:'+email, existing, password))){
         msgBox.innerHTML = '<div class="msg err">Email o contraseña incorrectos.</div>';
         return;
-      }
-      if(existing.password && !existing.passwordHash){
-        const migrated = await buildPasswordRecord(password);
-        existing.passwordHash = migrated.passwordHash;
-        existing.passwordSalt = migrated.passwordSalt;
-        delete existing.password;
-        await saveClientAccount(existing);
       }
       const sessionSaved = await safeSet('session-email-client', email, false);
       if(!sessionSaved){
@@ -3234,12 +3264,14 @@ function bindCourseProviderSignup(){
       return;
     }
 
-    const pw = await buildPasswordRecord(password);
+    const cred = await registerAccountCredentials('account:'+email, password);
+    if(!cred.ok){
+      msgBox.innerHTML = '<div class="msg err">Ya existe una cuenta con ese email.</div>';
+      return;
+    }
     const newAccount = {
       name,
       email,
-      passwordHash: pw.passwordHash,
-      passwordSalt: pw.passwordSalt,
       phone,
       website: website || '',
       bio: desc,
@@ -3252,6 +3284,11 @@ function bindCourseProviderSignup(){
       workPhotos: [],
       featuredUntil: null
     };
+    if(!cred.serverSide){
+      const pw = await buildPasswordRecord(password);
+      newAccount.passwordHash = pw.passwordHash;
+      newAccount.passwordSalt = pw.passwordSalt;
+    }
 
     const savedAccount = await safeSet('account:'+email, JSON.stringify(newAccount), true);
     if(!savedAccount){
@@ -3737,13 +3774,15 @@ function bindPro(){
         return;
       }
 
+      const cred = await registerAccountCredentials('account:'+email, password);
+      if(!cred.ok){
+        msgBox.innerHTML = '<div class="msg err">Ya existe una cuenta con ese email.</div>';
+        return;
+      }
       const promo = await claimLaunchPromoSlot();
-      const pw = await buildPasswordRecord(password);
       const newAccount = {
         name,
         email,
-        passwordHash: pw.passwordHash,
-        passwordSalt: pw.passwordSalt,
         oficio: document.getElementById('rg-oficio').value,
         phone,
         address: document.getElementById('rg-address').value.trim(),
@@ -3763,6 +3802,11 @@ function bindPro(){
         premiumPromoSlot: promo.granted ? promo.slot : null,
         premiumTrial: !promo.granted
       };
+      if(!cred.serverSide){
+        const pw = await buildPasswordRecord(password);
+        newAccount.passwordHash = pw.passwordHash;
+        newAccount.passwordSalt = pw.passwordSalt;
+      }
 
       const savedAccount = await safeSet('account:'+email, JSON.stringify(newAccount), true);
       if(!savedAccount){
@@ -3801,14 +3845,7 @@ function bindPro(){
       const raw = await safeGet('account:'+email, true);
       if(!raw){ msgBox.innerHTML = '<div class="msg err">No encontramos una cuenta con ese email.</div>'; return; }
       const acc = JSON.parse(raw);
-      if(!(await verifyPasswordRecord(acc, password))){ msgBox.innerHTML = '<div class="msg err">Contraseña incorrecta.</div>'; return; }
-      if(acc.password && !acc.passwordHash){
-        const migrated = await buildPasswordRecord(password);
-        acc.passwordHash = migrated.passwordHash;
-        acc.passwordSalt = migrated.passwordSalt;
-        delete acc.password;
-        await safeSet('account:'+email, JSON.stringify(acc), true);
-      }
+      if(!(await verifyAccountPassword('account:'+email, acc, password))){ msgBox.innerHTML = '<div class="msg err">Contraseña incorrecta.</div>'; return; }
 
       const sessionSaved = await safeSet('session-email', email, false);
       if(!sessionSaved){

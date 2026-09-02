@@ -16,9 +16,11 @@ Directorio de profesionales de oficios (fontaneros, electricistas, albañiles, c
 
 ## Modelo de datos (importante)
 
-**No hay Supabase Auth.** La tabla `kv_store` es un almacén clave/valor genérico (`namespace`, `key`, `value` como JSON en texto) usado como sustituto en la nube de `localStorage` — ver `getStorageApi()`/`cloudStorageAdapter()` en `index.html`. Todos los datos de la app (cuentas, presupuestos, mensajes) viven bajo el namespace fijo `todooficios:v1`, diferenciados solo por `key`. El login verifica la contraseña **en el cliente** (`verifyPasswordRecord` en `index.html`), no en el servidor.
+**No hay Supabase Auth.** La tabla `kv_store` es un almacén clave/valor genérico (`namespace`, `key`, `value` como JSON en texto) usado como sustituto en la nube de `localStorage` — ver `getStorageApi()`/`cloudStorageAdapter()` en `index.html`. Todos los datos de la app (cuentas, presupuestos, mensajes) viven bajo el namespace fijo `todooficios:v1`, diferenciados solo por `key` (p. ej. `client:<email>`, `account:<email>`, `contactMessages`).
 
-Esto significa que la seguridad de acceso depende enteramente de las políticas RLS de `kv_store`, no de autenticación real. Cualquier cambio a esas políticas debe considerar que hoy en día casi toda key se lee y escribe directo desde el navegador con la anon key pública.
+La seguridad de acceso depende de las políticas RLS de `kv_store` (`supabase/migrations/`): casi toda key se lee y escribe directo desde el navegador con la anon key pública, porque el sitio es estático y necesita que el directorio de profesionales sea público. La única excepción es el prefijo **`credentials:<email-key>`**, bloqueado por completo para `anon` — ahí vive el `passwordHash`/`passwordSalt` de cada cuenta, gestionado exclusivamente por la Edge Function `account-auth` (con `SUPABASE_SERVICE_ROLE_KEY`). El login y el alta de cuentas llaman a esa función (`verifyAccountPassword()` / `registerAccountCredentials()` en `index.html`) en vez de comparar la contraseña en el propio navegador. Si Supabase no está configurado (modo local/desarrollo) o la función aún no está desplegada, cae de vuelta al comportamiento anterior (hash embebido en el perfil) para no romper el flujo.
+
+Cualquier otro dato del perfil (fotos, bio, presupuestos, mensajes) sigue sin protección por usuario a nivel de fila — solo se protegió lo más crítico (credenciales). Ver `docs/decisions/0001-supabase-como-backend.md` para el detalle y las limitaciones que quedan pendientes.
 
 ## Despliegue
 

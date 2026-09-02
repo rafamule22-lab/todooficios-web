@@ -11,7 +11,7 @@ create table if not exists public.kv_store (
 
 alter table public.kv_store enable row level security;
 
--- Lectura pública (cliente web)
+-- Lectura pública (cliente web), excepto las credenciales (ver Edge Function account-auth)
 do $$
 begin
   if not exists (
@@ -24,11 +24,11 @@ begin
       on public.kv_store
       for select
       to anon
-      using (true);
+      using (key not like 'credentials:%');
   end if;
 end $$;
 
--- Escritura pública (cliente web)
+-- Escritura pública (cliente web), excepto las credenciales
 do $$
 begin
   if not exists (
@@ -41,11 +41,11 @@ begin
       on public.kv_store
       for insert
       to anon
-      with check (true);
+      with check (key not like 'credentials:%');
   end if;
 end $$;
 
--- Actualización pública (cliente web)
+-- Actualización pública (cliente web), excepto las credenciales
 do $$
 begin
   if not exists (
@@ -58,12 +58,12 @@ begin
       on public.kv_store
       for update
       to anon
-      using (true)
-      with check (true);
+      using (key not like 'credentials:%')
+      with check (key not like 'credentials:%');
   end if;
 end $$;
 
--- Borrado público (cliente web)
+-- Borrado público (cliente web), excepto las credenciales
 do $$
 begin
   if not exists (
@@ -76,6 +76,11 @@ begin
       on public.kv_store
       for delete
       to anon
-      using (true);
+      using (key not like 'credentials:%');
   end if;
 end $$;
+
+-- Si la tabla y las políticas YA existen de antes (creadas con using(true)),
+-- ejecuta también supabase/migrations/20260902000000_restrict_credentials_key.sql
+-- para sustituirlas por las de arriba: los bloques `if not exists` de este
+-- archivo no tocan políticas que ya existan.

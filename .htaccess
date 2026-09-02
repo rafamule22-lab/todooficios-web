@@ -3,14 +3,17 @@ DirectoryIndex index.html
 # ============================================================
 # MODO CONSTRUCCION: muestra "proximamente.html" a todo el mundo
 # Para ver la web real mientras esta en construccion, entra en:
-#   https://todooficios.es/?preview=toc-construccion-2026
+#   https://todooficios.es/?preview=toc-552d78c52fafdb4502a16698
 # (te deja una cookie 30 dias para no tener que repetirlo)
 # Para publicar la web, borra este bloque completo.
+# El codigo se rotó (2026-09) porque el anterior quedó expuesto en texto
+# plano en el historial de git; si se vuelve a filtrar, cambialo aquí de
+# nuevo por otro aleatorio.
 # ============================================================
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  RewriteCond %{QUERY_STRING} preview=toc-construccion-2026 [OR]
+  RewriteCond %{QUERY_STRING} preview=toc-552d78c52fafdb4502a16698 [OR]
   RewriteCond %{HTTP_COOKIE} toc_preview=1
   RewriteRule ^ - [CO=toc_preview:1:%{HTTP_HOST}:2592000:/,L]
 
