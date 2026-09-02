@@ -29,9 +29,24 @@ AddDefaultCharset UTF-8
   AddCharset UTF-8 .html .css .js .json
 </IfModule>
 
-# Durante desarrollo, evita que el navegador muestre versiones antiguas
+# Cabeceras de seguridad básicas
 <IfModule mod_headers.c>
-  Header set Cache-Control "no-cache, no-store, must-revalidate, max-age=0"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+</IfModule>
+
+# HTML: siempre revalidar (para no servir una versión vieja de la SPA)
+<IfModule mod_headers.c>
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Assets estáticos: sí se pueden cachear (antes se forzaba no-cache en todo el sitio)
+<IfModule mod_headers.c>
+  <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
 </IfModule>

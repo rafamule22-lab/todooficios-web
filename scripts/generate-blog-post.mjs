@@ -15,7 +15,7 @@ const OFICIOS_GROUPS = [
   { group: 'Mantenimiento general', items: ['Manitas / mantenimiento del hogar', 'Jardinero', 'Instalador de riego', 'Limpieza post obra', 'Retiro de escombros'] }
 ];
 
-function isoWeekNumber(date) {
+export function isoWeekNumber(date) {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
@@ -23,7 +23,7 @@ function isoWeekNumber(date) {
   return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
 }
 
-function slugify(text) {
+export function slugify(text) {
   return text
     .normalize('NFD').replace(/[̀-ͯ]/g, '')
     .toLowerCase()
@@ -126,7 +126,9 @@ Responde ÚNICAMENTE con un objeto JSON válido (sin bloques de código, sin tex
   console.log('Revísalo y publícalo cambiando status a "published" en Supabase Studio.');
 }
 
-main().catch((err) => {
-  console.error('Fallo generando el post del blog:', err.message || err);
-  process.exit(1);
-});
+if (import.meta.url === `file://${process.argv[1]}`) {
+  main().catch((err) => {
+    console.error('Fallo generando el post del blog:', err.message || err);
+    process.exit(1);
+  });
+}

@@ -23,19 +23,19 @@
     if(params.get('preview') === 'toc-construccion-2026'){
       localStorage.setItem(PREVIEW_KEY, String(Date.now() + THIRTY_DAYS_MS));
     }
-  }catch(e){}
+  }catch(e){ console.warn('No se pudo guardar el acceso de vista previa:', e); }
   var hasPreviewAccess = false;
   try{
     var expiry = parseInt(localStorage.getItem(PREVIEW_KEY) || '0', 10);
     hasPreviewAccess = expiry > Date.now();
-  }catch(e){}
+  }catch(e){ console.warn('No se pudo leer el acceso de vista previa:', e); }
   var onProximamente = /\/proximamente\.html$/.test(location.pathname);
   if(!hasPreviewAccess && !onProximamente){
     location.replace('/proximamente.html');
   }
 })();
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#141412">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1579,7 +1579,7 @@
 <script src="legal-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-window.TODOOFICIOS_LEGAL = Object.assign({
+const TODOOFICIOS_LEGAL_DEFAULTS = {
   razonSocial: 'PENDIENTE_RAZON_SOCIAL',
   nifCif: 'PENDIENTE_NIF_CIF',
   domicilio: 'PENDIENTE_DOMICILIO_FISCAL',
@@ -1597,7 +1597,8 @@ window.TODOOFICIOS_LEGAL = Object.assign({
     tiktok: '',
     web: ''
   }
-}, window.TODOOFICIOS_LEGAL || {});
+};
+window.TODOOFICIOS_LEGAL = Object.assign({}, TODOOFICIOS_LEGAL_DEFAULTS, window.TODOOFICIOS_LEGAL || {});
 
 /* ======================= TAXONOMÍA DE OFICIOS ======================= */
 const OFICIOS_GROUPS = [
@@ -1948,25 +1949,26 @@ function renderSocialLinks(social, showPlaceholders=false){
   return links.length ? `<div class="social-links">${links.join('')}</div>` : '';
 }
 function getLegalProfile(){
+  const defaults = TODOOFICIOS_LEGAL_DEFAULTS;
   const cfg = window.TODOOFICIOS_LEGAL || {};
   const social = cfg.social || {};
   return {
-    razonSocial: cfg.razonSocial || 'PENDIENTE_RAZON_SOCIAL',
-    nifCif: cfg.nifCif || 'PENDIENTE_NIF_CIF',
-    domicilio: cfg.domicilio || 'PENDIENTE_DOMICILIO_FISCAL',
-    emailContacto: cfg.emailContacto || 'contacto@todooficios.es',
-    emailSoporte: cfg.emailSoporte || 'soporte@todooficios.es',
-    telefono: cfg.telefono || '+34 910 00 00 00',
-    paypalClientId: cfg.paypalClientId || 'PENDIENTE_PAYPAL_CLIENT_ID',
-    supabaseUrl: cfg.supabaseUrl || 'PENDIENTE_SUPABASE_URL',
-    supabaseAnonKey: cfg.supabaseAnonKey || 'PENDIENTE_SUPABASE_ANON_KEY',
+    razonSocial: cfg.razonSocial || defaults.razonSocial,
+    nifCif: cfg.nifCif || defaults.nifCif,
+    domicilio: cfg.domicilio || defaults.domicilio,
+    emailContacto: cfg.emailContacto || defaults.emailContacto,
+    emailSoporte: cfg.emailSoporte || defaults.emailSoporte,
+    telefono: cfg.telefono || defaults.telefono,
+    paypalClientId: cfg.paypalClientId || defaults.paypalClientId,
+    supabaseUrl: cfg.supabaseUrl || defaults.supabaseUrl,
+    supabaseAnonKey: cfg.supabaseAnonKey || defaults.supabaseAnonKey,
     showLegalAlertInProduction: !!cfg.showLegalAlertInProduction,
     social: {
-      instagram: social.instagram || '',
-      facebook: social.facebook || '',
-      linkedin: social.linkedin || '',
-      tiktok: social.tiktok || '',
-      web: social.web || ''
+      instagram: social.instagram || defaults.social.instagram,
+      facebook: social.facebook || defaults.social.facebook,
+      linkedin: social.linkedin || defaults.social.linkedin,
+      tiktok: social.tiktok || defaults.social.tiktok,
+      web: social.web || defaults.social.web
     }
   };
 }
@@ -2122,7 +2124,7 @@ function leerSolicitudPresupuestoAlcance(){
   } catch(e){ return null; }
 }
 function descartarSolicitudPresupuestoAlcance(){
-  try { localStorage.removeItem('solicitud-presupuesto-alcance'); } catch(e){}
+  try { localStorage.removeItem('solicitud-presupuesto-alcance'); } catch(e){ console.warn('No se pudo descartar la solicitud de presupuesto por alcance:', e); }
 }
 function waLink(phone, proName){
   const digits = (phone||'').replace(/\D/g,'');
@@ -2576,21 +2578,21 @@ async function signInWithGoogle(role){
     showToast('El acceso con Google no está disponible ahora mismo.');
     return;
   }
-  try{ window.localStorage.setItem('oauth-pending-role', role); }catch(e){}
+  try{ window.localStorage.setItem('oauth-pending-role', role); }catch(e){ console.warn('No se pudo guardar el rol pendiente de OAuth:', e); }
   const { error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin + window.location.pathname }
   });
   if(error){
-    try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){}
+    try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){ console.warn('No se pudo limpiar el rol pendiente de OAuth:', e); }
     showToast('No se pudo iniciar el acceso con Google.');
   }
 }
 async function handleGoogleAuthRedirect(){
   let pendingRole = null;
-  try{ pendingRole = window.localStorage.getItem('oauth-pending-role'); }catch(e){}
+  try{ pendingRole = window.localStorage.getItem('oauth-pending-role'); }catch(e){ console.warn('No se pudo leer el rol pendiente de OAuth:', e); }
   if(!pendingRole) return;
-  try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){}
+  try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){ console.warn('No se pudo limpiar el rol pendiente de OAuth:', e); }
 
   const client = await initSupabaseClient();
   if(!client) return;
@@ -3316,7 +3318,7 @@ function renderDashboard(){
     ${negocioBannerHTML}
     <div class="panel panel-wide">
       <div class="dash-head" style="justify-content:flex-start; margin-bottom:14px;">
-        ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
+        ${account.photo ? `<img src="${account.photo}" alt="Foto de perfil de ${escapeHtml(account.name||'')}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
         <div style="flex:1; min-width:130px;">
           <h2 style="font-size:22px; margin:0;">${escapeHtml(account.name)}</h2>
           <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
@@ -3353,7 +3355,7 @@ function renderDashboard(){
   ${negocioBannerHTML}
   <a href="javascript:void(0)" class="back-link" id="dash-back-to-ficha">← Volver a mi ficha</a>
   <div class="dash-head">
-    ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
+    ${account.photo ? `<img src="${account.photo}" alt="Foto de perfil de ${escapeHtml(account.name||'')}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
     <div>
       <h2 style="font-size:22px;">${escapeHtml(account.name)}</h2>
       <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
@@ -3915,7 +3917,7 @@ function abrirPresupuestoPDF(id){
     const dd = new Date(p.fecha+'T00:00:00');
     dd.setDate(dd.getDate() + (p.validezDias||30));
     fechaValidez = dd.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'});
-  }catch(e){}
+  }catch(e){ console.warn('No se pudo calcular la fecha de validez del presupuesto:', e); }
 
   const filasHTML = (p.partidas||[]).map(x=>`
     <tr>
@@ -4025,7 +4027,7 @@ function abrirPresupuestoPDF(id){
   ${(p.fotos||[]).length ? `
   <div class="doc-fotos">
     <h3>Fotos del trabajo</h3>
-    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}">`).join('')}</div>
+    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}" alt="Foto del documento adjunto">`).join('')}</div>
   </div>` : ''}
 
   ${p.estado === 'Aceptado' ? `<div class="firma-digital ok">✓ Presupuesto aceptado digitalmente${p.firmaNombre?` por ${escapeHtml(p.firmaNombre)}`:''}${p.firmaFecha?` el ${formatDateES(p.firmaFecha)}`:''}.</div>`
@@ -4193,7 +4195,7 @@ function getPresupuestoDraft(email){
   try { return JSON.parse(localStorage.getItem('presupuesto-draft:'+email) || '[]'); } catch(e){ return []; }
 }
 function clearPresupuestoDraft(email){
-  try { localStorage.removeItem('presupuesto-draft:'+email); } catch(e){}
+  try { localStorage.removeItem('presupuesto-draft:'+email); } catch(e){ console.warn('No se pudo borrar el borrador de presupuesto:', e); }
 }
 
 async function renderNegocio(){
@@ -5272,7 +5274,7 @@ function bindPresupuestoForm(){
   function renderFotosPreview(){
     const el = document.getElementById('pp-fotos-preview');
     if(!el) return;
-    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
+    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}" alt="Foto adjunta al presupuesto"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
   }
   renderFotosPreview();
 
@@ -5282,7 +5284,7 @@ function bindPresupuestoForm(){
       const files = Array.from(fotosInput.files || []).slice(0, Math.max(0, FOTOS_MAX - ppFotos.length));
       fotosInput.value = '';
       for(const file of files){
-        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){}
+        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){ console.warn('No se pudo procesar una foto adjunta:', e); }
       }
       renderFotosPreview();
     };
@@ -5639,7 +5641,7 @@ function proCardHTML(p){
   return `
   <div class="pro-card">
     <div class="pro-card-top">
-      ${p.photo ? `<img class="ticket-photo" src="${p.photo}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
+      ${p.photo ? `<img class="ticket-photo" src="${p.photo}" alt="Foto de perfil de ${escapeHtml(p.name||'')}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
       <div>
         <div class="pro-name">${escapeHtml(p.name)}</div>
         <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>
@@ -5840,7 +5842,7 @@ async function renderDetalle(){
   <div class="ticket ticket-split" style="margin-bottom:26px;">
     <div class="ticket-main">
       <div class="ticket-top">
-        ${p.photo ? `<img class="ticket-photo" style="width:60px;height:60px;" src="${p.photo}">` : `<div class="ticket-photo-fallback" style="width:60px;height:60px;font-size:20px;">${(p.name||'?').charAt(0)}</div>`}
+        ${p.photo ? `<img class="ticket-photo" style="width:60px;height:60px;" src="${p.photo}" alt="Foto de perfil de ${escapeHtml(p.name||'')}">` : `<div class="ticket-photo-fallback" style="width:60px;height:60px;font-size:20px;">${(p.name||'?').charAt(0)}</div>`}
         <div>
           <div class="pro-name" style="font-size:22px;">${escapeHtml(p.name)}</div>
           <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>

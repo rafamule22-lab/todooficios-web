@@ -2171,7 +2171,7 @@
     try {
       if(localStorage.getItem('session-email')) return true;
       if(localStorage.getItem('session-email-client')) return true;
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo leer la sesión de localStorage:', e); }
     return false;
   }
 
@@ -2341,7 +2341,7 @@
       if(!proEmail) return;
       var lista = leerBorradorPresupuesto().filter(function(d){ return d.id !== id; });
       localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo actualizar el borrador de presupuesto:', e); }
   }
 
   function actualizarLineaBorrador(id, patch){
@@ -2356,14 +2356,14 @@
         return actualizado;
       });
       localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo guardar el borrador de presupuesto:', e); }
   }
 
   function vaciarBorradorPresupuesto(){
     try {
       var proEmail = localStorage.getItem('session-email');
       if(proEmail) localStorage.removeItem('presupuesto-draft:'+proEmail);
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo borrar el borrador de presupuesto:', e); }
   }
 
   /* Indicador persistente en la barra superior: cuántas partidas van
@@ -2496,7 +2496,7 @@
       if(!email) return;
       var lista = leerListaObra().filter(function(x){ return x.id !== id; });
       localStorage.setItem('obra-lista:'+email, JSON.stringify(lista));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo actualizar la lista de obra:', e); }
   }
 
   function resumenListaObraTexto(){
@@ -2514,7 +2514,7 @@
     try {
       if(!texto) return;
       localStorage.setItem('solicitud-presupuesto-alcance', JSON.stringify({resumen: texto, creadoEn: Date.now()}));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo guardar la solicitud de presupuesto por alcance:', e); }
   }
 
   function renderListaObraIndicator(){
@@ -3138,11 +3138,11 @@
     var darkToggle = document.getElementById('cecDarkToggle');
     if(darkToggle){
       var darkOn = false;
-      try { darkOn = localStorage.getItem('cec-modo-obra') === '1'; } catch(e){}
+      try { darkOn = localStorage.getItem('cec-modo-obra') === '1'; } catch(e){ console.warn('No se pudo leer el modo obra:', e); }
       function aplicarModoObra(on){
         document.body.classList.toggle('cec-dark', on);
         darkToggle.classList.toggle('on', on);
-        try { localStorage.setItem('cec-modo-obra', on ? '1' : '0'); } catch(e){}
+        try { localStorage.setItem('cec-modo-obra', on ? '1' : '0'); } catch(e){ console.warn('No se pudo guardar el modo obra:', e); }
       }
       aplicarModoObra(darkOn);
       darkToggle.addEventListener('click', function(){ aplicarModoObra(!document.body.classList.contains('cec-dark')); });
