@@ -52,6 +52,37 @@
     });
   }
 
+  /* presupuesto-publico:<id> está bloqueado para anon en kv_store (ver
+     supabase/functions/account-auth): el propio id (shareId aleatorio) es la
+     credencial, sin login, pero ya sin poder volcar la colección entera sin
+     conocerlo. Si la función todavía no está desplegada, cae de vuelta a
+     cloudGet/cloudSet de siempre (funciona mientras no se haya aplicado la
+     migración que restringe esta key). */
+  function securePresupuestoGet(key){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return null;
+      return client.functions.invoke('account-auth', {body: {action: 'get-public-presupuesto', key: key}})
+        .then(function(res){
+          if(!res.error && res.data && res.data.ok) return res.data.value;
+          return cloudGet(key);
+        })
+        .catch(function(){ return cloudGet(key); });
+    });
+  }
+
+  function securePresupuestoSet(key, value){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      return client.functions.invoke('account-auth', {body: {action: 'save-public-presupuesto', key: key, value: value}})
+        .then(function(res){
+          if(!res.error && res.data && res.data.ok) return true;
+          if(!res.error && res.data && !res.data.ok) return false;
+          return cloudSet(key, value);
+        })
+        .catch(function(){ return cloudSet(key, value); });
+    });
+  }
+
   function escapeHtml(str){
     var d = document.createElement('div');
     d.textContent = str || '';
@@ -185,7 +216,7 @@
         document.getElementById('btnAceptar').disabled = true;
         document.getElementById('btnRechazar').disabled = true;
         var actualizado = Object.assign({}, p, {estado: nuevoEstado, firmaNombre: nombre, firmaFecha: todayISO()});
-        cloudSet('presupuesto-publico:'+shareId, JSON.stringify(actualizado)).then(function(ok){
+        securePresupuestoSet('presupuesto-publico:'+shareId, JSON.stringify(actualizado)).then(function(ok){
           if(!ok){
             msg.innerHTML = '<div class="msg-err">No se pudo enviar tu respuesta. Comprueba tu conexión e inténtalo de nuevo.</div>';
             document.getElementById('btnAceptar').disabled = false;
@@ -207,7 +238,7 @@
       app.innerHTML = '<div class="state">Enlace incompleto: falta el identificador del presupuesto.</div>';
       return;
     }
-    cloudGet('presupuesto-publico:'+shareId).then(function(raw){
+    securePresupuestoGet('presupuesto-publico:'+shareId).then(function(raw){
       if(!raw){
         app.innerHTML = '<div class="state">No se ha encontrado este presupuesto. Puede que el enlace sea incorrecto o que el profesional lo haya retirado.</div>';
         return;

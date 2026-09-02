@@ -3,10 +3,13 @@
 --
 -- IMPORTANTE sobre el orden: si vienes de una versión anterior de este
 -- archivo (políticas con using(true), acceso total para anon), antes de
--- pegar esto despliega la Edge Function account-auth con SESSION_SECRET
--- configurado (ver supabase/functions/account-auth/index.ts). Si aplicas
--- las políticas de abajo antes de eso, nadie podrá editar su perfil, marcar
--- favoritos ni eliminar su cuenta hasta que la despliegues.
+-- pegar esto despliega la versión de la Edge Function account-auth que
+-- implementa TODAS sus acciones (login, register, get, save, delete,
+-- add-rating, get-messages, add-message, add-reply, get/save-public-
+-- presupuesto) con SESSION_SECRET configurado. Si aplicas las políticas de
+-- abajo antes de eso, se rompen el login/alta de clientes, el panel de
+-- negocio (incluidas las calculadoras), los mensajes, las reseñas nuevas y
+-- los presupuestos públicos hasta que despliegues la función.
 
 create table if not exists public.kv_store (
   namespace text not null,
@@ -18,7 +21,12 @@ create table if not exists public.kv_store (
 
 alter table public.kv_store enable row level security;
 
--- Lectura pública (cliente web y directorio), excepto las credenciales
+-- Lectura pública: solo lo que de verdad necesita ser público (el
+-- directorio de profesionales y las reseñas). Todo lo demás — cuentas de
+-- cliente, negocio, materiales/calculadoras favoritas, presupuestos
+-- públicos, mensajes y credenciales — está bloqueado para anon porque una
+-- consulta sin filtro (SELECT * sin .eq('key', ...)) devolvería TODAS las
+-- filas que la política deja pasar, no solo la que la app pide.
 do $$
 begin
   if not exists (
@@ -31,11 +39,21 @@ begin
       on public.kv_store
       for select
       to anon
-      using (key not like 'credentials:%');
+      using (
+        key not like 'credentials:%'
+        and key not like 'client:%'
+        and key not like 'negocio:%'
+        and key not like 'materiales:%'
+        and key not like 'calc-favoritas:%'
+        and key not like 'presupuesto-publico:%'
+        and key <> 'contactMessages'
+      );
   end if;
 end $$;
 
--- Alta de cuentas nuevas (INSERT, no UPDATE) y del resto de keys, excepto las credenciales
+-- Alta de cuentas nuevas (INSERT, no UPDATE): abierto solo para account:%
+-- (y las keys sueltas sin prefijo protegido, como accounts-index). El
+-- resto de colecciones sensibles se crean/actualizan solo vía Edge Function.
 do $$
 begin
   if not exists (
@@ -48,13 +66,23 @@ begin
       on public.kv_store
       for insert
       to anon
-      with check (key not like 'credentials:%');
+      with check (
+        key not like 'credentials:%'
+        and key not like 'client:%'
+        and key not like 'negocio:%'
+        and key not like 'materiales:%'
+        and key not like 'calc-favoritas:%'
+        and key not like 'presupuesto-publico:%'
+        and key <> 'contactMessages'
+        and key <> 'ratings'
+      );
   end if;
 end $$;
 
--- Actualización pública, EXCEPTO credenciales y perfiles de cliente/profesional
--- (esos se actualizan vía Edge Function account-auth, acción 'save', que exige
--- el token de sesión del login/alta)
+-- Actualización pública, EXCEPTO las colecciones protegidas: esas se
+-- actualizan vía Edge Function account-auth, que exige probar quién eres
+-- (token de sesión o sesión de Supabase Auth con Google) antes de tocar
+-- una fila que ya existe.
 do $$
 begin
   if not exists (
@@ -71,17 +99,28 @@ begin
         key not like 'credentials:%'
         and key not like 'client:%'
         and key not like 'account:%'
+        and key not like 'negocio:%'
+        and key not like 'materiales:%'
+        and key not like 'calc-favoritas:%'
+        and key not like 'presupuesto-publico:%'
+        and key <> 'contactMessages'
+        and key <> 'ratings'
       )
       with check (
         key not like 'credentials:%'
         and key not like 'client:%'
         and key not like 'account:%'
+        and key not like 'negocio:%'
+        and key not like 'materiales:%'
+        and key not like 'calc-favoritas:%'
+        and key not like 'presupuesto-publico:%'
+        and key <> 'contactMessages'
+        and key <> 'ratings'
       );
   end if;
 end $$;
 
--- Borrado público, EXCEPTO credenciales y perfiles de cliente/profesional
--- (esos se borran vía Edge Function account-auth, acción 'delete')
+-- Borrado público, EXCEPTO las colecciones protegidas (mismo motivo que UPDATE)
 do $$
 begin
   if not exists (
@@ -98,11 +137,16 @@ begin
         key not like 'credentials:%'
         and key not like 'client:%'
         and key not like 'account:%'
+        and key not like 'negocio:%'
+        and key not like 'materiales:%'
+        and key not like 'calc-favoritas:%'
+        and key not like 'presupuesto-publico:%'
+        and key <> 'contactMessages'
+        and key <> 'ratings'
       );
   end if;
 end $$;
 
 -- Si la tabla y las políticas YA existen de antes, los bloques `if not
 -- exists` de arriba no las tocan: ejecuta en su lugar, en este orden,
--- supabase/migrations/20260902000000_restrict_credentials_key.sql y
--- supabase/migrations/20260902000100_restrict_account_writes.sql
+-- todos los archivos de supabase/migrations/ (por fecha).
