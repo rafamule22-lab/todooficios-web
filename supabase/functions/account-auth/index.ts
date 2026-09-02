@@ -39,12 +39,14 @@
 //   1. supabase secrets set SESSION_SECRET=$(openssl rand -hex 32)
 //   2. supabase functions deploy account-auth
 //   3. Solo después, aplica (en orden) las migraciones
-//      20260902000100_restrict_account_writes.sql y
-//      20260902000200_restrict_sensitive_collections.sql
+//      20260902000100_restrict_account_writes.sql,
+//      20260902000200_restrict_sensitive_collections.sql y
+//      20260902000300_restrict_index_keys.sql
 //      (o pega supabase-kv-store.sql actualizado en el SQL Editor)
 // Si el paso 3 se aplica antes que el 1-2, se rompen el login/alta de
-// clientes, el panel de negocio, los mensajes, las reseñas nuevas y los
-// presupuestos públicos hasta que despliegues la función.
+// clientes y profesionales (incluidos los de Google), el panel de
+// negocio, los mensajes, las reseñas nuevas, los presupuestos públicos y
+// el directorio de profesionales hasta que despliegues la función.
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -180,6 +182,42 @@ async function resolveIdentity(
   return null;
 }
 
+function indexKeyFor(key: string): string | null {
+  if (key.startsWith('account:')) return 'accounts-index';
+  if (key.startsWith('client:')) return 'clients-index';
+  return null;
+}
+
+async function addToIndex(supabase: SupabaseClient, indexKey: string, email: string): Promise<void> {
+  const { data } = await supabase
+    .from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', indexKey).maybeSingle();
+  let list: string[] = [];
+  try { list = data ? JSON.parse(data.value) : []; } catch { list = []; }
+  if (!Array.isArray(list)) list = [];
+  if (list.includes(email)) return;
+  list.push(email);
+  await supabase.from('kv_store').upsert({
+    namespace: CLOUD_NAMESPACE, key: indexKey, value: JSON.stringify(list), updated_at: new Date().toISOString(),
+  }, { onConflict: 'namespace,key' });
+}
+
+async function removeFromIndex(supabase: SupabaseClient, indexKey: string, email: string): Promise<void> {
+  const { data } = await supabase
+    .from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', indexKey).maybeSingle();
+  if (!data) return;
+  try {
+    const list = JSON.parse(data.value);
+    if (!Array.isArray(list)) return;
+    const filtered = list.filter((e: string) => e !== email);
+    if (filtered.length === list.length) return;
+    await supabase.from('kv_store').upsert({
+      namespace: CLOUD_NAMESPACE, key: indexKey, value: JSON.stringify(filtered), updated_at: new Date().toISOString(),
+    }, { onConflict: 'namespace,key' });
+  } catch {
+    // Si el índice no es JSON válido, no hay nada sensato que filtrar.
+  }
+}
+
 async function purgeRatingsForPro(supabase: SupabaseClient, proEmail: string): Promise<void> {
   const { data } = await supabase
     .from('kv_store')
@@ -252,6 +290,9 @@ Deno.serve(async (req: Request) => {
         value: JSON.stringify({ passwordHash, passwordSalt }), updated_at: new Date().toISOString(),
       }, { onConflict: 'namespace,key' });
       if (writeError) return jsonResponse({ error: 'No se pudo guardar la contraseña.' }, 500);
+
+      const indexKey = indexKeyFor(key);
+      if (indexKey) await addToIndex(supabase, indexKey, emailOf(key));
 
       const token = sessionSecret ? await signToken(key, sessionSecret) : null;
       return jsonResponse({ ok: true, token });
@@ -331,6 +372,8 @@ Deno.serve(async (req: Request) => {
       const { error } = await supabase.from('kv_store').delete().eq('namespace', CLOUD_NAMESPACE).eq('key', key);
       if (error) return jsonResponse({ error: 'No se pudo eliminar.' }, 500);
       if (key.startsWith('account:')) await purgeRatingsForPro(supabase, emailOf(key));
+      const indexKey = indexKeyFor(key);
+      if (indexKey) await removeFromIndex(supabase, indexKey, emailOf(key));
       return jsonResponse({ ok: true });
     }
 
@@ -340,6 +383,22 @@ Deno.serve(async (req: Request) => {
       namespace: CLOUD_NAMESPACE, key, value: payload.value, updated_at: new Date().toISOString(),
     }, { onConflict: 'namespace,key' });
     if (error) return jsonResponse({ error: 'No se pudo guardar.' }, 500);
+    return jsonResponse({ ok: true });
+  }
+
+  // ---- accounts-index / clients-index: solo lectura pública (accounts-index,
+  // necesaria para el directorio) o ninguna (clients-index); los añade 'register'
+  // para las cuentas con contraseña, y esta acción para las cuentas de Google
+  // (que no pasan por 'register' al no tener contraseña) ----
+  if (action === 'index-add') {
+    const key = String(payload.key || '');
+    if (!isValidEmailKey(key, AUTH_PREFIXES)) return jsonResponse({ error: 'Cuenta inválida.' }, 400);
+    const identity = await resolveIdentity(payload, sessionSecret, supabase);
+    if (!identity || identity.email !== emailOf(key)) {
+      return jsonResponse({ error: 'Sesión inválida o caducada.' }, 401);
+    }
+    const indexKey = indexKeyFor(key);
+    if (indexKey) await addToIndex(supabase, indexKey, emailOf(key));
     return jsonResponse({ ok: true });
   }
 

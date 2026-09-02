@@ -1997,6 +1997,31 @@ async function getAccountSecure(key, token){
   }
   return await safeGet(key, true);
 }
+/* accounts-index/clients-index los mantiene el propio account-auth como efecto de
+   'register' para las cuentas con contraseña; las cuentas creadas con Google no pasan
+   por 'register' (no tienen contraseña), así que usan esta acción aparte con su sesión
+   de Supabase Auth como prueba de identidad. */
+async function addToIndexSecure(key, token){
+  if(cloudEnabled){
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { error } = await client.functions.invoke('account-auth', { body: { action: 'index-add', key, token, authToken } });
+          if(!error) return;
+        }
+      } catch(e){ console.warn('No se pudo actualizar el índice en el servidor, se intenta la escritura directa:', e); }
+    }
+  }
+  const indexKey = key.startsWith('client:') ? 'clients-index' : 'accounts-index';
+  const email = key.slice(key.indexOf(':')+1);
+  const list = JSON.parse(await safeGet(indexKey, true) || '[]');
+  if(!list.includes(email)){
+    list.push(email);
+    await safeSet(indexKey, JSON.stringify(list), true);
+  }
+}
 function legalConsentCopy(){
   return 'He leído y acepto el Aviso Legal, la Política de Privacidad y la Política de Cookies';
 }
@@ -2834,9 +2859,7 @@ async function handleGoogleAuthRedirect(){
       };
       const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
       if(!saved){ showToast('No se pudo crear tu cuenta profesional.'); return; }
-      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-      if(!index.includes(email)) index.push(email);
-      await safeSet('accounts-index', JSON.stringify(index), true);
+      await addToIndexSecure('account:'+email, null);
     }
     const sessionSaved = await safeSet('session-email', email, false);
     if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
@@ -2858,7 +2881,7 @@ async function handleGoogleAuthRedirect(){
       };
       const saved = await saveClientAccount(existing);
       if(!saved){ showToast('No se pudo crear tu cuenta de cliente.'); return; }
-      await addClientIndex(email);
+      await addToIndexSecure('client:'+email, null);
     }
     const sessionSaved = await safeSet('session-email-client', email, false);
     if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
@@ -3267,7 +3290,9 @@ function bindClient(){
           msgBox.innerHTML = '<div class="msg err">No se pudo crear la cuenta. Revisa el almacenamiento del navegador e inténtalo de nuevo.</div>';
           return;
         }
-        await addClientIndex(email);
+        // Con servidor, 'register' ya añadió el email a clients-index; en modo
+        // local/sin Supabase (offline) hay que hacerlo aquí, a mano.
+        if(!cred.serverSide) await addClientIndex(email);
         const sessionSaved = await safeSet('session-email-client', email, false);
         if(!sessionSaved){
           msgBox.innerHTML = '<div class="msg err">Cuenta creada, pero no se pudo iniciar sesión automáticamente.</div>';
@@ -3484,12 +3509,16 @@ function bindCourseProviderSignup(){
       msgBox.innerHTML = '<div class="msg err">No se pudo guardar la cuenta. Revisa el tamaño de las imágenes y vuelve a intentarlo.</div>';
       return;
     }
-    let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-    if(!index.includes(email)) index.push(email);
-    const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
-    if(!savedIndex){
-      msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de cuentas.</div>';
-      return;
+    // Con servidor, 'register' ya añadió el email a accounts-index; en modo
+    // local/sin Supabase (offline) hay que hacerlo aquí, a mano.
+    if(!cred.serverSide){
+      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+      if(!index.includes(email)) index.push(email);
+      const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
+      if(!savedIndex){
+        msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de cuentas.</div>';
+        return;
+      }
     }
     msgBox.innerHTML = '<div class="msg ok">Alta de proveedor de cursos creada. Ahora puedes iniciar sesión.</div>';
     document.getElementById('cp-submit').disabled = true;
@@ -3670,12 +3699,11 @@ function bindPro(){
       document.getElementById('deleteAccountBtn').onclick = async ()=>{
         if(!confirm('¿Eliminar tu cuenta y tu ficha pública de TodoOficios.es? Se borrarán tu perfil, tus datos del Panel de negocio y tus reseñas recibidas. Esta acción no se puede deshacer.')) return;
         const email = account.email;
-        const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-        await safeSet('accounts-index', JSON.stringify(index.filter(e=>e!==email)), true);
         await deleteAccountSecure('account:'+email, sessionToken);
         await deleteAccountSecure('negocio:'+email, sessionToken);
-        // Las reseñas de este profesional las borra la propia Edge Function como
-        // parte de 'delete' sobre account:<email> (ver purgeRatingsForPro).
+        // accounts-index y las reseñas de este profesional los limpia la propia
+        // Edge Function como parte de 'delete' sobre account:<email> (ver
+        // removeFromIndex/purgeRatingsForPro).
         await safeDelete('session-email', false);
         await safeDelete('session-token', false);
         session = null; account = null; sessionToken = null;
@@ -4004,12 +4032,16 @@ function bindPro(){
         msgBox.innerHTML = '<div class="msg err">No se pudo guardar la cuenta. Reduce el peso de las imágenes e inténtalo de nuevo.</div>';
         return;
       }
-      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-      if(!index.includes(email)) index.push(email);
-      const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
-      if(!savedIndex){
-        msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de profesionales.</div>';
-        return;
+      // Con servidor, 'register' ya añadió el email a accounts-index; en modo
+      // local/sin Supabase (offline) hay que hacerlo aquí, a mano.
+      if(!cred.serverSide){
+        let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+        if(!index.includes(email)) index.push(email);
+        const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
+        if(!savedIndex){
+          msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de profesionales.</div>';
+          return;
+        }
       }
       const sessionSaved = await safeSet('session-email', email, false);
       if(!sessionSaved){

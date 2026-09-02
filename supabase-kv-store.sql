@@ -5,11 +5,13 @@
 -- archivo (políticas con using(true), acceso total para anon), antes de
 -- pegar esto despliega la versión de la Edge Function account-auth que
 -- implementa TODAS sus acciones (login, register, get, save, delete,
--- add-rating, get-messages, add-message, add-reply, get/save-public-
--- presupuesto) con SESSION_SECRET configurado. Si aplicas las políticas de
--- abajo antes de eso, se rompen el login/alta de clientes, el panel de
--- negocio (incluidas las calculadoras), los mensajes, las reseñas nuevas y
--- los presupuestos públicos hasta que despliegues la función.
+-- index-add, add-rating, delete-rating, get-messages, add-message,
+-- add-reply, get/save-public-presupuesto) con SESSION_SECRET configurado.
+-- Si aplicas las políticas de abajo antes de eso, se rompen el login/alta
+-- de clientes y profesionales (incluidos los de Google), el panel de
+-- negocio (incluidas las calculadoras), los mensajes, las reseñas nuevas,
+-- los presupuestos públicos y el directorio de profesionales hasta que
+-- despliegues la función.
 
 create table if not exists public.kv_store (
   namespace text not null,
@@ -22,11 +24,10 @@ create table if not exists public.kv_store (
 alter table public.kv_store enable row level security;
 
 -- Lectura pública: solo lo que de verdad necesita ser público (el
--- directorio de profesionales y las reseñas). Todo lo demás — cuentas de
--- cliente, negocio, materiales/calculadoras favoritas, presupuestos
--- públicos, mensajes y credenciales — está bloqueado para anon porque una
--- consulta sin filtro (SELECT * sin .eq('key', ...)) devolvería TODAS las
--- filas que la política deja pasar, no solo la que la app pide.
+-- directorio de profesionales, su índice de emails, y las reseñas). Todo
+-- lo demás está bloqueado para anon porque una consulta sin filtro
+-- (SELECT * sin .eq('key', ...)) devolvería TODAS las filas que la
+-- política deja pasar, no solo la que la app pide.
 do $$
 begin
   if not exists (
@@ -47,13 +48,14 @@ begin
         and key not like 'calc-favoritas:%'
         and key not like 'presupuesto-publico:%'
         and key <> 'contactMessages'
+        and key <> 'clients-index'
       );
   end if;
 end $$;
 
 -- Alta de cuentas nuevas (INSERT, no UPDATE): abierto solo para account:%
--- (y las keys sueltas sin prefijo protegido, como accounts-index). El
--- resto de colecciones sensibles se crean/actualizan solo vía Edge Function.
+-- (y las keys sueltas sin prefijo protegido). El resto de colecciones
+-- sensibles, y los índices de emails, se crean/actualizan solo vía Edge Function.
 do $$
 begin
   if not exists (
@@ -75,6 +77,8 @@ begin
         and key not like 'presupuesto-publico:%'
         and key <> 'contactMessages'
         and key <> 'ratings'
+        and key <> 'accounts-index'
+        and key <> 'clients-index'
       );
   end if;
 end $$;
@@ -105,6 +109,8 @@ begin
         and key not like 'presupuesto-publico:%'
         and key <> 'contactMessages'
         and key <> 'ratings'
+        and key <> 'accounts-index'
+        and key <> 'clients-index'
       )
       with check (
         key not like 'credentials:%'
@@ -116,6 +122,8 @@ begin
         and key not like 'presupuesto-publico:%'
         and key <> 'contactMessages'
         and key <> 'ratings'
+        and key <> 'accounts-index'
+        and key <> 'clients-index'
       );
   end if;
 end $$;
@@ -143,6 +151,8 @@ begin
         and key not like 'presupuesto-publico:%'
         and key <> 'contactMessages'
         and key <> 'ratings'
+        and key <> 'accounts-index'
+        and key <> 'clients-index'
       );
   end if;
 end $$;
