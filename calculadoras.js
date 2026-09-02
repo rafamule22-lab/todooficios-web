@@ -2171,7 +2171,7 @@
     try {
       if(localStorage.getItem('session-email')) return true;
       if(localStorage.getItem('session-email-client')) return true;
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo leer la sesión de localStorage:', e); }
     return false;
   }
 
@@ -2246,10 +2246,59 @@
     });
   }
 
+  /* negocio:/materiales:/calc-favoritas:<email> están bloqueados para anon en
+     kv_store (ver supabase/functions/account-auth): solo su dueño puede leerlas o
+     escribirlas. session-token lo guarda index.html en localStorage al iniciar
+     sesión (se comparte entre páginas del mismo sitio); si la cuenta es de Google,
+     no hay token propio, pero sí una sesión real de Supabase Auth persistida por el
+     propio cliente de Supabase, que sirve como prueba alternativa de identidad. */
+  function proTokenActual(){
+    try { return localStorage.getItem('session-token') || ''; } catch(e){ return ''; }
+  }
+
+  function getSupabaseAuthTokenCalc(client){
+    return client.auth.getSession().then(function(res){
+      return (res.data && res.data.session && res.data.session.access_token) || null;
+    }).catch(function(){ return null; });
+  }
+
+  function secureCloudGet(key){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return null;
+      var token = proTokenActual();
+      return (token ? Promise.resolve(null) : getSupabaseAuthTokenCalc(client)).then(function(authToken){
+        if(!token && !authToken) return cloudGet(key);
+        return client.functions.invoke('account-auth', {body: {action: 'get', key: key, token: token, authToken: authToken}})
+          .then(function(res){
+            if(!res.error && res.data && res.data.ok) return res.data.value;
+            return cloudGet(key);
+          })
+          .catch(function(){ return cloudGet(key); });
+      });
+    });
+  }
+
+  function secureCloudSet(key, value){
+    return initCloudClient().then(function(client){
+      if(!client || !cloudEnabled) return false;
+      var token = proTokenActual();
+      return (token ? Promise.resolve(null) : getSupabaseAuthTokenCalc(client)).then(function(authToken){
+        if(!token && !authToken) return cloudSet(key, value);
+        return client.functions.invoke('account-auth', {body: {action: 'save', key: key, token: token, authToken: authToken, value: value}})
+          .then(function(res){
+            if(!res.error && res.data && res.data.ok) return true;
+            if(!res.error && res.data && !res.data.ok) return false;
+            return cloudSet(key, value);
+          })
+          .catch(function(){ return cloudSet(key, value); });
+      });
+    });
+  }
+
   function cargarMaterialesFavoritos(){
     var email = proEmailActual();
     if(!email) return Promise.resolve([]);
-    return cloudGet('materiales:'+email).then(function(raw){
+    return secureCloudGet('materiales:'+email).then(function(raw){
       if(!raw) return [];
       try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
     });
@@ -2259,7 +2308,7 @@
     var email = proEmailActual();
     if(!email) return Promise.resolve(false);
     materialesCache = materialesCache.concat([{id:'m'+Date.now(), nombre:nombre, unidad:unidad||'ud', precio:precio||0}]);
-    return cloudSet('materiales:'+email, JSON.stringify(materialesCache));
+    return secureCloudSet('materiales:'+email, JSON.stringify(materialesCache));
   }
 
   /* ============================================================
@@ -2269,7 +2318,7 @@
   function cargarCalcFavoritas(){
     var email = proEmailActual();
     if(!email) return Promise.resolve([]);
-    return cloudGet('calc-favoritas:'+email).then(function(raw){
+    return secureCloudGet('calc-favoritas:'+email).then(function(raw){
       if(!raw) return [];
       try { var lista = JSON.parse(raw); return Array.isArray(lista) ? lista : []; } catch(e){ return []; }
     });
@@ -2282,7 +2331,7 @@
     if(!email) return Promise.resolve(false);
     if(esCalcFavorita(id)) calcFavoritasCache = calcFavoritasCache.filter(function(x){ return x !== id; });
     else calcFavoritasCache = calcFavoritasCache.concat([id]);
-    return cloudSet('calc-favoritas:'+email, JSON.stringify(calcFavoritasCache));
+    return secureCloudSet('calc-favoritas:'+email, JSON.stringify(calcFavoritasCache));
   }
 
   function favoritaStarHTML(id){
@@ -2341,7 +2390,7 @@
       if(!proEmail) return;
       var lista = leerBorradorPresupuesto().filter(function(d){ return d.id !== id; });
       localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo actualizar el borrador de presupuesto:', e); }
   }
 
   function actualizarLineaBorrador(id, patch){
@@ -2356,14 +2405,14 @@
         return actualizado;
       });
       localStorage.setItem('presupuesto-draft:'+proEmail, JSON.stringify(lista));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo guardar el borrador de presupuesto:', e); }
   }
 
   function vaciarBorradorPresupuesto(){
     try {
       var proEmail = localStorage.getItem('session-email');
       if(proEmail) localStorage.removeItem('presupuesto-draft:'+proEmail);
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo borrar el borrador de presupuesto:', e); }
   }
 
   /* Indicador persistente en la barra superior: cuántas partidas van
@@ -2496,7 +2545,7 @@
       if(!email) return;
       var lista = leerListaObra().filter(function(x){ return x.id !== id; });
       localStorage.setItem('obra-lista:'+email, JSON.stringify(lista));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo actualizar la lista de obra:', e); }
   }
 
   function resumenListaObraTexto(){
@@ -2514,7 +2563,7 @@
     try {
       if(!texto) return;
       localStorage.setItem('solicitud-presupuesto-alcance', JSON.stringify({resumen: texto, creadoEn: Date.now()}));
-    } catch(e){}
+    } catch(e){ console.warn('No se pudo guardar la solicitud de presupuesto por alcance:', e); }
   }
 
   function renderListaObraIndicator(){
@@ -2610,7 +2659,7 @@
   function cargarNegocioCompleto(){
     var email = proEmailActual();
     if(!email) return Promise.resolve(null);
-    return cloudGet('negocio:'+email).then(function(raw){
+    return secureCloudGet('negocio:'+email).then(function(raw){
       if(!raw) return null;
       try { return JSON.parse(raw); } catch(e){ return null; }
     });
@@ -2619,7 +2668,7 @@
   function guardarNegocioCompleto(negocio){
     var email = proEmailActual();
     if(!email) return Promise.resolve(false);
-    return cloudSet('negocio:'+email, JSON.stringify(negocio));
+    return secureCloudSet('negocio:'+email, JSON.stringify(negocio));
   }
 
   function cargarPresupuestosPendientes(){
@@ -3138,11 +3187,11 @@
     var darkToggle = document.getElementById('cecDarkToggle');
     if(darkToggle){
       var darkOn = false;
-      try { darkOn = localStorage.getItem('cec-modo-obra') === '1'; } catch(e){}
+      try { darkOn = localStorage.getItem('cec-modo-obra') === '1'; } catch(e){ console.warn('No se pudo leer el modo obra:', e); }
       function aplicarModoObra(on){
         document.body.classList.toggle('cec-dark', on);
         darkToggle.classList.toggle('on', on);
-        try { localStorage.setItem('cec-modo-obra', on ? '1' : '0'); } catch(e){}
+        try { localStorage.setItem('cec-modo-obra', on ? '1' : '0'); } catch(e){ console.warn('No se pudo guardar el modo obra:', e); }
       }
       aplicarModoObra(darkOn);
       darkToggle.addEventListener('click', function(){ aplicarModoObra(!document.body.classList.contains('cec-dark')); });

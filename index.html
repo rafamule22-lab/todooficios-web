@@ -23,19 +23,19 @@
     if(params.get('preview') === 'toc-construccion-2026'){
       localStorage.setItem(PREVIEW_KEY, String(Date.now() + THIRTY_DAYS_MS));
     }
-  }catch(e){}
+  }catch(e){ console.warn('No se pudo guardar el acceso de vista previa:', e); }
   var hasPreviewAccess = false;
   try{
     var expiry = parseInt(localStorage.getItem(PREVIEW_KEY) || '0', 10);
     hasPreviewAccess = expiry > Date.now();
-  }catch(e){}
+  }catch(e){ console.warn('No se pudo leer el acceso de vista previa:', e); }
   var onProximamente = /\/proximamente\.html$/.test(location.pathname);
   if(!hasPreviewAccess && !onProximamente){
     location.replace('/proximamente.html');
   }
 })();
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#141412">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -1579,7 +1579,7 @@
 <script src="legal-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-window.TODOOFICIOS_LEGAL = Object.assign({
+const TODOOFICIOS_LEGAL_DEFAULTS = {
   razonSocial: 'PENDIENTE_RAZON_SOCIAL',
   nifCif: 'PENDIENTE_NIF_CIF',
   domicilio: 'PENDIENTE_DOMICILIO_FISCAL',
@@ -1597,7 +1597,8 @@ window.TODOOFICIOS_LEGAL = Object.assign({
     tiktok: '',
     web: ''
   }
-}, window.TODOOFICIOS_LEGAL || {});
+};
+window.TODOOFICIOS_LEGAL = Object.assign({}, TODOOFICIOS_LEGAL_DEFAULTS, window.TODOOFICIOS_LEGAL || {});
 
 /* ======================= TAXONOMÍA DE OFICIOS ======================= */
 const OFICIOS_GROUPS = [
@@ -1897,7 +1898,129 @@ async function verifyPasswordRecord(record, password){
     const hash = await sha256Hex(password + '|' + record.passwordSalt);
     return hash === record.passwordHash;
   }
-  return record.password === password;
+  return false;
+}
+/* La contraseña de client:<email> / account:<email> se verifica y se guarda en el
+   servidor (Edge Function account-auth) cuando hay conexión a Supabase, para que el
+   hash+salt no viva dentro del mismo objeto público que cualquiera puede leer con la
+   anon key. Si no hay cloud disponible (modo local/desarrollo, o la función todavía no
+   está desplegada), se usa el comportamiento anterior como respaldo: el hash queda
+   embebido en el propio perfil. */
+async function verifyAccountPassword(key, record, password){
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'login', key, password } });
+        if(!error && data) return { ok: !!data.ok, token: data.token || null, profile: data.profile || null };
+      }
+    } catch(e){ console.warn('No se pudo verificar la contraseña en el servidor, se usa la verificación local:', e); }
+  }
+  return { ok: await verifyPasswordRecord(record, password), token: null, profile: null };
+}
+async function registerAccountCredentials(key, password){
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'register', key, password } });
+        if(!error && data) return { ok: !!data.ok, serverSide: true, token: data.token || null };
+      }
+    } catch(e){ console.warn('No se pudo registrar la contraseña en el servidor, se guarda solo localmente:', e); }
+  }
+  return { ok: true, serverSide: false, token: null };
+}
+/* Sesión real de Supabase Auth (solo la usan las cuentas creadas con Google) — sirve
+   como prueba alternativa de identidad para account-auth cuando no hay token propio
+   (las cuentas con email+contraseña no tienen sesión de Supabase Auth, solo su token). */
+async function getSupabaseAuthToken(){
+  try{
+    const client = await initSupabaseClient();
+    if(!client) return null;
+    const { data } = await client.auth.getSession();
+    return data?.session?.access_token || null;
+  } catch(e){ return null; }
+}
+/* Guarda o borra tu propio perfil (client:<email> / account:<email>) pasando por
+   account-auth con el token de sesión (o, si iniciaste con Google, tu sesión de
+   Supabase Auth), para que la RLS de kv_store (que ya no deja a `anon` hacer
+   UPDATE/DELETE directo sobre esas keys) no lo bloquee. Si no hay ninguna de las dos
+   (cloud no disponible, o SESSION_SECRET/la migración de RLS todavía no están
+   desplegados), cae de vuelta a la escritura directa de siempre. */
+async function saveAccountSecure(key, valueObj, token){
+  const value = JSON.stringify(valueObj);
+  if(cloudEnabled){
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'save', key, token, authToken, value } });
+          if(!error && data && data.ok) return true;
+          if(!error && data && !data.ok) return false;
+        }
+      } catch(e){ console.warn('No se pudo guardar el perfil en el servidor, se intenta la escritura directa:', e); }
+    }
+  }
+  return await safeSet(key, value, true);
+}
+async function deleteAccountSecure(key, token){
+  if(cloudEnabled){
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'delete', key, token, authToken } });
+          if(!error && data && data.ok) return true;
+          if(!error && data && !data.ok) return false;
+        }
+      } catch(e){ console.warn('No se pudo eliminar el perfil en el servidor, se intenta el borrado directo:', e); }
+    }
+  }
+  return await safeDelete(key, true);
+}
+/* Lee tu propio negocio:/materiales:/calc-favoritas:/client:/account:<email> pasando
+   por account-auth, para las mismas keys que la RLS ya no deja leer directo a `anon`. */
+async function getAccountSecure(key, token){
+  if(cloudEnabled){
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'get', key, token, authToken } });
+          if(!error && data && data.ok) return data.value;
+        }
+      } catch(e){ console.warn('No se pudo leer en el servidor, se intenta la lectura directa:', e); }
+    }
+  }
+  return await safeGet(key, true);
+}
+/* accounts-index/clients-index los mantiene el propio account-auth como efecto de
+   'register' para las cuentas con contraseña; las cuentas creadas con Google no pasan
+   por 'register' (no tienen contraseña), así que usan esta acción aparte con su sesión
+   de Supabase Auth como prueba de identidad. */
+async function addToIndexSecure(key, token){
+  if(cloudEnabled){
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { error } = await client.functions.invoke('account-auth', { body: { action: 'index-add', key, token, authToken } });
+          if(!error) return;
+        }
+      } catch(e){ console.warn('No se pudo actualizar el índice en el servidor, se intenta la escritura directa:', e); }
+    }
+  }
+  const indexKey = key.startsWith('client:') ? 'clients-index' : 'accounts-index';
+  const email = key.slice(key.indexOf(':')+1);
+  const list = JSON.parse(await safeGet(indexKey, true) || '[]');
+  if(!list.includes(email)){
+    list.push(email);
+    await safeSet(indexKey, JSON.stringify(list), true);
+  }
 }
 function legalConsentCopy(){
   return 'He leído y acepto el Aviso Legal, la Política de Privacidad y la Política de Cookies';
@@ -1948,25 +2071,26 @@ function renderSocialLinks(social, showPlaceholders=false){
   return links.length ? `<div class="social-links">${links.join('')}</div>` : '';
 }
 function getLegalProfile(){
+  const defaults = TODOOFICIOS_LEGAL_DEFAULTS;
   const cfg = window.TODOOFICIOS_LEGAL || {};
   const social = cfg.social || {};
   return {
-    razonSocial: cfg.razonSocial || 'PENDIENTE_RAZON_SOCIAL',
-    nifCif: cfg.nifCif || 'PENDIENTE_NIF_CIF',
-    domicilio: cfg.domicilio || 'PENDIENTE_DOMICILIO_FISCAL',
-    emailContacto: cfg.emailContacto || 'contacto@todooficios.es',
-    emailSoporte: cfg.emailSoporte || 'soporte@todooficios.es',
-    telefono: cfg.telefono || '+34 910 00 00 00',
-    paypalClientId: cfg.paypalClientId || 'PENDIENTE_PAYPAL_CLIENT_ID',
-    supabaseUrl: cfg.supabaseUrl || 'PENDIENTE_SUPABASE_URL',
-    supabaseAnonKey: cfg.supabaseAnonKey || 'PENDIENTE_SUPABASE_ANON_KEY',
+    razonSocial: cfg.razonSocial || defaults.razonSocial,
+    nifCif: cfg.nifCif || defaults.nifCif,
+    domicilio: cfg.domicilio || defaults.domicilio,
+    emailContacto: cfg.emailContacto || defaults.emailContacto,
+    emailSoporte: cfg.emailSoporte || defaults.emailSoporte,
+    telefono: cfg.telefono || defaults.telefono,
+    paypalClientId: cfg.paypalClientId || defaults.paypalClientId,
+    supabaseUrl: cfg.supabaseUrl || defaults.supabaseUrl,
+    supabaseAnonKey: cfg.supabaseAnonKey || defaults.supabaseAnonKey,
     showLegalAlertInProduction: !!cfg.showLegalAlertInProduction,
     social: {
-      instagram: social.instagram || '',
-      facebook: social.facebook || '',
-      linkedin: social.linkedin || '',
-      tiktok: social.tiktok || '',
-      web: social.web || ''
+      instagram: social.instagram || defaults.social.instagram,
+      facebook: social.facebook || defaults.social.facebook,
+      linkedin: social.linkedin || defaults.social.linkedin,
+      tiktok: social.tiktok || defaults.social.tiktok,
+      web: social.web || defaults.social.web
     }
   };
 }
@@ -2122,7 +2246,7 @@ function leerSolicitudPresupuestoAlcance(){
   } catch(e){ return null; }
 }
 function descartarSolicitudPresupuestoAlcance(){
-  try { localStorage.removeItem('solicitud-presupuesto-alcance'); } catch(e){}
+  try { localStorage.removeItem('solicitud-presupuesto-alcance'); } catch(e){ console.warn('No se pudo descartar la solicitud de presupuesto por alcance:', e); }
 }
 function waLink(phone, proName){
   const digits = (phone||'').replace(/\D/g,'');
@@ -2190,33 +2314,6 @@ async function getAllProfessionals(){
   }
   return list;
 }
-async function seedDemoIfNeeded(){
-  const seeded = await safeGet('seeded-v2', true);
-  if(seeded) return;
-  const demo = [
-    {name:'Franco Medina', oficio:'Electricista', zona:'Madrid Centro', bio:'Instalaciones eléctricas domiciliarias e industriales. 12 años de experiencia.', photo:'', phone:'+34 600 000 001', email:'demo-franco@todooficios.es', verificado:true, lat:40.4168, lng:-3.7038},
-    {name:'Cecilia Basle', oficio:'Gasista', zona:'Madrid Este', bio:'Instalación y reparación de gas natural y envasado. Certificaciones al día.', photo:'', phone:'+34 600 000 002', email:'demo-cecilia@todooficios.es', verificado:true, lat:40.4300, lng:-3.6800},
-    {name:'Matías Servant', oficio:'Fontanero', zona:'Madrid Norte', bio:'Destapaciones, cañerías y arreglos urgentes. Presupuesto sin cargo.', photo:'', phone:'+34 600 000 003', email:'demo-matias@todooficios.es', verificado:true, lat:40.4500, lng:-3.6900},
-    {name:'Pedro Salatic', oficio:'Instalador de aire acondicionado', zona:'Madrid Sur', bio:'Instalación y service de equipos split y central. Atención el mismo día.', photo:'', phone:'+34 600 000 004', email:'demo-pedro@todooficios.es', verificado:false, lat:40.3900, lng:-3.7100},
-    {name:'Ricardo Hidalgo', oficio:'Albañil', zona:'Madrid Centro', bio:'Refacciones, ampliaciones y obra nueva. Trabajo prolijo y con referencias.', photo:'', phone:'+34 600 000 005', email:'demo-ricardo@todooficios.es', verificado:true, lat:40.4200, lng:-3.7200},
-    {name:'Eduardo Sara', oficio:'Pintor', zona:'Madrid Este', bio:'Pintura interior y exterior, impermeabilizaciones. Presupuesto en el día.', photo:'', phone:'+34 600 000 006', email:'demo-eduardo@todooficios.es', verificado:false, lat:40.4350, lng:-3.6700},
-  ];
-  let index = [];
-  for(const d of demo){
-    await safeSet('account:'+d.email, JSON.stringify(d), true);
-    index.push(d.email);
-  }
-  await safeSet('accounts-index', JSON.stringify(index), true);
-  const demoRatings = [
-    {proEmail:'demo-franco@todooficios.es', stars:5, comment:'Vino el mismo día y solucionó el corte en minutos.', clientName:'Laura M.', createdAt:Date.now()-86400000*3},
-    {proEmail:'demo-franco@todooficios.es', stars:4, comment:'Buen trabajo, un poco de demora en llegar.', clientName:'Iván R.', createdAt:Date.now()-86400000*10},
-    {proEmail:'demo-cecilia@todooficios.es', stars:5, comment:'Muy prolija y con toda la documentación al día.', clientName:'Sofía P.', createdAt:Date.now()-86400000*5},
-    {proEmail:'demo-matias@todooficios.es', stars:5, comment:'Destapó una cañería complicada, quedó impecable.', clientName:'Diego F.', createdAt:Date.now()-86400000*2},
-    {proEmail:'demo-ricardo@todooficios.es', stars:4, comment:'Buena terminación en la ampliación de la cocina.', clientName:'Marta G.', createdAt:Date.now()-86400000*15},
-  ];
-  await safeSet('ratings', JSON.stringify(demoRatings), true);
-  await safeSet('seeded-v2', 'true', true);
-}
 
 /* ======================= RESEÑAS ======================= */
 const RATING_CRITERIA = [
@@ -2238,12 +2335,38 @@ async function getRatings(){
   const raw = await safeGet('ratings', true);
   return raw ? JSON.parse(raw) : [];
 }
+/* add-rating/delete-rating pasan por account-auth: si hay sesión de cliente, el
+   servidor firma la reseña con el email verificado (nunca el que venga en el objeto),
+   para que nadie pueda dejar una reseña en nombre de otro cliente. Sigue permitiendo
+   reseñas sin sesión (clientEmail queda null), igual que antes. */
 async function addRating(rating){
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const token = clientSessionToken;
+        const authToken = token ? null : await getSupabaseAuthToken();
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'add-rating', rating, token, authToken } });
+        if(!error && data && data.ok) return true;
+        if(!error && data && !data.ok) return false;
+      }
+    } catch(e){ console.warn('No se pudo guardar la reseña en el servidor, se intenta la escritura directa:', e); }
+  }
   const list = await getRatings();
   list.push(rating);
   return await safeSet('ratings', JSON.stringify(list), true);
 }
 async function deleteRating(id){
+  if(cloudEnabled && clientSessionToken){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'delete-rating', key: id, token: clientSessionToken } });
+        if(!error && data && data.ok) return true;
+        if(!error && data && !data.ok) return false;
+      }
+    } catch(e){ console.warn('No se pudo eliminar la reseña en el servidor, se intenta el borrado directo:', e); }
+  }
   const list = await getRatings();
   return await safeSet('ratings', JSON.stringify(list.filter(r=>r.id!==id)), true);
 }
@@ -2258,6 +2381,7 @@ function ratingStats(email, allRatings){
 
 /* ======================= ESTADO GLOBAL ======================= */
 let session = null;       // {email} profesional
+let sessionToken = null;  // token de account-auth (cuentas con email+contraseña) para poder editar/borrar el perfil
 let account = null;       // cuenta del profesional logueado
 let negocio = null;       // panel de negocio del profesional logueado (gastos, clientes, presupuestos, agenda)
 let materialesFavoritos = null; // lista de materiales guardados del profesional (clave propia: se comparte también con calculadoras.html)
@@ -2265,6 +2389,7 @@ let negocioTab = 'pendientes'; // pestaña activa dentro del panel de negocio
 let negocioEditPresupuestoId = null; // id del presupuesto que se está editando (null = se está creando uno nuevo)
 let dashboardMode = 'ficha'; // 'ficha' muestra el perfil público del profesional; 'editar' abre el formulario
 let clientSession = null;  // {email} cliente
+let clientSessionToken = null; // token de account-auth para poder editar/borrar el perfil de cliente
 let clientAccount = null;  // cuenta del cliente
 let myLoc = null;         // ubicación del visitante
 let RATINGS = [];
@@ -2316,31 +2441,86 @@ async function claimLaunchPromoSlot(){
 
 async function loadSession(){
   const email = await safeGet('session-email', false);
+  sessionToken = await safeGet('session-token', false);
   if(email){
     const acc = await safeGet('account:'+email, true);
     if(acc){ account = JSON.parse(acc); session = {email}; }
   }
   const clientEmail = await safeGet('session-email-client', false);
+  clientSessionToken = await safeGet('session-token-client', false);
   if(clientEmail){
-    const cacc = await safeGet('client:'+clientEmail, true);
+    const cacc = await getAccountSecure('client:'+clientEmail, clientSessionToken);
     if(cacc){ clientAccount = JSON.parse(cacc); clientSession = {email: clientEmail}; }
   }
 }
-async function addContactMessage(message){
+/* contactMessages es un único array compartido, bloqueado para anon: get-messages/
+   add-message/add-reply filtran y verifican identidad en el servidor. Con cloud no
+   disponible (o antes de desplegar la función) caen de vuelta al array local completo,
+   igual que el resto de acciones seguras. */
+async function getMyContactMessages(role){
+  if(cloudEnabled){
+    const token = role === 'pro' ? sessionToken : clientSessionToken;
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'get-messages', role, token, authToken } });
+          if(!error && data && data.ok) return data.messages;
+        }
+      } catch(e){ console.warn('No se pudieron leer los mensajes en el servidor, se intenta la lectura directa:', e); }
+    }
+  }
   const list = JSON.parse(await safeGet('contactMessages', true) || '[]');
-  list.push(message);
+  return role === 'pro' ? list.filter(m => m.proEmail === account?.email) : list.filter(m => m.clientEmail === clientAccount?.email);
+}
+async function addContactMessage(proEmail, message, clientName){
+  if(cloudEnabled){
+    const token = clientSessionToken;
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'add-message', proEmail, message, clientName, token, authToken } });
+          if(!error && data && data.ok) return true;
+          if(!error && data && !data.ok) return false;
+        }
+      } catch(e){ console.warn('No se pudo enviar el mensaje en el servidor, se intenta la escritura directa:', e); }
+    }
+  }
+  const list = JSON.parse(await safeGet('contactMessages', true) || '[]');
+  list.push({
+    id: 'msg'+Date.now()+Math.random().toString(36).slice(2,8),
+    clientEmail: clientSession ? clientSession.email : null, clientName, proEmail, message, sentAt: Date.now(), replies: []
+  });
   return await safeSet('contactMessages', JSON.stringify(list), true);
 }
 function contactMessageKey(m){
   return m.id || (m.clientEmail+'|'+m.sentAt);
 }
 async function addContactReply(messageKey, replyText){
+  if(cloudEnabled){
+    const token = sessionToken;
+    const authToken = token ? null : await getSupabaseAuthToken();
+    if(token || authToken){
+      try{
+        const client = await initSupabaseClient();
+        if(client){
+          const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'add-reply', messageKey, replyText, token, authToken } });
+          if(!error && data && data.ok) return { ok:true, clientEmail: data.clientEmail || null };
+          if(!error && data && !data.ok) return { ok:false };
+        }
+      } catch(e){ console.warn('No se pudo enviar la respuesta en el servidor, se intenta la escritura directa:', e); }
+    }
+  }
   const list = JSON.parse(await safeGet('contactMessages', true) || '[]');
   const msg = list.find(m => contactMessageKey(m) === messageKey);
-  if(!msg) return false;
+  if(!msg) return { ok:false };
   msg.replies = msg.replies || [];
   msg.replies.push({ text: replyText, sentAt: Date.now() });
-  return await safeSet('contactMessages', JSON.stringify(list), true);
+  const saved = await safeSet('contactMessages', JSON.stringify(list), true);
+  return { ok: saved, clientEmail: msg.clientEmail };
 }
 /* Aviso por email al cliente cuando el profesional responde. Best-effort: si falla
    (Edge Function no desplegada, sin conexión, etc.) la respuesta ya quedó guardada
@@ -2357,10 +2537,6 @@ async function notifyClientOfReply(msg, replyText){
     }});
   }catch(err){ console.error('notify-reply:', err); }
 }
-async function getContactMessages(){
-  const raw = await safeGet('contactMessages', true);
-  return raw ? JSON.parse(raw) : [];
-}
 async function addClientIndex(email){
   let index = JSON.parse(await safeGet('clients-index', true) || '[]');
   if(!index.includes(email)) index.push(email);
@@ -2370,8 +2546,8 @@ async function getClientByEmail(email){
   const raw = await safeGet('client:'+email, true);
   return raw ? JSON.parse(raw) : null;
 }
-async function saveClientAccount(client){
-  return await safeSet('client:'+client.email, JSON.stringify(client), true);
+async function saveClientAccount(client, token){
+  return await saveAccountSecure('client:'+client.email, client, token || null);
 }
 async function getMyClientName(){
   return (await safeGet('my-client-name', false)) || '';
@@ -2412,7 +2588,8 @@ function defaultNegocio(){
   };
 }
 async function getNegocio(email){
-  const raw = await safeGet('negocio:'+email, true);
+  const token = session?.email === email ? sessionToken : null;
+  const raw = await getAccountSecure('negocio:'+email, token);
   if(!raw) return defaultNegocio();
   try{
     const data = JSON.parse(raw);
@@ -2424,7 +2601,8 @@ async function getNegocio(email){
   }catch(e){ return defaultNegocio(); }
 }
 async function saveNegocio(email, data){
-  return await safeSet('negocio:'+email, JSON.stringify(data), true);
+  const token = session?.email === email ? sessionToken : null;
+  return await saveAccountSecure('negocio:'+email, data, token);
 }
 
 /* ======================= PRESUPUESTO PÚBLICO (enlace de aceptación para el cliente) =======================
@@ -2457,16 +2635,45 @@ function presupuestoPublicoSnapshot(p, datosNegocio, cuentaProfesional){
   };
 }
 
+/* presupuesto-publico:<shareId> está bloqueado para anon (ver account-auth):
+   el propio shareId, aleatorio, es la credencial — sin login, pero ya sin poder
+   volcar la colección entera sin conocerlo. */
+async function getPublicPresupuestoSecure(key){
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'get-public-presupuesto', key } });
+        if(!error && data && data.ok) return data.value;
+      }
+    } catch(e){ console.warn('No se pudo leer el presupuesto público en el servidor, se intenta la lectura directa:', e); }
+  }
+  return await safeGet(key, true);
+}
+async function savePublicPresupuestoSecure(key, valueObj){
+  const value = JSON.stringify(valueObj);
+  if(cloudEnabled){
+    try{
+      const client = await initSupabaseClient();
+      if(client){
+        const { data, error } = await client.functions.invoke('account-auth', { body: { action: 'save-public-presupuesto', key, value } });
+        if(!error && data && data.ok) return true;
+        if(!error && data && !data.ok) return false;
+      }
+    } catch(e){ console.warn('No se pudo guardar el presupuesto público en el servidor, se intenta la escritura directa:', e); }
+  }
+  return await safeSet(key, value, true);
+}
 async function publicarPresupuesto(p){
   if(!p.shareId) p.shareId = generarShareId();
   const snapshot = presupuestoPublicoSnapshot(p, negocio.datos, account);
-  const ok = await safeSet('presupuesto-publico:'+p.shareId, JSON.stringify(snapshot), true);
+  const ok = await savePublicPresupuestoSecure('presupuesto-publico:'+p.shareId, snapshot);
   return ok ? p.shareId : null;
 }
 
 async function comprobarRespuestaPublica(p){
   if(!p.shareId) return null;
-  const raw = await safeGet('presupuesto-publico:'+p.shareId, true);
+  const raw = await getPublicPresupuestoSecure('presupuesto-publico:'+p.shareId);
   if(!raw) return null;
   try { return JSON.parse(raw); } catch(e){ return null; }
 }
@@ -2496,12 +2703,14 @@ async function enviarPresupuesto(id, via){
 /* Materiales favoritos: clave propia (no dentro de negocio:<email>) para que calculadoras.html
    pueda leerla/escribirla sin tocar el resto de los datos de negocio del profesional. */
 async function getMateriales(email){
-  const raw = await safeGet('materiales:'+email, true);
+  const token = session?.email === email ? sessionToken : null;
+  const raw = await getAccountSecure('materiales:'+email, token);
   if(!raw) return [];
   try { const list = JSON.parse(raw); return Array.isArray(list) ? list : []; } catch(e){ return []; }
 }
 async function saveMateriales(email, list){
-  return await safeSet('materiales:'+email, JSON.stringify(list), true);
+  const token = session?.email === email ? sessionToken : null;
+  return await saveAccountSecure('materiales:'+email, list, token);
 }
 function formatEUR(n){
   const num = Number(n) || 0;
@@ -2576,21 +2785,21 @@ async function signInWithGoogle(role){
     showToast('El acceso con Google no está disponible ahora mismo.');
     return;
   }
-  try{ window.localStorage.setItem('oauth-pending-role', role); }catch(e){}
+  try{ window.localStorage.setItem('oauth-pending-role', role); }catch(e){ console.warn('No se pudo guardar el rol pendiente de OAuth:', e); }
   const { error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: window.location.origin + window.location.pathname }
   });
   if(error){
-    try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){}
+    try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){ console.warn('No se pudo limpiar el rol pendiente de OAuth:', e); }
     showToast('No se pudo iniciar el acceso con Google.');
   }
 }
 async function handleGoogleAuthRedirect(){
   let pendingRole = null;
-  try{ pendingRole = window.localStorage.getItem('oauth-pending-role'); }catch(e){}
+  try{ pendingRole = window.localStorage.getItem('oauth-pending-role'); }catch(e){ console.warn('No se pudo leer el rol pendiente de OAuth:', e); }
   if(!pendingRole) return;
-  try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){}
+  try{ window.localStorage.removeItem('oauth-pending-role'); }catch(e){ console.warn('No se pudo limpiar el rol pendiente de OAuth:', e); }
 
   const client = await initSupabaseClient();
   if(!client) return;
@@ -2623,9 +2832,7 @@ async function handleGoogleAuthRedirect(){
       };
       const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
       if(!saved){ showToast('No se pudo crear tu cuenta profesional.'); return; }
-      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-      if(!index.includes(email)) index.push(email);
-      await safeSet('accounts-index', JSON.stringify(index), true);
+      await addToIndexSecure('account:'+email, null);
     }
     const sessionSaved = await safeSet('session-email', email, false);
     if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
@@ -2634,7 +2841,11 @@ async function handleGoogleAuthRedirect(){
     showToast(raw ? 'Bienvenido de nuevo.' : '¡Cuenta creada con Google! Completa tu perfil para publicarlo.');
     showView('pro');
   } else if(pendingRole === 'client'){
-    let existing = await getClientByEmail(email);
+    // client: ya no se puede leer directo con la anon key; con Supabase Auth (Google)
+    // ya hay sesión real en este punto, así que getAccountSecure() la usa como prueba
+    // de identidad para poder leer tu propio registro si ya existe.
+    const rawExisting = await getAccountSecure('client:'+email, null);
+    let existing = rawExisting ? JSON.parse(rawExisting) : null;
     if(!existing){
       existing = {
         name: fullName, email, phone: '', favorites: [],
@@ -2643,7 +2854,7 @@ async function handleGoogleAuthRedirect(){
       };
       const saved = await saveClientAccount(existing);
       if(!saved){ showToast('No se pudo crear tu cuenta de cliente.'); return; }
-      await addClientIndex(email);
+      await addToIndexSecure('client:'+email, null);
     }
     const sessionSaved = await safeSet('session-email-client', email, false);
     if(!sessionSaved){ showToast('No se pudo iniciar sesión en este navegador.'); return; }
@@ -3028,56 +3239,62 @@ function bindClient(){
           msgBox.innerHTML = '<div class="msg err">Debes aceptar el aviso legal, privacidad y cookies para crear la cuenta.</div>';
           return;
         }
-        const existing = await getClientByEmail(email);
-        if(existing){
-          msgBox.innerHTML = '<div class="msg err">Ya existe un cliente con ese email.</div>';
+        const cred = await registerAccountCredentials('client:'+email, password);
+        if(!cred.ok){
+          msgBox.innerHTML = '<div class="msg err">Ya existe una cuenta con ese email.</div>';
           return;
         }
-        const pw = await buildPasswordRecord(password);
         const client = {
           name,
           email,
           phone,
-          passwordHash: pw.passwordHash,
-          passwordSalt: pw.passwordSalt,
           favorites: [],
           createdAt: Date.now(),
           legalAcceptedAt: Date.now(),
           contactVerified: false
         };
-        const savedClient = await saveClientAccount(client);
+        if(!cred.serverSide){
+          const pw = await buildPasswordRecord(password);
+          client.passwordHash = pw.passwordHash;
+          client.passwordSalt = pw.passwordSalt;
+        }
+        const savedClient = await saveClientAccount(client, cred.token);
         if(!savedClient){
           msgBox.innerHTML = '<div class="msg err">No se pudo crear la cuenta. Revisa el almacenamiento del navegador e inténtalo de nuevo.</div>';
           return;
         }
-        await addClientIndex(email);
+        // Con servidor, 'register' ya añadió el email a clients-index; en modo
+        // local/sin Supabase (offline) hay que hacerlo aquí, a mano.
+        if(!cred.serverSide) await addClientIndex(email);
         const sessionSaved = await safeSet('session-email-client', email, false);
         if(!sessionSaved){
           msgBox.innerHTML = '<div class="msg err">Cuenta creada, pero no se pudo iniciar sesión automáticamente.</div>';
           return;
         }
+        if(cred.token) await safeSet('session-token-client', cred.token, false);
+        clientSessionToken = cred.token;
         clientSession = {email}; clientAccount = client;
         showToast('Cuenta de cliente creada. Ya puedes contactar profesionales.');
         showView('client');
         return;
       }
-      const existing = await getClientByEmail(email);
-      if(!existing || !(await verifyPasswordRecord(existing, password))){
+      // getClientByEmail() solo encuentra algo aquí en modo local/sin Supabase (offline);
+      // con Supabase configurado, client: ya no se puede leer directo y el perfil llega
+      // en auth.profile, devuelto por el propio login.
+      const existingLocal = await getClientByEmail(email);
+      const auth = await verifyAccountPassword('client:'+email, existingLocal, password);
+      const existing = (auth.profile ? JSON.parse(auth.profile) : null) || existingLocal;
+      if(!auth.ok || !existing){
         msgBox.innerHTML = '<div class="msg err">Email o contraseña incorrectos.</div>';
         return;
-      }
-      if(existing.password && !existing.passwordHash){
-        const migrated = await buildPasswordRecord(password);
-        existing.passwordHash = migrated.passwordHash;
-        existing.passwordSalt = migrated.passwordSalt;
-        delete existing.password;
-        await saveClientAccount(existing);
       }
       const sessionSaved = await safeSet('session-email-client', email, false);
       if(!sessionSaved){
         msgBox.innerHTML = '<div class="msg err">No se pudo iniciar sesión en este navegador.</div>';
         return;
       }
+      if(auth.token) await safeSet('session-token-client', auth.token, false);
+      clientSessionToken = auth.token;
       clientSession = {email}; clientAccount = existing;
       showToast('Bienvenido de nuevo.');
       showView('client');
@@ -3088,7 +3305,8 @@ function bindClient(){
   if(logoutBtn){
     logoutBtn.onclick = async ()=>{
       await safeDelete('session-email-client', false).catch(()=>{});
-      clientSession = null; clientAccount = null;
+      await safeDelete('session-token-client', false).catch(()=>{});
+      clientSession = null; clientAccount = null; clientSessionToken = null;
       showToast('Cerraste sesión de cliente.');
       showView('home');
     };
@@ -3097,9 +3315,10 @@ function bindClient(){
   if(deleteClientBtn){
     deleteClientBtn.onclick = async ()=>{
       if(!confirm('¿Eliminar tu cuenta de cliente de TodoOficios.es? Se borrarán tus datos y tus favoritos. Esta acción no se puede deshacer.')) return;
-      await safeDelete('client:'+clientAccount.email, true);
+      await deleteAccountSecure('client:'+clientAccount.email, clientSessionToken);
       await safeDelete('session-email-client', false);
-      clientSession = null; clientAccount = null;
+      await safeDelete('session-token-client', false);
+      clientSession = null; clientAccount = null; clientSessionToken = null;
       showToast('Tu cuenta de cliente se eliminó correctamente.');
       showView('home');
     };
@@ -3128,7 +3347,7 @@ function bindClient(){
           b.onclick = async ()=>{
             const email = b.dataset.removeFav;
             clientAccount.favorites = (clientAccount.favorites || []).filter(e => e !== email);
-            await saveClientAccount(clientAccount);
+            await saveAccountSecure('client:'+clientAccount.email, clientAccount, clientSessionToken);
             showToast('Profesional eliminado de favoritos.');
             showView('client');
           };
@@ -3138,7 +3357,7 @@ function bindClient(){
   }
   const msgList = document.getElementById('client-message-list');
   if(msgList){
-    getContactMessages().then(async allMessages => {
+    getMyContactMessages('client').then(async allMessages => {
       const myMessages = allMessages.filter(m => m.clientEmail === clientAccount.email).sort((a,b)=>b.sentAt - a.sentAt);
       if(!myMessages.length){
         msgList.innerHTML = '<div class="empty-state">Aún no le escribiste a ningún profesional.</div>';
@@ -3232,12 +3451,14 @@ function bindCourseProviderSignup(){
       return;
     }
 
-    const pw = await buildPasswordRecord(password);
+    const cred = await registerAccountCredentials('account:'+email, password);
+    if(!cred.ok){
+      msgBox.innerHTML = '<div class="msg err">Ya existe una cuenta con ese email.</div>';
+      return;
+    }
     const newAccount = {
       name,
       email,
-      passwordHash: pw.passwordHash,
-      passwordSalt: pw.passwordSalt,
       phone,
       website: website || '',
       bio: desc,
@@ -3250,18 +3471,27 @@ function bindCourseProviderSignup(){
       workPhotos: [],
       featuredUntil: null
     };
+    if(!cred.serverSide){
+      const pw = await buildPasswordRecord(password);
+      newAccount.passwordHash = pw.passwordHash;
+      newAccount.passwordSalt = pw.passwordSalt;
+    }
 
     const savedAccount = await safeSet('account:'+email, JSON.stringify(newAccount), true);
     if(!savedAccount){
       msgBox.innerHTML = '<div class="msg err">No se pudo guardar la cuenta. Revisa el tamaño de las imágenes y vuelve a intentarlo.</div>';
       return;
     }
-    let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-    if(!index.includes(email)) index.push(email);
-    const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
-    if(!savedIndex){
-      msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de cuentas.</div>';
-      return;
+    // Con servidor, 'register' ya añadió el email a accounts-index; en modo
+    // local/sin Supabase (offline) hay que hacerlo aquí, a mano.
+    if(!cred.serverSide){
+      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+      if(!index.includes(email)) index.push(email);
+      const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
+      if(!savedIndex){
+        msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de cuentas.</div>';
+        return;
+      }
     }
     msgBox.innerHTML = '<div class="msg ok">Alta de proveedor de cursos creada. Ahora puedes iniciar sesión.</div>';
     document.getElementById('cp-submit').disabled = true;
@@ -3316,7 +3546,7 @@ function renderDashboard(){
     ${negocioBannerHTML}
     <div class="panel panel-wide">
       <div class="dash-head" style="justify-content:flex-start; margin-bottom:14px;">
-        ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
+        ${account.photo ? `<img src="${account.photo}" alt="Foto de perfil de ${escapeHtml(account.name||'')}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
         <div style="flex:1; min-width:130px;">
           <h2 style="font-size:22px; margin:0;">${escapeHtml(account.name)}</h2>
           <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
@@ -3353,7 +3583,7 @@ function renderDashboard(){
   ${negocioBannerHTML}
   <a href="javascript:void(0)" class="back-link" id="dash-back-to-ficha">← Volver a mi ficha</a>
   <div class="dash-head">
-    ${account.photo ? `<img src="${account.photo}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
+    ${account.photo ? `<img src="${account.photo}" alt="Foto de perfil de ${escapeHtml(account.name||'')}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
     <div>
       <h2 style="font-size:22px;">${escapeHtml(account.name)}</h2>
       <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
@@ -3433,7 +3663,8 @@ function bindPro(){
       };
       document.getElementById('logoutBtn').onclick = async ()=>{
         await safeDelete('session-email', false).catch(()=>{});
-        session = null; account = null;
+        await safeDelete('session-token', false).catch(()=>{});
+        session = null; account = null; sessionToken = null;
         dashboardMode = 'ficha';
         showToast('Cerraste sesión.');
         showView('home');
@@ -3441,14 +3672,14 @@ function bindPro(){
       document.getElementById('deleteAccountBtn').onclick = async ()=>{
         if(!confirm('¿Eliminar tu cuenta y tu ficha pública de TodoOficios.es? Se borrarán tu perfil, tus datos del Panel de negocio y tus reseñas recibidas. Esta acción no se puede deshacer.')) return;
         const email = account.email;
-        const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-        await safeSet('accounts-index', JSON.stringify(index.filter(e=>e!==email)), true);
-        await safeDelete('account:'+email, true);
-        await safeDelete('negocio:'+email, true);
-        const ratings = await getRatings();
-        await safeSet('ratings', JSON.stringify(ratings.filter(r=>r.proEmail!==email)), true);
+        await deleteAccountSecure('account:'+email, sessionToken);
+        await deleteAccountSecure('negocio:'+email, sessionToken);
+        // accounts-index y las reseñas de este profesional los limpia la propia
+        // Edge Function como parte de 'delete' sobre account:<email> (ver
+        // removeFromIndex/purgeRatingsForPro).
         await safeDelete('session-email', false);
-        session = null; account = null;
+        await safeDelete('session-token', false);
+        session = null; account = null; sessionToken = null;
         dashboardMode = 'ficha';
         showToast('Tu cuenta se eliminó correctamente.');
         showView('home');
@@ -3457,7 +3688,7 @@ function bindPro(){
       async function renderProMessages(){
         const list = document.getElementById('pro-message-list');
         if(!list) return;
-        const messages = (await getContactMessages()).filter(m => m.proEmail === account.email);
+        const messages = (await getMyContactMessages('pro')).filter(m => m.proEmail === account.email);
         if(!messages.length){
           list.innerHTML = '<div class="empty-state">Aún no recibiste mensajes de clientes.</div>';
           return;
@@ -3509,9 +3740,9 @@ function bindPro(){
             const text = textarea.value.trim();
             if(!text) return;
             sendBtn.disabled = true;
-            const saved = await addContactReply(key, text);
+            const result = await addContactReply(key, text);
             sendBtn.disabled = false;
-            if(!saved){ showToast('No se pudo enviar la respuesta. Inténtalo de nuevo.'); return; }
+            if(!result.ok){ showToast('No se pudo enviar la respuesta. Inténtalo de nuevo.'); return; }
             showToast('Respuesta enviada al cliente.');
             if(msg) notifyClientOfReply(msg, text);
             renderProMessages();
@@ -3614,7 +3845,7 @@ function bindPro(){
       account.workPhotos = dashWorkPhotos.filter(Boolean);
       account.lat = dashLoc ? dashLoc.lat : null;
       account.lng = dashLoc ? dashLoc.lng : null;
-      const saved = await safeSet('account:'+account.email, JSON.stringify(account), true);
+      const saved = await saveAccountSecure('account:'+account.email, account, sessionToken);
       if(!saved){
         msgBox.innerHTML = '<div class="msg err">No se pudo guardar el perfil. Reduce fotos/tamaño e inténtalo de nuevo.</div>';
         showToast('Error al guardar perfil.');
@@ -3735,13 +3966,15 @@ function bindPro(){
         return;
       }
 
+      const cred = await registerAccountCredentials('account:'+email, password);
+      if(!cred.ok){
+        msgBox.innerHTML = '<div class="msg err">Ya existe una cuenta con ese email.</div>';
+        return;
+      }
       const promo = await claimLaunchPromoSlot();
-      const pw = await buildPasswordRecord(password);
       const newAccount = {
         name,
         email,
-        passwordHash: pw.passwordHash,
-        passwordSalt: pw.passwordSalt,
         oficio: document.getElementById('rg-oficio').value,
         phone,
         address: document.getElementById('rg-address').value.trim(),
@@ -3761,24 +3994,35 @@ function bindPro(){
         premiumPromoSlot: promo.granted ? promo.slot : null,
         premiumTrial: !promo.granted
       };
+      if(!cred.serverSide){
+        const pw = await buildPasswordRecord(password);
+        newAccount.passwordHash = pw.passwordHash;
+        newAccount.passwordSalt = pw.passwordSalt;
+      }
 
       const savedAccount = await safeSet('account:'+email, JSON.stringify(newAccount), true);
       if(!savedAccount){
         msgBox.innerHTML = '<div class="msg err">No se pudo guardar la cuenta. Reduce el peso de las imágenes e inténtalo de nuevo.</div>';
         return;
       }
-      let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-      if(!index.includes(email)) index.push(email);
-      const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
-      if(!savedIndex){
-        msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de profesionales.</div>';
-        return;
+      // Con servidor, 'register' ya añadió el email a accounts-index; en modo
+      // local/sin Supabase (offline) hay que hacerlo aquí, a mano.
+      if(!cred.serverSide){
+        let index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+        if(!index.includes(email)) index.push(email);
+        const savedIndex = await safeSet('accounts-index', JSON.stringify(index), true);
+        if(!savedIndex){
+          msgBox.innerHTML = '<div class="msg err">No se pudo actualizar el índice de profesionales.</div>';
+          return;
+        }
       }
       const sessionSaved = await safeSet('session-email', email, false);
       if(!sessionSaved){
         msgBox.innerHTML = '<div class="msg err">Cuenta creada, pero no se pudo iniciar sesión automáticamente.</div>';
         return;
       }
+      if(cred.token) await safeSet('session-token', cred.token, false);
+      sessionToken = cred.token;
 
       session = {email};
       account = newAccount;
@@ -3799,20 +4043,16 @@ function bindPro(){
       const raw = await safeGet('account:'+email, true);
       if(!raw){ msgBox.innerHTML = '<div class="msg err">No encontramos una cuenta con ese email.</div>'; return; }
       const acc = JSON.parse(raw);
-      if(!(await verifyPasswordRecord(acc, password))){ msgBox.innerHTML = '<div class="msg err">Contraseña incorrecta.</div>'; return; }
-      if(acc.password && !acc.passwordHash){
-        const migrated = await buildPasswordRecord(password);
-        acc.passwordHash = migrated.passwordHash;
-        acc.passwordSalt = migrated.passwordSalt;
-        delete acc.password;
-        await safeSet('account:'+email, JSON.stringify(acc), true);
-      }
+      const auth = await verifyAccountPassword('account:'+email, acc, password);
+      if(!auth.ok){ msgBox.innerHTML = '<div class="msg err">Contraseña incorrecta.</div>'; return; }
 
       const sessionSaved = await safeSet('session-email', email, false);
       if(!sessionSaved){
         msgBox.innerHTML = '<div class="msg err">No se pudo iniciar sesión en este navegador.</div>';
         return;
       }
+      if(auth.token) await safeSet('session-token', auth.token, false);
+      sessionToken = auth.token;
       session = {email};
       account = acc;
       dashboardMode = 'ficha';
@@ -3915,7 +4155,7 @@ function abrirPresupuestoPDF(id){
     const dd = new Date(p.fecha+'T00:00:00');
     dd.setDate(dd.getDate() + (p.validezDias||30));
     fechaValidez = dd.toLocaleDateString('es-ES', {day:'2-digit', month:'2-digit', year:'numeric'});
-  }catch(e){}
+  }catch(e){ console.warn('No se pudo calcular la fecha de validez del presupuesto:', e); }
 
   const filasHTML = (p.partidas||[]).map(x=>`
     <tr>
@@ -4025,7 +4265,7 @@ function abrirPresupuestoPDF(id){
   ${(p.fotos||[]).length ? `
   <div class="doc-fotos">
     <h3>Fotos del trabajo</h3>
-    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}">`).join('')}</div>
+    <div class="doc-fotos-grid">${p.fotos.map(f=>`<img src="${f}" alt="Foto del documento adjunto">`).join('')}</div>
   </div>` : ''}
 
   ${p.estado === 'Aceptado' ? `<div class="firma-digital ok">✓ Presupuesto aceptado digitalmente${p.firmaNombre?` por ${escapeHtml(p.firmaNombre)}`:''}${p.firmaFecha?` el ${formatDateES(p.firmaFecha)}`:''}.</div>`
@@ -4193,7 +4433,7 @@ function getPresupuestoDraft(email){
   try { return JSON.parse(localStorage.getItem('presupuesto-draft:'+email) || '[]'); } catch(e){ return []; }
 }
 function clearPresupuestoDraft(email){
-  try { localStorage.removeItem('presupuesto-draft:'+email); } catch(e){}
+  try { localStorage.removeItem('presupuesto-draft:'+email); } catch(e){ console.warn('No se pudo borrar el borrador de presupuesto:', e); }
 }
 
 async function renderNegocio(){
@@ -5272,7 +5512,7 @@ function bindPresupuestoForm(){
   function renderFotosPreview(){
     const el = document.getElementById('pp-fotos-preview');
     if(!el) return;
-    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
+    el.innerHTML = ppFotos.map((src,idx)=>`<div class="pp-foto-thumb"><img src="${src}" alt="Foto adjunta al presupuesto"><button type="button" data-remove-foto="${idx}" title="Quitar foto" aria-label="Quitar foto">✕</button></div>`).join('');
   }
   renderFotosPreview();
 
@@ -5282,7 +5522,7 @@ function bindPresupuestoForm(){
       const files = Array.from(fotosInput.files || []).slice(0, Math.max(0, FOTOS_MAX - ppFotos.length));
       fotosInput.value = '';
       for(const file of files){
-        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){}
+        try { ppFotos.push(await compressImage(file, 1000)); } catch(e){ console.warn('No se pudo procesar una foto adjunta:', e); }
       }
       renderFotosPreview();
     };
@@ -5639,7 +5879,7 @@ function proCardHTML(p){
   return `
   <div class="pro-card">
     <div class="pro-card-top">
-      ${p.photo ? `<img class="ticket-photo" src="${p.photo}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
+      ${p.photo ? `<img class="ticket-photo" src="${p.photo}" alt="Foto de perfil de ${escapeHtml(p.name||'')}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
       <div>
         <div class="pro-name">${escapeHtml(p.name)}</div>
         <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>
@@ -5840,7 +6080,7 @@ async function renderDetalle(){
   <div class="ticket ticket-split" style="margin-bottom:26px;">
     <div class="ticket-main">
       <div class="ticket-top">
-        ${p.photo ? `<img class="ticket-photo" style="width:60px;height:60px;" src="${p.photo}">` : `<div class="ticket-photo-fallback" style="width:60px;height:60px;font-size:20px;">${(p.name||'?').charAt(0)}</div>`}
+        ${p.photo ? `<img class="ticket-photo" style="width:60px;height:60px;" src="${p.photo}" alt="Foto de perfil de ${escapeHtml(p.name||'')}">` : `<div class="ticket-photo-fallback" style="width:60px;height:60px;font-size:20px;">${(p.name||'?').charAt(0)}</div>`}
         <div>
           <div class="pro-name" style="font-size:22px;">${escapeHtml(p.name)}</div>
           <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>
@@ -6045,7 +6285,7 @@ function bindDetalle(){
         favBtn.textContent = 'Quitar favorito';
         showToast('Profesional agregado a favoritos.');
       }
-      await saveClientAccount(clientAccount);
+      await saveAccountSecure('client:'+clientAccount.email, clientAccount, clientSessionToken);
     };
   }
 
@@ -6056,15 +6296,7 @@ function bindDetalle(){
       const msgBox = document.getElementById('contactMsg');
       msgBox.innerHTML = '';
       if(!msg){ msgBox.innerHTML = '<div class="msg err">Escribe un mensaje para el profesional.</div>'; return; }
-      const saved = await addContactMessage({
-        id: 'msg'+Date.now()+Math.random().toString(36).slice(2,8),
-        clientEmail: clientSession.email,
-        clientName: clientAccount.name,
-        proEmail: p.email,
-        message: msg,
-        sentAt: Date.now(),
-        replies: []
-      });
+      const saved = await addContactMessage(p.email, msg, clientAccount.name);
       if(!saved){
         msgBox.innerHTML = '<div class="msg err">No se pudo enviar el mensaje. Inténtalo de nuevo.</div>';
         return;
@@ -6205,7 +6437,8 @@ async function markFeaturedAccount(email){
   const acc = JSON.parse(raw);
   acc.featuredUntil = Date.now() + PREMIUM_DURATION_MS;
   acc.premiumMonthsPaid = (acc.premiumMonthsPaid||0) + 1;
-  const saved = await safeSet('account:'+email, JSON.stringify(acc), true);
+  const token = session?.email === email ? sessionToken : null;
+  const saved = await saveAccountSecure('account:'+email, acc, token);
   if(!saved) return false;
   if(session?.email === email){ account = acc; }
   return true;
@@ -6261,7 +6494,6 @@ function renderFeaturedPaypalButtons(){
 /* ======================= INIT ======================= */
 async function init(){
   await initSupabaseClient();
-  await seedDemoIfNeeded();
   await loadSession();
   setActiveNav('home');
   applyLegalProfileToFooter();

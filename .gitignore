@@ -1,0 +1,8 @@
+node_modules/
+
+# Artefactos de despliegue manual a Hostinger (no son código fuente)
+subida-hostinger/
+subida-hostinger*.zip
+
+# Copias de seguridad manuales (git ya es el sistema de versionado)
+index-copia-seguridad-*.html
