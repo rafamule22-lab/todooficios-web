@@ -1,5 +1,12 @@
 -- Ejecuta este SQL en Supabase SQL Editor
 -- Crea un almacén clave/valor compartido para TodoOficios
+--
+-- IMPORTANTE sobre el orden: si vienes de una versión anterior de este
+-- archivo (políticas con using(true), acceso total para anon), antes de
+-- pegar esto despliega la Edge Function account-auth con SESSION_SECRET
+-- configurado (ver supabase/functions/account-auth/index.ts). Si aplicas
+-- las políticas de abajo antes de eso, nadie podrá editar su perfil, marcar
+-- favoritos ni eliminar su cuenta hasta que la despliegues.
 
 create table if not exists public.kv_store (
   namespace text not null,
@@ -11,7 +18,7 @@ create table if not exists public.kv_store (
 
 alter table public.kv_store enable row level security;
 
--- Lectura pública (cliente web), excepto las credenciales (ver Edge Function account-auth)
+-- Lectura pública (cliente web y directorio), excepto las credenciales
 do $$
 begin
   if not exists (
@@ -28,7 +35,7 @@ begin
   end if;
 end $$;
 
--- Escritura pública (cliente web), excepto las credenciales
+-- Alta de cuentas nuevas (INSERT, no UPDATE) y del resto de keys, excepto las credenciales
 do $$
 begin
   if not exists (
@@ -45,7 +52,9 @@ begin
   end if;
 end $$;
 
--- Actualización pública (cliente web), excepto las credenciales
+-- Actualización pública, EXCEPTO credenciales y perfiles de cliente/profesional
+-- (esos se actualizan vía Edge Function account-auth, acción 'save', que exige
+-- el token de sesión del login/alta)
 do $$
 begin
   if not exists (
@@ -58,12 +67,21 @@ begin
       on public.kv_store
       for update
       to anon
-      using (key not like 'credentials:%')
-      with check (key not like 'credentials:%');
+      using (
+        key not like 'credentials:%'
+        and key not like 'client:%'
+        and key not like 'account:%'
+      )
+      with check (
+        key not like 'credentials:%'
+        and key not like 'client:%'
+        and key not like 'account:%'
+      );
   end if;
 end $$;
 
--- Borrado público (cliente web), excepto las credenciales
+-- Borrado público, EXCEPTO credenciales y perfiles de cliente/profesional
+-- (esos se borran vía Edge Function account-auth, acción 'delete')
 do $$
 begin
   if not exists (
@@ -76,11 +94,15 @@ begin
       on public.kv_store
       for delete
       to anon
-      using (key not like 'credentials:%');
+      using (
+        key not like 'credentials:%'
+        and key not like 'client:%'
+        and key not like 'account:%'
+      );
   end if;
 end $$;
 
--- Si la tabla y las políticas YA existen de antes (creadas con using(true)),
--- ejecuta también supabase/migrations/20260902000000_restrict_credentials_key.sql
--- para sustituirlas por las de arriba: los bloques `if not exists` de este
--- archivo no tocan políticas que ya existan.
+-- Si la tabla y las políticas YA existen de antes, los bloques `if not
+-- exists` de arriba no las tocan: ejecuta en su lugar, en este orden,
+-- supabase/migrations/20260902000000_restrict_credentials_key.sql y
+-- supabase/migrations/20260902000100_restrict_account_writes.sql
