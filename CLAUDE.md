@@ -29,6 +29,8 @@ Editar tu ficha, marcar favoritos, activar destacado, guardar tu panel de negoci
 
 Si Supabase no está configurado (modo local/desarrollo), la función aún no está desplegada, o `SESSION_SECRET` no está puesto, todo esto cae de vuelta al comportamiento anterior (lectura/escritura directa) para no romper el flujo — pero eso significa que la RLS restrictiva solo protege de verdad una vez que account-auth está desplegada con `SESSION_SECRET` configurado, y **antes** de aplicar las migraciones que restringen kv_store. Ver el comentario al principio de `supabase/functions/account-auth/index.ts` para el orden correcto de despliegue.
 
+Toda política RLS de `kv_store` debe cubrir tanto `anon` como `authenticated` (`to anon, authenticated`): una sesión de Google hace que el cliente mande sus peticiones como `authenticated`, no `anon`, así que una política escrita solo `to anon` deja ese flujo bloqueado por defecto (pasó una vez, ver fase 5 de `docs/decisions/0001-supabase-como-backend.md`).
+
 Ver `docs/decisions/0001-supabase-como-backend.md` para el detalle y las limitaciones que quedan pendientes.
 
 ## Despliegue
