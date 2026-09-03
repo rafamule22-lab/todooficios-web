@@ -39,8 +39,6 @@
       return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
     });
   }
-  function faseMul(tipo){ return tipo === 'trifasico' ? Math.sqrt(3) : (tipo === 'trifasico_ln' ? 1 : 2); }
-
   var RHO = { cobre: 0.017241, aluminio: 0.028264 }; // Ω·mm²/m a 20°C
 
   /* ---------- Tablas de componentes ---------- */
@@ -54,9 +52,6 @@
     {n:'Marrón', t:1}, {n:'Rojo', t:2}, {n:'Verde', t:0.5}, {n:'Azul', t:0.25}, {n:'Violeta', t:0.1},
     {n:'Gris', t:0.05}, {n:'Oro', t:5}, {n:'Plata', t:10}, {n:'Ninguno', t:20}
   ];
-  function opts(arr, key, label){
-    return arr.map(function(x){ return {value: x[key !== undefined ? key : 'n'], label: label ? label(x) : x.n}; });
-  }
   function optsNombres(arr){ return arr.map(function(x){ return {value: x.n, label: x.n}; }); }
   function porNombre(arr, n){ var r = arr.filter(function(x){ return x.n === n; })[0]; if(!r) throw new Error('Color no reconocido'); return r; }
 
@@ -163,10 +158,6 @@
     var g = grupoDe(cat);
     var s = size || 32;
     return '<span class="cec-mic" style="background:' + g.color + '; width:' + s + 'px; height:' + s + 'px;"><svg viewBox="0 0 24 24">' + ICONS[cat.icon] + '</svg></span>';
-  }
-  function grupoIconHTML(g, size){
-    var s = size || 26;
-    return '<span class="cec-mic" style="background:' + g.color + '; width:' + s + 'px; height:' + s + 'px;"><svg viewBox="0 0 24 24">' + ICONS[g.icon] + '</svg></span>';
   }
   function calcIconHTML(c, size){
     if(c.icono) return '<span class="cec-mic-formula">' + c.icono + '</span>';
@@ -2421,13 +2412,6 @@
     } catch(e){ console.warn('No se pudo guardar el borrador de presupuesto:', e); }
   }
 
-  function vaciarBorradorPresupuesto(){
-    try {
-      var proEmail = localStorage.getItem('session-email');
-      if(proEmail) localStorage.removeItem('presupuesto-draft:'+proEmail);
-    } catch(e){ console.warn('No se pudo borrar el borrador de presupuesto:', e); }
-  }
-
   /* Indicador persistente en la barra superior: cuántas partidas van
      acumuladas para el próximo presupuesto, aunque se navegue entre
      varias calculadoras distintas antes de crearlo. */
@@ -2752,14 +2736,6 @@
   }
 
   function normaliza(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); }
-
-  function cardHTML(icono, titulo, sub){
-    return '<div class="cec-card" tabindex="0" role="button">' +
-      '<div class="cec-card-icon">' + icono + '</div>' +
-      '<div class="cec-card-title">' + titulo + '</div>' +
-      (sub ? '<div class="cec-card-sub">' + sub + '</div>' : '') +
-      '</div>';
-  }
 
   function attachFavStarHandlers(container, afterToggle){
     Array.prototype.forEach.call(container.querySelectorAll('[data-fav-calc]'), function(btn){
