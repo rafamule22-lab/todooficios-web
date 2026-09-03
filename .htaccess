@@ -49,7 +49,14 @@ AddDefaultCharset UTF-8
 
 # Assets estáticos: sí se pueden cachear (antes se forzaba no-cache en todo el sitio)
 <IfModule mod_headers.c>
-  <FilesMatch "\.(css|js|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$">
+  <FilesMatch "\.(css|png|jpg|jpeg|gif|svg|webp|ico|woff2?)$">
     Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  # JS: cache corta (1h), no 7 días. Sin build ni versionado automático, el
+  # ?v= manual en los <script src> se olvida al tocar el archivo (ya
+  # pasó); un max-age largo convierte ese olvido en hasta una semana de
+  # usuarios ejecutando código viejo, con fixes de seguridad incluidos.
+  <FilesMatch "\.js$">
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
   </FilesMatch>
 </IfModule>

@@ -11,8 +11,6 @@
 <meta name="robots" content="index,follow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<script src="legal-config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --ink:#141412; --ink-soft:#4a4842; --paper:#FFFFFF; --paper-light:#F3F3F1;
@@ -71,6 +69,8 @@
       <div id="blogArticleBody"></div>
     </div>
   </main>
+  <script src="legal-config.js?v=1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (function(){
       "use strict";
@@ -123,7 +123,7 @@
         elListBody.innerHTML = '<div class="blog-list">' + posts.map(cardHTML).join('') + '</div>';
         Array.prototype.forEach.call(elListBody.querySelectorAll('[data-slug]'), function(node){
           node.addEventListener('click', function(){ goToArticle(node.getAttribute('data-slug')); });
-          node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToArticle(node.getAttribute('data-slug')); });
+          node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToArticle(node.getAttribute('data-slug')); } });
         });
       }
 

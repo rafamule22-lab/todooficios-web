@@ -4,9 +4,14 @@
 // el formulario "Añadir gasto" del Panel de negocio en index.html.
 //
 // La API key de Anthropic vive solo aquí, como secreto de Supabase, y nunca se expone
-// en el cliente. Despliegue:
+// en el cliente. Exige sesión de profesional (mismo token que account-auth) para que
+// nadie con solo la anon key pública pueda gastar la cuota de la API a costa del sitio.
+// Despliegue:
 //   supabase functions deploy parse-gasto
 //   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
+//   supabase secrets set SESSION_SECRET=$(openssl rand -hex 32)  # el mismo que account-auth
+
+import { createClient } from 'jsr:@supabase/supabase-js@2';
 
 const CATEGORIAS_GASTO = [
   'Fontanería', 'Electricidad', 'Albañilería', 'Pintura y acabados', 'Climatización',
@@ -26,6 +31,57 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+// Verificación mínima del token propio emitido por account-auth (HMAC-SHA256
+// sobre el payload, ver ese archivo para el detalle). Duplicado aquí a
+// propósito: son funciones Edge independientes sin módulo compartido.
+function base64urlToBytes(b64url: string): Uint8Array {
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/').padEnd(b64url.length + (4 - (b64url.length % 4 || 4)) % 4, '=');
+  const str = atob(b64);
+  const bytes = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) bytes[i] = str.charCodeAt(i);
+  return bytes;
+}
+
+async function verifyToken(token: string, secret: string): Promise<{ sub: string } | null> {
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [payloadB64, sigB64] = parts;
+  try {
+    const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+    const valid = await crypto.subtle.verify('HMAC', key, base64urlToBytes(sigB64), new TextEncoder().encode(payloadB64));
+    if (!valid) return null;
+    const payload = JSON.parse(new TextDecoder().decode(base64urlToBytes(payloadB64)));
+    if (typeof payload.sub !== 'string' || typeof payload.exp !== 'number') return null;
+    if (payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return { sub: payload.sub };
+  } catch {
+    return null;
+  }
+}
+
+// Exige una identidad de profesional (token propio con prefijo 'account:' o
+// sesión de Supabase Auth): el escaneo de facturas es una función del panel
+// de negocio, no algo que deba poder invocar cualquiera con la anon key.
+async function isAuthorizedPro(payload: { token?: string; authToken?: string }): Promise<boolean> {
+  const sessionSecret = Deno.env.get('SESSION_SECRET') || '';
+  const token = String(payload.token || '');
+  if (token && sessionSecret) {
+    const verified = await verifyToken(token, sessionSecret);
+    if (verified && verified.sub.startsWith('account:')) return true;
+  }
+  const authToken = String(payload.authToken || '');
+  if (authToken) {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    if (supabaseUrl && serviceRoleKey) {
+      const supabase = createClient(supabaseUrl, serviceRoleKey);
+      const { data } = await supabase.auth.getUser(authToken);
+      if (data?.user?.email) return true;
+    }
+  }
+  return false;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
   if (req.method !== 'POST') return jsonResponse({ error: 'Método no permitido' }, 405);
@@ -33,11 +89,15 @@ Deno.serve(async (req: Request) => {
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
   if (!apiKey) return jsonResponse({ error: 'El servidor no tiene configurada la lectura de facturas todavía.' }, 500);
 
-  let payload: { image?: string };
+  let payload: { image?: string; token?: string; authToken?: string };
   try {
     payload = await req.json();
   } catch {
     return jsonResponse({ error: 'Petición inválida.' }, 400);
+  }
+
+  if (!(await isAuthorizedPro(payload))) {
+    return jsonResponse({ error: 'Sesión de profesional inválida o caducada.' }, 401);
   }
 
   const dataUrl = payload.image || '';

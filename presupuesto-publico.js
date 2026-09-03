@@ -84,9 +84,9 @@
   }
 
   function escapeHtml(str){
-    var d = document.createElement('div');
-    d.textContent = str || '';
-    return d.innerHTML;
+    return String(str || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
   }
 
   function fmtEUR(n){
@@ -141,7 +141,7 @@
     return '<div class="doc">' +
       '<div class="doc-head">' +
         '<div class="doc-brand">' +
-          '<div class="ic">' + (p.emisor && p.emisor.foto ? '<img src="' + p.emisor.foto + '">' : '<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>') + '</div>' +
+          '<div class="ic">' + (p.emisor && p.emisor.foto ? '<img src="' + p.emisor.foto + '" alt="Foto de perfil de ' + escapeHtml(p.emisor.nombre||'') + '">' : '<svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg>') + '</div>' +
           '<div><h2>' + escapeHtml(p.emisor?.nombre||'') + '</h2><div class="meta">' +
             (p.emisor?.nif ? 'NIF: ' + escapeHtml(p.emisor.nif) + '<br>' : '') +
             (p.emisor?.direccion ? escapeHtml(p.emisor.direccion) + '<br>' : '') +
@@ -173,14 +173,14 @@
         '<div class="total"><span>TOTAL</span><span>' + fmtEUR(p.total) + '</span></div>' +
       '</div>' +
       '<div class="condiciones"><div><strong>Forma de pago:</strong> ' + escapeHtml(p.formaPago||'Transferencia bancaria') + '</div></div>' +
-      ((p.fotos||[]).length ? '<div class="fotos"><h3>Fotos del trabajo</h3><div class="fotos-grid">' + p.fotos.map(function(f){ return '<img src="' + f + '">'; }).join('') + '</div></div>' : '') +
+      ((p.fotos||[]).length ? '<div class="fotos"><h3>Fotos del trabajo</h3><div class="fotos-grid">' + p.fotos.map(function(f){ return '<img src="' + f + '" alt="Foto del trabajo" loading="lazy">'; }).join('') + '</div></div>' : '') +
     '</div>';
   }
 
   function actionCardHTML(){
     return '<div class="action-card" id="actionCard">' +
       '<h3>¿Estás de acuerdo con este presupuesto?</h3>' +
-      '<label>Tu nombre (para confirmar tu respuesta)</label>' +
+      '<label for="firmaNombre">Tu nombre (para confirmar tu respuesta)</label>' +
       '<input type="text" id="firmaNombre" placeholder="Nombre y apellidos">' +
       '<div class="check-row"><input type="checkbox" id="firmaCheck" style="margin-top:2px;"><label for="firmaCheck" style="font-weight:400; margin:0;">He revisado las partidas, el precio y las condiciones de este presupuesto.</label></div>' +
       '<div class="action-btns">' +
