@@ -2324,9 +2324,25 @@ function haversineKm(a, b){
 }
 
 /* ======================= CUENTAS (solo profesionales) ======================= */
+/* Con Supabase, una sola query trae todos los perfiles (SELECT sobre
+   account:* ya es público, ver CLAUDE.md) en vez de una petición HTTP por
+   profesional del directorio. Sin cloud (modo local), sigue recorriendo
+   accounts-index una key a la vez contra localStorage. */
 async function getAllProfessionals(){
-  const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
-  const rawAccounts = await Promise.all(index.map(email => safeGet('account:'+email, true)));
+  let rawAccounts = null;
+  if(cloudEnabled){
+    const client = await initSupabaseClient();
+    if(client){
+      const { data, error } = await client
+        .from('kv_store').select('value')
+        .eq('namespace', CLOUD_NAMESPACE).like('key', 'account:%');
+      if(!error && data) rawAccounts = data.map(row => row.value);
+    }
+  }
+  if(!rawAccounts){
+    const index = JSON.parse(await safeGet('accounts-index', true) || '[]');
+    rawAccounts = await Promise.all(index.map(email => safeGet('account:'+email, true)));
+  }
   const list = [];
   for(const raw of rawAccounts){
     if(!raw) continue;
@@ -5906,7 +5922,7 @@ function proCardHTML(p){
   return `
   <div class="pro-card">
     <div class="pro-card-top">
-      ${p.photo ? `<img class="ticket-photo" src="${p.photo}" alt="Foto de perfil de ${escapeHtml(p.name||'')}">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
+      ${p.photo ? `<img class="ticket-photo" src="${p.photo}" alt="Foto de perfil de ${escapeHtml(p.name||'')}" loading="lazy">` : `<div class="ticket-photo-fallback">${(p.name||'?').charAt(0)}</div>`}
       <div>
         <div class="pro-name">${escapeHtml(p.name)}</div>
         <span class="pro-oficio">${escapeHtml(p.oficio || 'Oficio general')}</span>
