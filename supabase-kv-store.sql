@@ -39,7 +39,7 @@ begin
     create policy kv_store_select_anon
       on public.kv_store
       for select
-      to anon
+      to anon, authenticated
       using (
         key not like 'credentials:%'
         and key not like 'client:%'
@@ -67,7 +67,7 @@ begin
     create policy kv_store_insert_anon
       on public.kv_store
       for insert
-      to anon
+      to anon, authenticated
       with check (
         key not like 'credentials:%'
         and key not like 'client:%'
@@ -98,7 +98,7 @@ begin
     create policy kv_store_update_anon
       on public.kv_store
       for update
-      to anon
+      to anon, authenticated
       using (
         key not like 'credentials:%'
         and key not like 'client:%'
@@ -140,7 +140,7 @@ begin
     create policy kv_store_delete_anon
       on public.kv_store
       for delete
-      to anon
+      to anon, authenticated
       using (
         key not like 'credentials:%'
         and key not like 'client:%'
