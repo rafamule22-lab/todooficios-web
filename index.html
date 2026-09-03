@@ -1316,11 +1316,11 @@
 <div class="legal-alert" id="storageModeAlert">Aviso técnico: este sitio funciona en modo local sin backend compartido. Configura Supabase (supabaseUrl y supabaseAnonKey) para compartir registros y mensajes entre dispositivos.</div>
 
 <div class="info-modal-backdrop" id="m-como-pro">
-  <div class="info-modal">
+  <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="m-como-pro-title">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
       <div class="ic-circle" style="background:var(--c-gastos);"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
-      <div><span class="eyebrow">Para profesionales</span><h2>Todo lo que ganas al darte de alta</h2></div>
+      <div><span class="eyebrow">Para profesionales</span><h2 id="m-como-pro-title">Todo lo que ganas al darte de alta</h2></div>
     </div>
     <div class="info-modal-body">
       <h5>Tu ficha, siempre gratis</h5>
@@ -1368,11 +1368,11 @@
 </div>
 
 <div class="info-modal-backdrop" id="m-como-loc">
-  <div class="info-modal">
+  <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="m-como-loc-title">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
       <div class="ic-circle" style="background:var(--c-fiscal);"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
-      <div><span class="eyebrow">Ubicación real</span><h2>Por qué te mostramos primero a quien tienes cerca</h2></div>
+      <div><span class="eyebrow">Ubicación real</span><h2 id="m-como-loc-title">Por qué te mostramos primero a quien tienes cerca</h2></div>
     </div>
     <div class="info-modal-body">
       <h5>Para quien busca un profesional</h5>
@@ -1390,11 +1390,11 @@
 </div>
 
 <div class="info-modal-backdrop" id="m-como-rate">
-  <div class="info-modal">
+  <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="m-como-rate-title">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
       <div class="ic-circle" style="background:var(--c-agente);"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
-      <div><span class="eyebrow">Valoraciones honestas</span><h2>Qué se valora exactamente</h2></div>
+      <div><span class="eyebrow">Valoraciones honestas</span><h2 id="m-como-rate-title">Qué se valora exactamente</h2></div>
     </div>
     <div class="info-modal-body">
       <p>Cada reseña puntúa (de 1 a 5 estrellas) cinco aspectos concretos del trabajo, no una nota genérica:</p>
@@ -1416,11 +1416,11 @@
 </div>
 
 <div class="info-modal-backdrop" id="m-como-contact">
-  <div class="info-modal">
+  <div class="info-modal" role="dialog" aria-modal="true" aria-labelledby="m-como-contact-title">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
       <div class="ic-circle" style="background:var(--c-agenda);"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
-      <div><span class="eyebrow">Contacto directo</span><h2>Así hablas con el profesional</h2></div>
+      <div><span class="eyebrow">Contacto directo</span><h2 id="m-como-contact-title">Así hablas con el profesional</h2></div>
     </div>
     <div class="info-modal-body">
       <p>En cuanto tienes una cuenta de cliente (gratis), puedes contactar de tres formas, sin que nadie se quede en medio:</p>
@@ -6357,17 +6357,30 @@ document.querySelectorAll('.nav-btn').forEach(b=>{
 });
 document.getElementById('brandHomeBtn')?.addEventListener('click', ()=> showView('home'));
 
+/* Foco: al abrir se mueve al botón de cerrar (entra dentro del diálogo para
+   teclado/lector de pantalla); al cerrar (click, Cerrar o Escape) vuelve al
+   botón que lo abrió. No es un focus-trap completo (Tab puede salir del
+   modal), pero cubre los dos saltos que más se notan sin teclado. */
 document.querySelectorAll('[data-modal]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.getElementById(btn.dataset.modal)?.classList.add('show');
+    const modal = document.getElementById(btn.dataset.modal);
+    if(!modal) return;
+    modal.classList.add('show');
+    modal.__opener = btn;
+    modal.querySelector('.info-modal-close')?.focus();
   });
 });
 document.querySelectorAll('.info-modal-backdrop').forEach(backdrop=>{
-  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) backdrop.classList.remove('show'); });
-  backdrop.querySelector('[data-modal-close]')?.addEventListener('click', ()=> backdrop.classList.remove('show'));
+  const closeInfoModal = ()=>{
+    backdrop.classList.remove('show');
+    backdrop.__opener?.focus();
+  };
+  backdrop.addEventListener('click', (e)=>{ if(e.target === backdrop) closeInfoModal(); });
+  backdrop.querySelector('[data-modal-close]')?.addEventListener('click', closeInfoModal);
+  backdrop.__close = closeInfoModal;
 });
 document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape') document.querySelectorAll('.info-modal-backdrop.show').forEach(b=>b.classList.remove('show'));
+  if(e.key === 'Escape') document.querySelectorAll('.info-modal-backdrop.show').forEach(b=> b.__close ? b.__close() : b.classList.remove('show'));
 });
 
 
