@@ -1238,7 +1238,7 @@
     </a>
 
     <div class="drawer-group">
-      <div class="drawer-group-head">
+      <div class="drawer-group-head" tabindex="0" role="button" aria-expanded="false">
         <div class="m-ic" style="background:var(--c-agente);"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div>
         <span class="drawer-label">Cursos</span>
         <span class="chev">›</span>
@@ -1250,7 +1250,7 @@
     </div>
 
     <div class="drawer-group">
-      <div class="drawer-group-head">
+      <div class="drawer-group-head" tabindex="0" role="button" aria-expanded="false">
         <div class="m-ic" style="background:var(--c-envio);"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
         <span class="drawer-label">Noticias</span>
         <span class="chev">›</span>
@@ -1272,7 +1272,7 @@
     </a>
 
     <div class="drawer-group">
-      <div class="drawer-group-head">
+      <div class="drawer-group-head" tabindex="0" role="button" aria-expanded="false">
         <div class="m-ic" style="background:var(--ic-oficios);"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg></div>
         <span class="drawer-label">Buscar por oficio</span>
         <span class="chev">›</span>
@@ -1632,7 +1632,7 @@ const GROUP_VISUALS = {
 function groupBadgeHTML(groupName, active){
   const v = GROUP_VISUALS[groupName] || { color:'#141412', icon:'' };
   return `
-  <div class="hex-item filter-chip ${active?'active':''}" data-group="${escapeHtml(groupName)}">
+  <div class="hex-item filter-chip ${active?'active':''}" data-group="${escapeHtml(groupName)}" tabindex="0" role="button" aria-pressed="${active?'true':'false'}">
     <div class="hex-shape" style="background:${v.color};"><svg class="hex-icon" viewBox="0 0 24 24">${v.icon}</svg></div>
     <span>${escapeHtml(groupName)}</span>
   </div>`;
@@ -1643,7 +1643,7 @@ function sfDropdownGroupsHTML(){
     return `
     <div class="sf-dropdown-group">
       <div class="sf-dropdown-label"><span class="mic" style="background:${v.color};"><svg viewBox="0 0 24 24">${v.icon}</svg></span>${escapeHtml(g.group)}</div>
-      ${g.items.map(o => `<div class="sf-dropdown-item" data-oficio="${escapeHtml(o)}">${escapeHtml(o)}</div>`).join('')}
+      ${g.items.map(o => `<div class="sf-dropdown-item" data-oficio="${escapeHtml(o)}" tabindex="0" role="option">${escapeHtml(o)}</div>`).join('')}
     </div>`;
   }).join('');
 }
@@ -2231,6 +2231,13 @@ function showToast(msg){
 }
 function escapeHtml(str){
   return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/* Activa un elemento (pensado para <div role="button">, que no responde a
+   Enter/Espacio de forma nativa como un <button>) tanto por click como por
+   teclado. */
+function onClickOrKey(el, handler){
+  el.onclick = handler;
+  el.onkeydown = e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); handler(e); } };
 }
 /* Lista de materiales/alcance que el cliente dejó preparada en la
    Calculadora de reformas (calculadoras.js) antes de venir a buscar
@@ -2968,17 +2975,17 @@ function renderNavAccountChips(){
       quickGroup.classList.add('show');
       quickGroup.innerHTML = `
         <div class="quick-group-title">Tu cuenta</div>
-        <div class="quick-item" data-view="negocio">
+        <div class="quick-item" data-view="negocio" tabindex="0" role="button">
           <div class="m-ic" style="background:var(--amber-deep);"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="14" rx="2"/><path d="M3.5 8h17M8 14h4"/></svg></div>
           <div class="qi-text"><span class="qi-label">Panel de negocios</span><span class="qi-sub">Gastos, agenda, clientes…</span></div>
           <span class="chev">›</span>
         </div>
-        <div class="quick-item" data-view="negocio" data-negocio-tab="presupuestos">
+        <div class="quick-item" data-view="negocio" data-negocio-tab="presupuestos" tabindex="0" role="button">
           <div class="m-ic" style="background:var(--c-presupuestos);"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
           <div class="qi-text"><span class="qi-label">Presupuestos</span><span class="qi-sub">Crear y gestionar</span></div>
           <span class="chev">›</span>
         </div>
-        <div class="quick-item" data-view="pro">
+        <div class="quick-item" data-view="pro" tabindex="0" role="button">
           <div class="m-ic" style="background:var(--c-gastos);"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
           <div class="qi-text"><span class="qi-label">Mi ficha pública</span></div>
           <span class="chev">›</span>
@@ -2988,7 +2995,7 @@ function renderNavAccountChips(){
       quickGroup.classList.add('show');
       quickGroup.innerHTML = `
         <div class="quick-group-title">Tu cuenta</div>
-        <div class="quick-item" data-view="client">
+        <div class="quick-item" data-view="client" tabindex="0" role="button">
           <div class="m-ic" style="background:var(--c-clientes);"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-10-9.3C.6 8 2.4 4.5 6 4c2.2-.3 4 1 6 3.3C14 5 15.8 3.7 18 4c3.6.5 5.4 4 4 7.7C19.5 16.4 12 21 12 21z"/></svg></div>
           <div class="qi-text"><span class="qi-label">Mis favoritos</span></div>
           ${favCount ? `<span class="count-badge">${favCount}</span>` : '<span class="chev">›</span>'}
@@ -3062,6 +3069,13 @@ document.body.addEventListener('click', (e)=>{
     return;
   }
 });
+/* Los <div role="button"> de este delegado (p. ej. .quick-item) no reciben
+   Enter/Espacio de forma nativa como un <button>; esto simula el click. */
+document.body.addEventListener('keydown', (e)=>{
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const el = e.target.closest('[role="button"][data-view], [role="button"][data-quick-oficio], [role="button"][data-coming-soon]');
+  if(el){ e.preventDefault(); el.click(); }
+});
 
 /* ======================= VISTA: SOY PROFESIONAL ======================= */
 async function renderPro(){
@@ -3071,9 +3085,9 @@ async function renderPro(){
   return `
   <div class="section-label">Perfil profesional</div>
   <h2 style="font-size:24px; margin-bottom:16px;">Gestioná tu ficha de trabajo</h2>
-  <div class="role-toggle" style="max-width:420px;">
-    <div class="role-opt ${proAuthMode==='registro'?'active':''}" data-mode="registro">Crear cuenta</div>
-    <div class="role-opt ${proAuthMode==='login'?'active':''}" data-mode="login">Ya tengo cuenta</div>
+  <div class="role-toggle" style="max-width:420px;" role="radiogroup" aria-label="Modo de acceso">
+    <div class="role-opt ${proAuthMode==='registro'?'active':''}" data-mode="registro" tabindex="0" role="radio" aria-checked="${proAuthMode==='registro'}">Crear cuenta</div>
+    <div class="role-opt ${proAuthMode==='login'?'active':''}" data-mode="login" tabindex="0" role="radio" aria-checked="${proAuthMode==='login'}">Ya tengo cuenta</div>
   </div>
   <div class="panel ${proAuthMode === 'registro' ? 'panel-wide' : ''}">
     <div id="proMsg"></div>
@@ -3200,9 +3214,9 @@ function renderClient(){
   return `
   <div class="section-label">Soy cliente</div>
   <h2 style="font-size:24px; margin-bottom:16px;">Registrate para contactar profesionales</h2>
-  <div class="role-toggle" style="max-width:420px; margin-bottom:20px;">
-    <div class="role-opt ${clientAuthMode==='registro'?'active':''}" data-client-mode="registro">Crear cuenta</div>
-    <div class="role-opt ${clientAuthMode==='login'?'active':''}" data-client-mode="login">Ya soy cliente</div>
+  <div class="role-toggle" style="max-width:420px; margin-bottom:20px;" role="radiogroup" aria-label="Modo de acceso">
+    <div class="role-opt ${clientAuthMode==='registro'?'active':''}" data-client-mode="registro" tabindex="0" role="radio" aria-checked="${clientAuthMode==='registro'}">Crear cuenta</div>
+    <div class="role-opt ${clientAuthMode==='login'?'active':''}" data-client-mode="login" tabindex="0" role="radio" aria-checked="${clientAuthMode==='login'}">Ya soy cliente</div>
   </div>
   <div class="panel ${clientAuthMode === 'registro' ? 'panel-wide' : ''}">
     <div id="clientMsg"></div>
@@ -3241,10 +3255,10 @@ function bindClient(){
     clientGoogleBtn.onclick = () => signInWithGoogle('client');
   }
   document.querySelectorAll('[data-client-mode]').forEach(opt=>{
-    opt.onclick = ()=>{
+    onClickOrKey(opt, ()=>{
       clientAuthMode = opt.dataset.clientMode;
       showView('client');
-    };
+    });
   });
   const btn = document.getElementById('cl-submit');
   if(btn){
@@ -3912,10 +3926,10 @@ function bindPro(){
 
   // No hay sesión: bind toggle + formularios
   document.querySelectorAll('.role-opt').forEach(opt=>{
-    opt.onclick = ()=>{
+    onClickOrKey(opt, ()=>{
       proAuthMode = opt.dataset.mode;
       showView('pro');
-    };
+    });
   });
 
   if(proAuthMode === 'registro'){
@@ -4601,7 +4615,7 @@ async function renderNegocio(){
       <div class="ng-box">
         <div class="ng-box-label">Tus números</div>
         <div class="nav-list">
-          <div class="nav-card" data-ng-tab="gastos">
+          <div class="nav-card" data-ng-tab="gastos" tabindex="0" role="button">
             ${ngIconHTML('gastos')}
             <div class="nc-body">
               <span class="stat-label">Gastos este mes</span>
@@ -4610,7 +4624,7 @@ async function renderNegocio(){
             </div>
             <span class="chev">›</span>
           </div>
-          <div class="nav-card" data-ng-tab="presupuestos">
+          <div class="nav-card" data-ng-tab="presupuestos" tabindex="0" role="button">
             ${ngIconHTML('presupuestos')}
             <div class="nc-body">
               <span class="stat-label">Presupuestos pendientes</span>
@@ -4619,7 +4633,7 @@ async function renderNegocio(){
             </div>
             <span class="chev">›</span>
           </div>
-          <div class="nav-card" data-ng-tab="agenda">
+          <div class="nav-card" data-ng-tab="agenda" tabindex="0" role="button">
             ${ngIconHTML('agenda')}
             <div class="nc-body">
               <span class="stat-label">Próxima cita</span>
@@ -4628,7 +4642,7 @@ async function renderNegocio(){
             </div>
             <span class="chev">›</span>
           </div>
-          <div class="nav-card" data-ng-tab="clientes">
+          <div class="nav-card" data-ng-tab="clientes" tabindex="0" role="button">
             ${ngIconHTML('clientes')}
             <div class="nc-body">
               <span class="stat-label">Clientes</span>
@@ -4637,7 +4651,7 @@ async function renderNegocio(){
             </div>
             <span class="chev">›</span>
           </div>
-          <div class="nav-card" data-ng-tab="materiales">
+          <div class="nav-card" data-ng-tab="materiales" tabindex="0" role="button">
             ${ngIconHTML('materiales')}
             <div class="nc-body">
               <span class="stat-label">Materiales favoritos</span>
@@ -4653,7 +4667,7 @@ async function renderNegocio(){
         <div class="ng-box-label">Herramientas</div>
         <div class="nav-list">
           ${negocioTabsHerramientas.map(t=>`
-          <div class="nav-card tool" data-ng-tab="${t.key}">
+          <div class="nav-card tool" data-ng-tab="${t.key}" tabindex="0" role="button">
             ${ngIconHTML(t.key)}
             <div class="nc-body">
               <span class="stat-value">${t.label}</span>
@@ -4838,7 +4852,7 @@ async function renderNegocio(){
             <div class="fav-dropdown">
               <button type="button" class="btn btn-outline btn-sm fav-dropdown-btn" id="pp-fav-toggle">+ Añadir material favorito</button>
               <div class="fav-dropdown-menu" id="pp-fav-menu" style="display:none;">
-                ${materialesFavoritos.map(m=>`<div class="fav-dropdown-item" data-fav-id="${m.id}"><span>${escapeHtml(m.nombre)}</span><span class="fav-price">${formatEUR(m.precio)}</span></div>`).join('')}
+                ${materialesFavoritos.map(m=>`<div class="fav-dropdown-item" data-fav-id="${m.id}" tabindex="0" role="button"><span>${escapeHtml(m.nombre)}</span><span class="fav-price">${formatEUR(m.precio)}</span></div>`).join('')}
               </div>
             </div>` : ''}
           </div>
@@ -5013,19 +5027,19 @@ async function renderNegocio(){
       <p class="note">Nada que configurar aquí: se generan solos combinando el Asesor fiscal, el Envío al gestor y tus Gastos y Presupuestos.</p>
       <div class="asesor-cardgrid">
         ${nextDeadline ? `
-        <div class="asesor-card" data-ng-tab="fiscal">
+        <div class="asesor-card" data-ng-tab="fiscal" tabindex="0" role="button">
           ${ngIconHTML('fiscal')}
           <div><h4>Vencimiento cercano</h4><p>${escapeHtml(nextDeadline.label)} vence en ${daysToNext} día${daysToNext===1?'':'s'}.</p></div>
         </div>` : ''}
-        <div class="asesor-card" data-ng-tab="envio">
+        <div class="asesor-card" data-ng-tab="envio" tabindex="0" role="button">
           ${ngIconHTML('envio')}
           <div><h4>${envioPendiente?'Envío pendiente':'Envío al día'}</h4><p>${envioPendiente ? `Aún no has mandado los gastos de esta semana a tu gestor (${gastosSemana.length} factura${gastosSemana.length===1?'':'s'}, ${formatEUR(totalGastosSemana)}).` : 'Ya preparaste el envío de esta semana a tu gestor.'}</p></div>
         </div>
-        <div class="asesor-card" data-ng-tab="gastos">
+        <div class="asesor-card" data-ng-tab="gastos" tabindex="0" role="button">
           ${ngIconHTML('gastos')}
           <div><h4>Gastos deducibles</h4><p>Llevas ${formatEUR(gastosTrimestre)} registrados este trimestre. Si te falta alguna factura de material o combustible, súbela antes del cierre.</p></div>
         </div>
-        <div class="asesor-card" data-ng-tab="presupuestos">
+        <div class="asesor-card" data-ng-tab="presupuestos" tabindex="0" role="button">
           ${ngIconHTML('presupuestos')}
           <div><h4>Comparativa</h4><p>${facturadoTrimestreAnterior>0
             ? `Este trimestre llevas ${formatEUR(facturadoTrimestre)} en presupuestos aceptados, frente a ${formatEUR(facturadoTrimestreAnterior)} el trimestre anterior.`
@@ -5058,6 +5072,17 @@ function updateNegocioBackLink(){
   }
 }
 
+/* nav-card/asesor-card son <div> con role="button" para el estilo de tarjeta
+   (no encajan como <button>); esto les da la activación por teclado que un
+   botón nativo tendría gratis. */
+function bindNgTabTrigger(el){
+  el.onclick = ()=> activateNegocioTab(el.dataset.ngTab);
+  if(el.tagName !== 'BUTTON' && el.tagName !== 'A'){
+    el.onkeydown = e=>{
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); activateNegocioTab(el.dataset.ngTab); }
+    };
+  }
+}
 function activateNegocioTab(tab){
   if(tab !== 'presupuestos') negocioEditPresupuestoId = null;
   negocioTab = tab;
@@ -5070,9 +5095,7 @@ function activateNegocioTab(tab){
 
 function bindNegocio(){
   updateNegocioBackLink();
-  document.querySelectorAll('[data-ng-tab]').forEach(el=>{
-    el.onclick = ()=> activateNegocioTab(el.dataset.ngTab);
-  });
+  document.querySelectorAll('[data-ng-tab]').forEach(bindNgTabTrigger);
 
   let citaOverlapAcknowledged = false;
 
@@ -5414,9 +5437,7 @@ function wireEpigrafeCard(){
   const card = document.getElementById('epigrafe-suggest-card');
   if(!card) return;
 
-  card.querySelectorAll('[data-ng-tab]').forEach(el=>{
-    el.onclick = ()=> activateNegocioTab(el.dataset.ngTab);
-  });
+  card.querySelectorAll('[data-ng-tab]').forEach(bindNgTabTrigger);
 
   async function persistEpigrafe(code, confidence){
     negocio.asesor.epigrafeCode = code;
@@ -5451,16 +5472,16 @@ function wireEpigrafeCard(){
       if(i.label.toLowerCase().includes(q) || i.code.includes(q)) matches.push(i);
     }));
     results.innerHTML = matches.slice(0,6).map(i=>
-      `<div class="result-item" data-code="${escapeHtml(i.code)}"><span>${escapeHtml(i.label)}</span><span class="rcode">${escapeHtml(i.code)}</span></div>`).join('')
+      `<div class="result-item" data-code="${escapeHtml(i.code)}" tabindex="0" role="button"><span>${escapeHtml(i.label)}</span><span class="rcode">${escapeHtml(i.code)}</span></div>`).join('')
       || '<div class="result-item" style="cursor:default;">Sin resultados — descríbelo con otras palabras.</div>';
     results.querySelectorAll('.result-item[data-code]').forEach(r=>{
-      r.onclick = async ()=>{
+      onClickOrKey(r, async ()=>{
         const code = r.dataset.code;
         await persistEpigrafe(code, 'alta');
         card.className = 'suggest-card ok';
         card.innerHTML = epigrafeResultCardHTML(code, 'alta', 'Elegido manualmente en la búsqueda.', false);
         wireEpigrafeCard();
-      };
+      });
     });
   };
 
@@ -5652,9 +5673,7 @@ function bindPresupuestoForm(){
       e.stopPropagation();
       favMenu.style.display = favMenu.style.display === 'none' ? '' : 'none';
     };
-    favMenu.addEventListener('click', (e)=>{
-      const item = e.target.closest('[data-fav-id]');
-      if(!item) return;
+    const addFavPartida = (item)=>{
       const m = materialesFavoritos.find(x=>x.id===item.dataset.favId);
       if(!m) return;
       const soloVacia = ppPartidas.length===1 && !ppPartidas[0].descripcion && !ppPartidas[0].precio;
@@ -5662,6 +5681,15 @@ function bindPresupuestoForm(){
       if(soloVacia) ppPartidas = [nueva]; else ppPartidas.push(nueva);
       favMenu.style.display = 'none';
       renderRows();
+    };
+    favMenu.addEventListener('click', (e)=>{
+      const item = e.target.closest('[data-fav-id]');
+      if(item) addFavPartida(item);
+    });
+    favMenu.addEventListener('keydown', (e)=>{
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      const item = e.target.closest('[data-fav-id]');
+      if(item){ e.preventDefault(); addFavPartida(item); }
     });
   }
 
@@ -6033,13 +6061,21 @@ function bindBuscar(){
   textInput.addEventListener('input', ()=>{ doFilter(); filterDropdown(); dropdown.classList.add('open'); });
   textInput.addEventListener('focus', ()=>{ filterDropdown(); dropdown.classList.add('open'); });
 
+  const selectOficio = (item)=>{
+    textInput.value = item.dataset.oficio;
+    dropdown.classList.remove('open');
+    doFilter();
+  };
   dropdown.addEventListener('mousedown', (e)=>{
     const item = e.target.closest('.sf-dropdown-item');
     if(!item) return;
     e.preventDefault();
-    textInput.value = item.dataset.oficio;
-    dropdown.classList.remove('open');
-    doFilter();
+    selectOficio(item);
+  });
+  dropdown.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const item = e.target.closest('.sf-dropdown-item');
+    if(item){ e.preventDefault(); selectOficio(item); }
   });
 
   document.addEventListener('click', (e)=>{
@@ -6071,11 +6107,11 @@ function bindBuscar(){
   }
 
   document.querySelectorAll('#tradesStrip .filter-chip').forEach(chip=>{
-    chip.onclick = ()=>{
+    onClickOrKey(chip, ()=>{
       const g = chip.dataset.group;
       activeGroupFilter = (activeGroupFilter === g) ? null : g;
       showView('buscar');
-    };
+    });
   });
 
   document.getElementById('locBtn').onclick = async ()=>{
@@ -6175,9 +6211,9 @@ async function renderDetalle(){
     </div>
     <div class="field" style="margin-top:14px;">
       <label id="rt-rehire-label">¿Volverías a contratar a este profesional?</label>
-      <div class="role-toggle" style="max-width:280px;" role="group" aria-labelledby="rt-rehire-label">
-        <div class="role-opt" data-rehire="si">Sí</div>
-        <div class="role-opt" data-rehire="no">No</div>
+      <div class="role-toggle" style="max-width:280px;" role="radiogroup" aria-labelledby="rt-rehire-label">
+        <div class="role-opt" data-rehire="si" tabindex="0" role="radio" aria-checked="false">Sí</div>
+        <div class="role-opt" data-rehire="no" tabindex="0" role="radio" aria-checked="false">No</div>
       </div>
     </div>
     <button type="button" class="rt-detail-toggle" id="rt-detail-toggle"><span>+ Añadir un comentario (opcional)</span><span class="chev">▸</span></button>
@@ -6247,10 +6283,13 @@ function bindDetalle(){
   window.__ratingRehire = null;
   renderCriteriaStars();
   document.querySelectorAll('[data-rehire]').forEach(opt=>{
-    opt.onclick = ()=>{
+    onClickOrKey(opt, ()=>{
       window.__ratingRehire = opt.dataset.rehire;
-      document.querySelectorAll('[data-rehire]').forEach(o=>o.classList.toggle('active', o===opt));
-    };
+      document.querySelectorAll('[data-rehire]').forEach(o=>{
+        o.classList.toggle('active', o===opt);
+        o.setAttribute('aria-checked', String(o===opt));
+      });
+    });
   });
   document.querySelectorAll('[data-del-review]').forEach(btn=>{
     btn.onclick = async ()=>{
@@ -6390,7 +6429,14 @@ const sideDrawer = document.getElementById('sideDrawer');
 const drawerBackdrop = document.getElementById('drawerBackdrop');
 
 document.querySelectorAll('.drawer-group > .drawer-group-head').forEach(head=>{
-  head.addEventListener('click', ()=> head.parentElement.classList.toggle('open'));
+  const toggle = ()=>{
+    const open = head.parentElement.classList.toggle('open');
+    head.setAttribute('aria-expanded', String(open));
+  };
+  head.addEventListener('click', toggle);
+  head.addEventListener('keydown', e=>{
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); }
+  });
 });
 const featuredModalBackdrop = document.getElementById('featuredModalBackdrop');
 const featuredModalClose = document.getElementById('featuredModalClose');
