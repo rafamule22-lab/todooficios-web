@@ -2551,11 +2551,14 @@ async function notifyClientOfReply(msg, replyText){
   try{
     const client = await initSupabaseClient();
     if(!client || !msg.clientEmail) return;
+    const token = sessionToken;
+    const authToken = token ? null : await getSupabaseAuthToken();
     await client.functions.invoke('notify-reply', { body: {
       toEmail: msg.clientEmail,
       toName: msg.clientName || '',
       proName: (account && account.name) || 'Un profesional',
-      excerpt: replyText.slice(0, 300)
+      excerpt: replyText.slice(0, 300),
+      token, authToken
     }});
   }catch(err){ console.error('notify-reply:', err); }
 }
@@ -5097,7 +5100,9 @@ function bindNegocio(){
         scanMsg.innerHTML = '<div class="msg err">Escanear factura necesita conexión con el servidor. Rellena los datos a mano.</div>';
         return;
       }
-      const { data, error } = await client.functions.invoke('parse-gasto', { body: { image: dataUrl } });
+      const token = sessionToken;
+      const authToken = token ? null : await getSupabaseAuthToken();
+      const { data, error } = await client.functions.invoke('parse-gasto', { body: { image: dataUrl, token, authToken } });
       if(error || !data || data.error){
         let msg = (data && data.error) || 'No se pudo leer la factura. Rellena los datos a mano.';
         if(error && error.context && typeof error.context.json === 'function'){
