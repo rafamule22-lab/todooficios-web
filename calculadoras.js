@@ -87,6 +87,19 @@
     {id:'geometria', nombre:'Geometría y conversores', icon:'ruler', color:'#3E5FBF'},
     {id:'avanzado', nombre:'Electrónica avanzada (opcional)', icon:'chip', color:'#8f8878', colapsado:true}
   ];
+
+  /* Iconos de acción en línea (píldoras, botones, avisos) — mismo lenguaje
+     visual de trazo que ICONS de arriba, en vez de emoji sueltos. */
+  var ACTION_ICONS = {
+    receipt: '<path d="M6 3.2h12v17.6l-2.4-1.5L13 20.8l-2.4-1.5-2.2 1.5-2.4-1.5z"/><path d="M8.8 8.2h6.4M8.8 12h6.4M8.8 15.8h3.8"/>',
+    bricks: ICONS.bricks,
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    warn: '<path d="M12 3.5 21.5 19.5H2.5z"/><path d="M12 9v4.2"/><circle cx="12" cy="16.7" r="0.9" fill="currentColor" stroke="none"/>',
+    clipboard: '<rect x="7" y="4" width="10" height="16" rx="1.5"/><path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1"/><path d="M9.5 10h5M9.5 13h5M9.5 16h3"/>'
+  };
+  function actIco(name){
+    return '<svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:4px;">' + (ACTION_ICONS[name]||'') + '</svg>';
+  }
   var CATEGORIAS = [
     {id:'fundamentales', grupo:'electricidad', nombre:'Fundamentales', icon:'gauge', desc:'Ley de Ohm, potencias, resistencia e impedancia'},
     {id:'instalacion', grupo:'electricidad', nombre:'Instalación y conductores', icon:'plug', desc:'Dimensionamiento, caídas de tensión, cortocircuitos y protecciones'},
@@ -2435,7 +2448,7 @@
     }
     wrap.style.display = '';
     var total = totalBorradorPresupuesto(lista);
-    pill.textContent = '🧾 ' + lista.length + (lista.length === 1 ? ' partida · ' : ' partidas · ') + fmt(total,2) + ' €';
+    pill.innerHTML = actIco('receipt') + lista.length + (lista.length === 1 ? ' partida · ' : ' partidas · ') + fmt(total,2) + ' €';
     menu.innerHTML = lista.map(function(d){
       var desc = d.descripcion || d.concepto || '';
       var subtotal = (Number(d.cantidad)||0) * (Number(d.precio)||0);
@@ -2449,7 +2462,7 @@
         '</div></div>';
     }).join('') +
       '<div class="cec-draft-total">Total <strong id="cecDraftTotal">' + fmt(total,2) + ' €</strong></div>' +
-      '<a class="btn-link" href="index.html?view=negocio">🧾 Convertir en presupuesto →</a>';
+      '<a class="btn-link" href="index.html?view=negocio">' + actIco('receipt') + 'Convertir en presupuesto →</a>';
   }
 
   function actualizarTotalesMenuDraft(){
@@ -2465,7 +2478,7 @@
     });
     var totalEl = document.getElementById('cecDraftTotal');
     if(totalEl) totalEl.textContent = fmt(total,2) + ' €';
-    if(pill) pill.textContent = '🧾 ' + items.length + (items.length === 1 ? ' partida · ' : ' partidas · ') + fmt(total,2) + ' €';
+    if(pill) pill.innerHTML = actIco('receipt') + items.length + (items.length === 1 ? ' partida · ' : ' partidas · ') + fmt(total,2) + ' €';
   }
 
   function bindDraftIndicator(){
@@ -2578,12 +2591,12 @@
       return;
     }
     wrap.style.display = '';
-    pill.textContent = '🧱 ' + lista.length + (lista.length === 1 ? ' partida en tu lista' : ' partidas en tu lista');
+    pill.innerHTML = actIco('bricks') + lista.length + (lista.length === 1 ? ' partida en tu lista' : ' partidas en tu lista');
     menu.innerHTML = lista.map(function(it){
       return '<div class="cec-draft-item"><span title="' + escapeHtml(it.concepto) + '">' + escapeHtml(it.concepto) + '</span>' +
         '<button type="button" data-remove-obra="' + it.id + '" title="Quitar" aria-label="Quitar">✕</button></div>';
     }).join('') +
-      '<button type="button" class="btn-link" id="cecObraCopiar" style="width:100%;border:none;cursor:pointer;">📋 Copiar lista para pedir presupuesto</button>' +
+      '<button type="button" class="btn-link" id="cecObraCopiar" style="width:100%;border:none;cursor:pointer;">' + actIco('clipboard') + 'Copiar lista para pedir presupuesto</button>' +
       (isProfessionalLoggedIn() ? '' : '<a class="btn-link" href="index.html?view=buscar" id="cecObraBuscar" style="margin-top:6px;">Buscar profesionales verificados →</a>');
   }
 
@@ -2955,12 +2968,12 @@
       '<div class="cec-result" id="cecResult"></div>' +
       ((isRegistered() && !isProfessionalLoggedIn()) ?
         '<div id="cecObraActionWrap" style="display:none;margin-top:10px;">' +
-          '<button type="button" class="cec-add-budget-btn" id="cecAddObra">🧱 Añadir a mi lista de la reforma</button>' +
+          '<button type="button" class="cec-add-budget-btn" id="cecAddObra">' + actIco('bricks') + 'Añadir a mi lista de la reforma</button>' +
           '<div class="cec-add-toast" id="cecAddObraToast" style="display:none;"></div>' +
         '</div>' : '') +
       (isProfessionalLoggedIn() ?
         '<div id="cecAddBudgetWrap" style="display:none;margin-top:10px;">' +
-          '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">➕ Añadir a un presupuesto</button>' +
+          '<button type="button" class="cec-add-budget-btn" id="cecAddBudget">' + actIco('plus') + 'Añadir a un presupuesto</button>' +
           '<div class="cec-add-toast" id="cecAddToast" style="display:none;"></div>' +
           '<div class="cec-add-picker" id="cecAddPicker" style="display:none;">' +
             '<button type="button" class="cec-add-draft-btn" id="cecAddDraftBtn">Guardar para mi próximo presupuesto</button>' +
@@ -3125,7 +3138,7 @@
         var addBudgetWrap = document.getElementById('cecAddBudgetWrap');
         if(addBudgetWrap) addBudgetWrap.style.display = hayResultado ? '' : 'none';
       } catch(e){
-        out.innerHTML = '<div class="cec-error-msg">⚠ ' + e.message + '</div>';
+        out.innerHTML = '<div class="cec-error-msg">' + actIco('warn') + e.message + '</div>';
         out.classList.add('cec-error');
       }
     }

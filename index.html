@@ -2261,6 +2261,28 @@ function waLink(phone, proName){
 const WA_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2zm5.8 14.15c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.17-1.56-1.17-2.98 0-1.42.74-2.11 1-2.4.26-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.81 2 .88 2.15.07.15.12.32.02.51-.1.19-.15.31-.3.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.62 2 1.11.99 2.05 1.3 2.34 1.45.29.15.46.13.63-.05.17-.19.72-.84.92-1.13.19-.29.39-.24.65-.14.27.1 1.69.8 1.98.94.29.15.48.22.55.34.07.13.07.72-.17 1.4z"/></svg>';
 const MIC_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
 
+/* Iconos de acción en línea (botones, etiquetas de estado) — mismo lenguaje visual
+   que el resto del sitio (trazo, currentColor) en vez de emoji sueltos que cada
+   sistema operativo renderiza a su manera. Reutiliza paths ya usados en NG_ICONS
+   y en los iconos de categoría siempre que coinciden. */
+const ACTION_ICONS = {
+  trash: '<path d="M4 7h16M9 7V4.8c0-.4.4-.8.8-.8h4.4c.4 0 .8.4.8.8V7"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>',
+  phone: '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.2c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  doc: '<path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/>',
+  link: '<path d="M9 15l6-6"/><path d="M13 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M11 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/>',
+  mail: '<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M4 6.5l8 6.5 8-6.5"/>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/>',
+  camera: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.2"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><circle cx="8.4" cy="13.6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13.6" r="1" fill="currentColor" stroke="none"/><circle cx="15.6" cy="13.6" r="1" fill="currentColor" stroke="none"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>'
+};
+function actIco(name){
+  return `<svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:4px;">${ACTION_ICONS[name]||''}</svg>`;
+}
+
 function compressImage(file, maxW=300){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -3094,7 +3116,7 @@ async function renderPro(){
         </div>
       </details>
       <div class="field">
-        <button type="button" class="btn btn-outline btn-sm" id="rg-locBtn">📍 Compartir mi ubicación</button>
+        <button type="button" class="btn btn-outline btn-sm" id="rg-locBtn">${actIco('pin')}Compartir mi ubicación</button>
         <div class="loc-status" id="rg-locStatus">Así apareces ordenado por cercanía. Es opcional.</div>
       </div>
       <button class="btn btn-primary btn-block" id="rg-submit">Publicar mi perfil</button>
@@ -3553,7 +3575,7 @@ function renderDashboard(){
           <h2 style="font-size:22px; margin:0;">${escapeHtml(account.name)}</h2>
           <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
         </div>
-        <button type="button" class="edit-pill" id="dash-edit-btn">✎ Editar</button>
+        <button type="button" class="edit-pill" id="dash-edit-btn">${actIco('edit')}Editar</button>
         <div class="stamp ${stats.avg==null?'empty':''}">
           <span class="num">${stats.avg==null?'—':stats.avg.toFixed(1)}</span>
           <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
@@ -3561,8 +3583,8 @@ function renderDashboard(){
       </div>
       <div class="pro-desc">${escapeHtml(account.bio) || 'Todavía no agregaste una descripción.'}</div>
       <div class="pro-meta" style="margin-bottom:14px;">
-        ${account.zona ? `<span>📍 ${escapeHtml(account.zona)}</span>` : ''}
-        ${account.phone ? `<span>☎️ ${escapeHtml(account.phone)}</span>` : ''}
+        ${account.zona ? `<span>${actIco('pin')}${escapeHtml(account.zona)}</span>` : ''}
+        ${account.phone ? `<span>${actIco('phone')}${escapeHtml(account.phone)}</span>` : ''}
       </div>
       <div style="text-align:center;">
         <button type="button" class="muted-link" id="dash-view">Ver ficha completa y reseñas →</button>
@@ -3635,7 +3657,7 @@ function renderDashboard(){
           </div>
         </details>
         <div class="field">
-          <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">📍 ${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
+          <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">${actIco('pin')}${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
           <div class="loc-status ${account.lat?'ok':''}" id="dash-locStatus">${account.lat?'Ubicación activa para búsquedas por cercanía.':'Todavía no compartiste tu ubicación.'}</div>
         </div>
       </div>
@@ -3716,7 +3738,7 @@ function bindPro(){
             ${repliesHTML}
             ${m.clientEmail ? `
             <div class="pro-msg-reply-zone" style="margin-top:10px;">
-              <button type="button" class="btn btn-outline btn-sm pro-msg-reply-toggle">✉ ${replies.length ? 'Responder de nuevo' : 'Responder'}</button>
+              <button type="button" class="btn btn-outline btn-sm pro-msg-reply-toggle">${actIco('mail')}${replies.length ? 'Responder de nuevo' : 'Responder'}</button>
               <div class="pro-msg-reply-form" hidden>
                 <textarea class="pro-msg-reply-text" style="min-height:80px; margin-top:8px;" placeholder="Escribe tu respuesta..."></textarea>
                 <div style="display:flex; gap:8px; margin-top:8px;">
@@ -3827,7 +3849,7 @@ function bindPro(){
       const pos = await getPosition();
       if(pos){
         dashLoc = pos;
-        statusEl.textContent = '📍 Ubicación actualizada.';
+        statusEl.textContent = 'Ubicación actualizada.';
         statusEl.className = 'loc-status ok';
       } else {
         statusEl.textContent = 'No pudimos obtener tu ubicación.';
@@ -3921,7 +3943,7 @@ function bindPro(){
       const pos = await getPosition();
       if(pos){
         regLoc = pos;
-        statusEl.textContent = '📍 Ubicación compartida correctamente.';
+        statusEl.textContent = 'Ubicación compartida correctamente.';
         statusEl.className = 'loc-status ok';
       } else {
         statusEl.textContent = 'No pudimos obtener tu ubicación. Puedes registrarte igual con tu zona.';
@@ -4069,14 +4091,14 @@ function bindPro(){
 function clienteRowHTML(c){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}${c.email?' · '+escapeHtml(c.email):''}</span></div>
-    <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">🗑</button>
+    <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">${actIco('trash')}</button>
   </div>`;
 }
 function gastoRowHTML(g){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(g.concepto || g.categoria)}</strong><br><span class="drow-meta">${formatDateES(g.fecha)} · ${escapeHtml(g.proveedor||'Sin proveedor')} · ${escapeHtml(g.categoria||'')}</span></div>
     <div class="drow-amount">${formatEUR(g.total)}</div>
-    <button type="button" class="pp-mini-btn bad" data-del-gasto="${g.id}" title="Eliminar gasto">🗑</button>
+    <button type="button" class="pp-mini-btn bad" data-del-gasto="${g.id}" title="Eliminar gasto">${actIco('trash')}</button>
   </div>`;
 }
 function googleCalendarUrl(c){
@@ -4113,8 +4135,8 @@ function googleCalendarUrl(c){
 function citaRowHTML(c){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(c.tipoTrabajo||'Cita')}</strong> con ${escapeHtml(c.cliente||'cliente')}<br><span class="drow-meta">${formatDateES(c.fecha)}${c.horaInicio?' · '+c.horaInicio+(c.horaFin?'–'+c.horaFin:''):''}${c.direccion?' · '+escapeHtml(c.direccion):''}</span>
-    <div class="drow-row-actions"><a class="pp-mini-btn" href="${escapeHtml(googleCalendarUrl(c))}" target="_blank" rel="noopener noreferrer">📅 Añadir a Google Calendar</a></div></div>
-    <button type="button" class="pp-mini-btn bad" data-del-cita="${c.id}" title="Eliminar cita">🗑</button>
+    <div class="drow-row-actions"><a class="pp-mini-btn" href="${escapeHtml(googleCalendarUrl(c))}" target="_blank" rel="noopener noreferrer">${actIco('calendar')}Añadir a Google Calendar</a></div></div>
+    <button type="button" class="pp-mini-btn bad" data-del-cita="${c.id}" title="Eliminar cita">${actIco('trash')}</button>
   </div>`;
 }
 function presupuestoRowHTML(p){
@@ -4126,7 +4148,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button>${p.clienteEmail?`<button type="button" class="pp-mini-btn" data-email-presupuesto="${p.id}">📧 Enviar por email</button>`:''}${p.clienteTelefono?`<button type="button" class="pp-mini-btn" data-whatsapp-presupuesto="${p.id}">${WA_ICON} Enviar por WhatsApp</button>`:''}<button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">${actIco('doc')}Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">${actIco('link')}Compartir con el cliente</button>${p.clienteEmail?`<button type="button" class="pp-mini-btn" data-email-presupuesto="${p.id}">${actIco('mail')}Enviar por email</button>`:''}${p.clienteTelefono?`<button type="button" class="pp-mini-btn" data-whatsapp-presupuesto="${p.id}">${WA_ICON} Enviar por WhatsApp</button>`:''}<button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">${actIco('edit')}Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">${actIco('copy')}Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">${actIco('trash')}Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -4136,7 +4158,7 @@ function materialRowHTML(m){
     <div class="mat-ic">${NG_ICONS.materiales}</div>
     <div class="mat-info"><strong>${escapeHtml(m.nombre)}</strong><span>${escapeHtml(m.unidad)}</span></div>
     <div class="mat-price">${formatEUR(m.precio)}</div>
-    <button type="button" class="pp-mini-btn bad" data-del-material="${m.id}">🗑 Eliminar</button>
+    <button type="button" class="pp-mini-btn bad" data-del-material="${m.id}">${actIco('trash')}Eliminar</button>
   </div>`;
 }
 
@@ -4662,7 +4684,7 @@ async function renderNegocio(){
       <details class="ng-add">
         <summary>Añadir gasto</summary>
         <div class="ng-add-body">
-          <button type="button" class="btn btn-outline btn-block file-btn" id="ng-gas-scan-btn">📷 Escanear factura (rellena los datos solo)
+          <button type="button" class="btn btn-outline btn-block file-btn" id="ng-gas-scan-btn">${actIco('camera')}Escanear factura (rellena los datos solo)
             <input type="file" accept="image/*" capture="environment" id="ng-gas-foto">
           </button>
           <div id="ng-gas-scan-msg"></div>
@@ -4718,10 +4740,10 @@ async function renderNegocio(){
       <div class="pp-stale-banner">
         <strong>${presupuestosSinRespuesta.length} presupuesto${presupuestosSinRespuesta.length>1?'s':''} sin respuesta desde hace 5 días o más</strong>
         <div class="pp-stale-list">
-          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Reenviar PDF</button></span>`).join('')}
+          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">${actIco('doc')}Reenviar PDF</button></span>`).join('')}
         </div>
       </div>` : ''}
-      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">🔄 Comprobar si algún cliente respondió</button>` : ''}
+      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">${actIco('refresh')}Comprobar si algún cliente respondió</button>` : ''}
       ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
       <div id="negocio-presupuestos-list">${presupuestosPendientes.length ? presupuestosPendientes.slice().reverse().map(presupuestoRowHTML).join('') : (negocio.presupuestos.length ? '<div class="empty-state">No tienes presupuestos pendientes de respuesta.</div>' : '<div class="empty-state">Todavía no registraste presupuestos.</div>')}</div>
       ${presupuestosCerrados.length ? `
@@ -5230,7 +5252,7 @@ function bindNegocio(){
       const yaExistia = !!p.shareId;
       const shareId = await publicarPresupuesto(p);
       shareBtn.disabled = false;
-      shareBtn.textContent = '🔗 Compartir con el cliente';
+      shareBtn.innerHTML = `${actIco('link')}Compartir con el cliente`;
       if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
       if(!yaExistia) await saveNegocio(account.email, negocio);
       const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
@@ -5265,7 +5287,7 @@ function bindNegocio(){
       }
       if(cambios) await saveNegocio(account.email, negocio);
       checkRespuestasBtn.disabled = false;
-      checkRespuestasBtn.textContent = '🔄 Comprobar si algún cliente respondió';
+      checkRespuestasBtn.innerHTML = `${actIco('refresh')}Comprobar si algún cliente respondió`;
       showToast(cambios ? `${cambios} presupuesto${cambios>1?'s':''} actualizado${cambios>1?'s':''}.` : 'Sin novedades por ahora.');
       if(cambios) showView('negocio');
     };
@@ -5776,7 +5798,7 @@ function bindPresupuestoForm(){
     negocioEditPresupuestoId = null;
 
     const accionesEnvio = [
-      clienteEmail ? `<button type="button" class="pp-mini-btn" data-quick-email="${presupuestoFinal.id}">📧 Enviar por email</button>` : '',
+      clienteEmail ? `<button type="button" class="pp-mini-btn" data-quick-email="${presupuestoFinal.id}">${actIco('mail')}Enviar por email</button>` : '',
       clienteTelefono ? `<button type="button" class="pp-mini-btn" data-quick-wa="${presupuestoFinal.id}">${WA_ICON} Enviar por WhatsApp</button>` : ''
     ].filter(Boolean).join('');
     msgBox.innerHTML = `<div class="msg ok">
@@ -5889,7 +5911,7 @@ function proCardHTML(p){
     </div>
     <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
     <div class="pro-meta">
-      <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
+      <span>${actIco('pin')}${escapeHtml(p.zona) || 'Sin zona'}</span>
       ${dist != null ? `<span class="distance-tag">≈ ${dist.toFixed(1)} km</span>` : ''}
       ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
       ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
@@ -5930,7 +5952,7 @@ async function renderBuscar(){
       <div class="search-combo" id="searchCombo">
         <div style="display:flex; gap:6px;">
           <div class="search-input-wrap">
-            <span class="search-icon" aria-hidden="true">🔍</span>
+            <span class="search-icon" aria-hidden="true">${actIco('search')}</span>
             <input type="text" id="sf-text" placeholder="Ej. electricista Chamberí" autocomplete="off" style="width:100%;">
           </div>
           <button type="button" class="btn btn-outline btn-sm" id="voiceSearchBtn" title="Buscar por voz" style="display:none; flex:0 0 auto; width:auto; padding:10px 14px;">${MIC_ICON}</button>
@@ -5940,7 +5962,7 @@ async function renderBuscar(){
     </div>
     <div class="field" style="flex:0 0 auto;">
       <label>&nbsp;</label>
-      <button class="btn btn-outline btn-sm" id="locBtn">📍 Ordenar por cercanía</button>
+      <button class="btn btn-outline btn-sm" id="locBtn">${actIco('pin')}Ordenar por cercanía</button>
     </div>
   </div>
   <div class="loc-status" id="clientLocStatus" style="margin:-8px 0 20px;">${myLoc ? 'Ubicación activa — mostrando los más cercanos primero.' : 'Comparte tu ubicación para ver quién está más cerca.'}</div>
@@ -6044,7 +6066,7 @@ function bindBuscar(){
     const pos = await getPosition();
     if(pos){
       myLoc = pos;
-      statusEl.textContent = '📍 Ubicación activa — mostrando los más cercanos primero.';
+      statusEl.textContent = 'Ubicación activa — mostrando los más cercanos primero.';
       statusEl.className = 'loc-status ok';
       doFilter();
     } else {
@@ -6090,8 +6112,8 @@ async function renderDetalle(){
       </div>
       <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
       <div class="pro-meta">
-        <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
-        ${clientSession && p.phone ? `<span>☎️ ${escapeHtml(p.phone)}</span>` : ''}
+        <span>${actIco('pin')}${escapeHtml(p.zona) || 'Sin zona'}</span>
+        ${clientSession && p.phone ? `<span>${actIco('phone')}${escapeHtml(p.phone)}</span>` : ''}
         ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
         ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
       </div>
