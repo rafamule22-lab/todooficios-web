@@ -72,11 +72,27 @@ function matchesPrefix(key: string, prefixes: string[]): string | null {
   return prefixes.find((p) => key.startsWith(p)) || null;
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function isValidEmailKey(key: string, prefixes: string[]): boolean {
   const prefix = matchesPrefix(key, prefixes);
   if (!prefix) return false;
-  const email = key.slice(prefix.length);
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  return EMAIL_RE.test(key.slice(prefix.length));
+}
+
+const RATING_CRITERIA_KEYS = ['puntualidad', 'calidad', 'limpieza', 'trato', 'precio'];
+
+// Solo se aceptan las 5 claves conocidas, cada una un número entre 1 y 5;
+// cualquier otra clave o valor fuera de rango se descarta en vez de guardarse.
+function sanitizeRatingCriteria(input: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (input && typeof input === 'object') {
+    for (const k of RATING_CRITERIA_KEYS) {
+      const v = Number((input as Record<string, unknown>)[k]);
+      if (Number.isFinite(v) && v >= 1 && v <= 5) out[k] = v;
+    }
+  }
+  return out;
 }
 
 function emailOf(key: string): string {
@@ -218,6 +234,39 @@ async function removeFromIndex(supabase: SupabaseClient, indexKey: string, email
   }
 }
 
+// Freno básico a fuerza bruta sobre login: tras LOGIN_MAX_ATTEMPTS fallos
+// consecutivos para una misma cuenta en LOGIN_LOCKOUT_SECONDS, se rechaza sin
+// ni siquiera mirar la contraseña. El contador vive en su propio prefijo de
+// kv_store (nunca expuesto a `anon`, solo lo toca esta función con la service
+// role key), y se borra en cuanto el login tiene éxito.
+const LOGIN_MAX_ATTEMPTS = 8;
+const LOGIN_LOCKOUT_SECONDS = 15 * 60;
+
+async function getLoginAttempts(supabase: SupabaseClient, key: string): Promise<{ count: number; first: number }> {
+  const { data } = await supabase
+    .from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', 'login-attempts:' + key).maybeSingle();
+  if (!data) return { count: 0, first: 0 };
+  try {
+    const v = JSON.parse(data.value);
+    return { count: Number(v.count) || 0, first: Number(v.first) || 0 };
+  } catch {
+    return { count: 0, first: 0 };
+  }
+}
+
+async function recordLoginFailure(supabase: SupabaseClient, key: string, current: { count: number; first: number }): Promise<void> {
+  const now = Math.floor(Date.now() / 1000);
+  const stillFresh = current.count > 0 && now - current.first < LOGIN_LOCKOUT_SECONDS;
+  const next = { first: stillFresh ? current.first : now, count: stillFresh ? current.count + 1 : 1 };
+  await supabase.from('kv_store').upsert({
+    namespace: CLOUD_NAMESPACE, key: 'login-attempts:' + key, value: JSON.stringify(next), updated_at: new Date().toISOString(),
+  }, { onConflict: 'namespace,key' });
+}
+
+async function clearLoginAttempts(supabase: SupabaseClient, key: string): Promise<void> {
+  await supabase.from('kv_store').delete().eq('namespace', CLOUD_NAMESPACE).eq('key', 'login-attempts:' + key);
+}
+
 async function purgeRatingsForPro(supabase: SupabaseClient, proEmail: string): Promise<void> {
   const { data } = await supabase
     .from('kv_store')
@@ -299,7 +348,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // action === 'login'
+    const loginAttempts = await getLoginAttempts(supabase, key);
+    const attemptsAge = Math.floor(Date.now() / 1000) - loginAttempts.first;
+    if (loginAttempts.count >= LOGIN_MAX_ATTEMPTS && attemptsAge < LOGIN_LOCKOUT_SECONDS) {
+      return jsonResponse({ error: 'Demasiados intentos fallidos. Prueba de nuevo en unos minutos.' }, 429);
+    }
+
     const respondOk = async () => {
+      await clearLoginAttempts(supabase, key);
       const token = sessionSecret ? await signToken(key, sessionSecret) : null;
       const { data: profileRow } = await supabase
         .from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', key).maybeSingle();
@@ -313,7 +369,10 @@ Deno.serve(async (req: Request) => {
     if (credRow) {
       const record = JSON.parse(credRow.value);
       const hash = await sha256Hex(password + '|' + record.passwordSalt);
-      if (hash !== record.passwordHash) return jsonResponse({ ok: false });
+      if (hash !== record.passwordHash) {
+        await recordLoginFailure(supabase, key, loginAttempts);
+        return jsonResponse({ ok: false });
+      }
       return await respondOk();
     }
 
@@ -324,7 +383,10 @@ Deno.serve(async (req: Request) => {
     const { data: profileRow, error: profileError } = await supabase
       .from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', key).maybeSingle();
     if (profileError) return jsonResponse({ error: 'No se pudo verificar la contraseña.' }, 500);
-    if (!profileRow) return jsonResponse({ ok: false });
+    if (!profileRow) {
+      await recordLoginFailure(supabase, key, loginAttempts);
+      return jsonResponse({ ok: false });
+    }
 
     const profile = JSON.parse(profileRow.value);
     if (!profile.passwordHash || !profile.passwordSalt) {
@@ -332,7 +394,10 @@ Deno.serve(async (req: Request) => {
     }
 
     const hash = await sha256Hex(password + '|' + profile.passwordSalt);
-    if (hash !== profile.passwordHash) return jsonResponse({ ok: false });
+    if (hash !== profile.passwordHash) {
+      await recordLoginFailure(supabase, key, loginAttempts);
+      return jsonResponse({ ok: false });
+    }
 
     const { error: migrateError } = await supabase.from('kv_store').upsert({
       namespace: CLOUD_NAMESPACE, key: credentialsKey,
@@ -408,12 +473,36 @@ Deno.serve(async (req: Request) => {
     // cliente (clientEmail queda null en ese caso, igual que antes). Si SÍ
     // hay sesión, se usa el email verificado — nunca el que venga en
     // payload.rating, para que nadie pueda firmar una reseña con el email
-    // de otro cliente.
+    // de otro cliente. El resto del objeto se reconstruye campo a campo
+    // (id incluido) en vez de aceptar lo que mande el cliente tal cual:
+    // sin esto, cualquiera sin sesión podía meter cualquier clave/valor
+    // arbitrario (incluido HTML/JS) en una reseña pública.
     const identity = await resolveIdentity(payload, sessionSecret, supabase);
     const clientEmail = (identity && (!identity.prefix || identity.prefix === 'client:')) ? identity.email : null;
     const rating = payload.rating;
     if (!rating || typeof rating !== 'object') return jsonResponse({ error: 'Falta la reseña.' }, 400);
-    const clean = { ...(rating as Record<string, unknown>), clientEmail };
+    const raw = rating as Record<string, unknown>;
+
+    const proEmail = String(raw.proEmail || '').toLowerCase();
+    if (!EMAIL_RE.test(proEmail)) return jsonResponse({ error: 'Profesional inválido.' }, 400);
+    const criteria = sanitizeRatingCriteria(raw.criteria);
+    if (Object.keys(criteria).length !== RATING_CRITERIA_KEYS.length) {
+      return jsonResponse({ error: 'Faltan criterios de la valoración.' }, 400);
+    }
+    const overall = RATING_CRITERIA_KEYS.reduce((s, k) => s + criteria[k], 0) / RATING_CRITERIA_KEYS.length;
+
+    const clean = {
+      id: 'rt' + Date.now() + Math.random().toString(36).slice(2, 8),
+      proEmail,
+      clientEmail,
+      clientName: String(raw.clientName || '').slice(0, 120),
+      criteria,
+      overall,
+      wouldRehire: raw.wouldRehire === true,
+      title: String(raw.title || '').slice(0, 200),
+      comment: String(raw.comment || '').slice(0, 2000),
+      createdAt: Date.now(),
+    };
 
     const { data } = await supabase
       .from('kv_store').select('value').eq('namespace', CLOUD_NAMESPACE).eq('key', 'ratings').maybeSingle();
