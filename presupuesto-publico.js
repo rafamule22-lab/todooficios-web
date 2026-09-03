@@ -84,9 +84,9 @@
   }
 
   function escapeHtml(str){
-    var d = document.createElement('div');
-    d.textContent = str || '';
-    return d.innerHTML;
+    return String(str || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
   }
 
   function fmtEUR(n){

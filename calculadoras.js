@@ -35,9 +35,9 @@
   }
   function must(cond, msg){ if(!cond) throw new Error(msg); }
   function escapeHtml(str){
-    var d = document.createElement('div');
-    d.textContent = str || '';
-    return d.innerHTML;
+    return String(str || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
   }
   function faseMul(tipo){ return tipo === 'trifasico' ? Math.sqrt(3) : (tipo === 'trifasico_ln' ? 1 : 2); }
 

@@ -2230,9 +2230,7 @@ function showToast(msg){
   window.__toastTimer = setTimeout(()=> t.classList.remove('show'), 2600);
 }
 function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
+  return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 /* Lista de materiales/alcance que el cliente dejó preparada en la
    Calculadora de reformas (calculadoras.js) antes de venir a buscar
