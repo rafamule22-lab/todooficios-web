@@ -125,6 +125,8 @@
     --c-envio:#B4407A;
     --c-agente:#C77C1E;
     --c-materiales:#6B6355;
+    /* Mismos acentos reutilizados por los iconos de la web pública (categorías de servicio, menú) para no crear una segunda paleta paralela */
+    --ic-oficios:#5C6B73;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -1210,19 +1212,19 @@
   <div class="side-drawer-body">
     <div class="drawer-primary">
       <a class="drawer-primary-item" href="javascript:void(0)" data-view="home">
-        <div class="m-ic" style="background:#141412;"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/></svg></div>
+        <div class="m-ic" style="background:var(--ink);"><svg viewBox="0 0 24 24"><path d="M4 11.5 12 4l8 7.5M6 10v9h12v-9"/></svg></div>
         <span>Inicio</span>
       </a>
       <a class="drawer-primary-item" href="javascript:void(0)" data-view="pro" id="drawerProTile">
-        <div class="m-ic" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
+        <div class="m-ic" style="background:var(--c-gastos);"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
         <span>Soy profesional</span>
       </a>
       <a class="drawer-primary-item" href="javascript:void(0)" data-view="buscar">
-        <div class="m-ic" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></div>
+        <div class="m-ic" style="background:var(--c-fiscal);"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg></div>
         <span>Buscar</span>
       </a>
       <a class="drawer-primary-item" href="javascript:void(0)" data-view="client" id="drawerClientTile">
-        <div class="m-ic" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
+        <div class="m-ic" style="background:var(--c-agenda);"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
         <span>Soy cliente</span>
       </a>
     </div>
@@ -1230,14 +1232,14 @@
     <div class="quick-group" id="drawerQuickGroup"></div>
 
     <a class="drawer-group-head" href="javascript:void(0)" data-view="app" style="text-decoration:none; color:inherit;">
-      <div class="m-ic" style="background:#7458C2;"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 18h8"/></svg></div>
+      <div class="m-ic" style="background:var(--c-presupuestos);"><svg viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M8 18h8"/></svg></div>
       <span class="drawer-label">App móvil</span>
       <span class="drawer-badge">Pronto</span>
     </a>
 
     <div class="drawer-group">
       <div class="drawer-group-head">
-        <div class="m-ic" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div>
+        <div class="m-ic" style="background:var(--c-agente);"><svg viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5-9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg></div>
         <span class="drawer-label">Cursos</span>
         <span class="chev">›</span>
       </div>
@@ -1249,7 +1251,7 @@
 
     <div class="drawer-group">
       <div class="drawer-group-head">
-        <div class="m-ic" style="background:#B4407A;"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
+        <div class="m-ic" style="background:var(--c-envio);"><svg viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></div>
         <span class="drawer-label">Noticias</span>
         <span class="chev">›</span>
       </div>
@@ -1260,18 +1262,18 @@
     </div>
 
     <a class="drawer-group-head" href="blog.html" style="text-decoration:none; color:inherit;">
-      <div class="m-ic" style="background:#3E5FBF;"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg></div>
+      <div class="m-ic" style="background:var(--c-clientes);"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg></div>
       <span class="drawer-label">Blog</span>
     </a>
 
     <a class="drawer-group-head" href="calculadoras.html" style="text-decoration:none; color:inherit;">
-      <div class="m-ic" style="background:#D9A400;"><svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01"/></svg></div>
+      <div class="m-ic" style="background:var(--amber-deep);"><svg viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01"/></svg></div>
       <span class="drawer-label">Calculadoras</span>
     </a>
 
     <div class="drawer-group">
       <div class="drawer-group-head">
-        <div class="m-ic" style="background:#5C6B73;"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg></div>
+        <div class="m-ic" style="background:var(--ic-oficios);"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg></div>
         <span class="drawer-label">Buscar por oficio</span>
         <span class="chev">›</span>
       </div>
@@ -1317,7 +1319,7 @@
   <div class="info-modal">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
-      <div class="ic-circle" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-gastos);"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
       <div><span class="eyebrow">Para profesionales</span><h2>Todo lo que ganas al darte de alta</h2></div>
     </div>
     <div class="info-modal-body">
@@ -1369,7 +1371,7 @@
   <div class="info-modal">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
-      <div class="ic-circle" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-fiscal);"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
       <div><span class="eyebrow">Ubicación real</span><h2>Por qué te mostramos primero a quien tienes cerca</h2></div>
     </div>
     <div class="info-modal-body">
@@ -1391,7 +1393,7 @@
   <div class="info-modal">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
-      <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-agente);"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
       <div><span class="eyebrow">Valoraciones honestas</span><h2>Qué se valora exactamente</h2></div>
     </div>
     <div class="info-modal-body">
@@ -1417,7 +1419,7 @@
   <div class="info-modal">
     <button class="info-modal-close" type="button" aria-label="Cerrar" data-modal-close>&times;</button>
     <div class="info-modal-head">
-      <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-agenda);"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
       <div><span class="eyebrow">Contacto directo</span><h2>Así hablas con el profesional</h2></div>
     </div>
     <div class="info-modal-body">
@@ -1452,13 +1454,13 @@
 
     <div class="section-heading">Servicios destacados</div>
     <div class="hex-strip" style="margin: 0 auto 24px auto;">
-      <div class="hex-item"><div class="hex-shape" style="background:#C05A3A;"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div><span>Fontanería</span></div>
-      <div class="hex-item"><div class="hex-shape" style="background:#C77C1E;"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><span>Electricidad</span></div>
-      <div class="hex-item"><div class="hex-shape" style="background:#1C7A8C;"><svg class="hex-icon" viewBox="0 0 24 24"><circle cx="12" cy="10" r="4.2"/><path d="M12 14v6M9 20h6"/></svg></div><span>Cerrajería</span></div>
-      <div class="hex-item"><div class="hex-shape" style="background:#B4407A;"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M20 4c-4 0-9 1-12.5 4.5S3 16 3 20c4 0 9-1 12.5-4.5S20 8 20 4Z"/><circle cx="8.5" cy="15.5" r="1.4"/></svg></div><span>Pintura</span></div>
-      <div class="hex-item"><div class="hex-shape" style="background:#7458C2;"><svg class="hex-icon" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg></div><span>Albañilería</span></div>
-      <div class="hex-item"><div class="hex-shape" style="background:#3E5FBF;"><svg class="hex-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M12 4v16M4 12h16"/></svg></div><span>Vidriería</span></div>
-      <div class="hex-item"><div class="hex-shape" style="background:#2E8F6E;"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M3 15l7-7 3 3-7 7-3-3z"/><path d="M13 8l3-3 5 5-3 3"/><circle cx="6.5" cy="17.5" r="1.4"/></svg></div><span>Carpintería</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-gastos);"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div><span>Fontanería</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-agente);"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div><span>Electricidad</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-fiscal);"><svg class="hex-icon" viewBox="0 0 24 24"><circle cx="12" cy="10" r="4.2"/><path d="M12 14v6M9 20h6"/></svg></div><span>Cerrajería</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-envio);"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M20 4c-4 0-9 1-12.5 4.5S3 16 3 20c4 0 9-1 12.5-4.5S20 8 20 4Z"/><circle cx="8.5" cy="15.5" r="1.4"/></svg></div><span>Pintura</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-presupuestos);"><svg class="hex-icon" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1"/><rect x="13" y="13" width="7.5" height="7.5" rx="1"/></svg></div><span>Albañilería</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-clientes);"><svg class="hex-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M12 4v16M4 12h16"/></svg></div><span>Vidriería</span></div>
+      <div class="hex-item"><div class="hex-shape" style="background:var(--c-agenda);"><svg class="hex-icon" viewBox="0 0 24 24"><path d="M3 15l7-7 3 3-7 7-3-3z"/><path d="M13 8l3-3 5 5-3 3"/><circle cx="6.5" cy="17.5" r="1.4"/></svg></div><span>Carpintería</span></div>
     </div>
 
     <div class="section-heading">Perfiles destacados</div>
@@ -1495,25 +1497,25 @@
     <div class="section-heading">Cómo funciona</div>
     <div class="how-grid-ic">
       <button type="button" class="how-card-ic" data-modal="m-como-pro">
-        <div class="ic-circle" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
+        <div class="ic-circle" style="background:var(--c-gastos);"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2 2.6-2.6z"/></svg></div>
         <h3>Para profesionales</h3>
         <p>Crea tu ficha en un minuto: tu oficio, tu experiencia y tu zona de trabajo. Los clientes cercanos te encuentran solos.</p>
         <span class="how-cta">Ver todo lo que incluye <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
       </button>
       <button type="button" class="how-card-ic" data-modal="m-como-loc">
-        <div class="ic-circle" style="background:#1C7A8C;"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
+        <div class="ic-circle" style="background:var(--c-fiscal);"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/></svg></div>
         <h3>Ubicación real</h3>
         <p>Compartimos tu ubicación aproximada para ordenar los resultados por cercanía — nunca la dirección exacta de nadie.</p>
         <span class="how-cta">Cómo se usa tu ubicación <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
       </button>
       <button type="button" class="how-card-ic" data-modal="m-como-rate">
-        <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
+        <div class="ic-circle" style="background:var(--c-agente);"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.9 6.3.6-4.7 4.4 1.3 6.4L12 17.1 6.4 20.3l1.3-6.4L3 9.5l6.3-.6L12 3z"/></svg></div>
         <h3>Valoraciones honestas</h3>
         <p>Cada cliente puede valorar el trabajo recibido. La reputación se construye trabajo a trabajo, no con publicidad.</p>
         <span class="how-cta">Qué se valora exactamente <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
       </button>
       <button type="button" class="how-card-ic" data-modal="m-como-contact">
-        <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
+        <div class="ic-circle" style="background:var(--c-agenda);"><svg viewBox="0 0 24 24"><path d="M4.5 4.5c1 4.5 3.3 8.8 7 12.5 3.7 3.7 8 6 12.5 7l.3-3.6c.1-1-.6-1.9-1.6-2.1l-3.2-.7a1.8 1.8 0 0 0-1.8.5l-1 1a13 13 0 0 1-6.8-6.8l1-1c.5-.5.7-1.2.5-1.8l-.7-3.2c-.2-1-1.1-1.7-2.1-1.6L4.5 4.5z"/></svg></div>
         <h3>Contacto directo</h3>
         <p>Sin intermediarios ni comisiones ocultas: hablas directamente con el profesional para acordar el trabajo.</p>
         <span class="how-cta">Cómo funciona el contacto <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
@@ -2259,6 +2261,28 @@ function waLink(phone, proName){
 const WA_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.28-1.38a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.86 9.86 0 0 0 12.04 2zm5.8 14.15c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.17-1.56-1.17-2.98 0-1.42.74-2.11 1-2.4.26-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.81 2 .88 2.15.07.15.12.32.02.51-.1.19-.15.31-.3.48-.15.17-.31.38-.44.51-.15.15-.3.31-.13.6.17.29.75 1.24 1.62 2 1.11.99 2.05 1.3 2.34 1.45.29.15.46.13.63-.05.17-.19.72-.84.92-1.13.19-.29.39-.24.65-.14.27.1 1.69.8 1.98.94.29.15.48.22.55.34.07.13.07.72-.17 1.4z"/></svg>';
 const MIC_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>';
 
+/* Iconos de acción en línea (botones, etiquetas de estado) — mismo lenguaje visual
+   que el resto del sitio (trazo, currentColor) en vez de emoji sueltos que cada
+   sistema operativo renderiza a su manera. Reutiliza paths ya usados en NG_ICONS
+   y en los iconos de categoría siempre que coinciden. */
+const ACTION_ICONS = {
+  trash: '<path d="M4 7h16M9 7V4.8c0-.4.4-.8.8-.8h4.4c.4 0 .8.4.8.8V7"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6M14 11v6"/>',
+  pin: '<path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.4"/>',
+  phone: '<path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.2c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+  doc: '<path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/>',
+  link: '<path d="M9 15l6-6"/><path d="M13 6.5l1-1a3.5 3.5 0 0 1 5 5l-1 1"/><path d="M11 17.5l-1 1a3.5 3.5 0 0 1-5-5l1-1"/>',
+  mail: '<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M4 6.5l8 6.5 8-6.5"/>',
+  refresh: '<path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/>',
+  camera: '<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.2"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/><circle cx="8.4" cy="13.6" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13.6" r="1" fill="currentColor" stroke="none"/><circle cx="15.6" cy="13.6" r="1" fill="currentColor" stroke="none"/>',
+  copy: '<rect x="8" y="8" width="12" height="12" rx="1.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>'
+};
+function actIco(name){
+  return `<svg viewBox="0 0 24 24" width="14" height="14" style="stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:4px;">${ACTION_ICONS[name]||''}</svg>`;
+}
+
 function compressImage(file, maxW=300){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
@@ -2938,7 +2962,7 @@ function renderNavAccountChips(){
           <span class="chev">›</span>
         </div>
         <div class="quick-item" data-view="pro">
-          <div class="m-ic" style="background:#C05A3A;"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
+          <div class="m-ic" style="background:var(--c-gastos);"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div>
           <div class="qi-text"><span class="qi-label">Mi ficha pública</span></div>
           <span class="chev">›</span>
         </div>`;
@@ -3092,7 +3116,7 @@ async function renderPro(){
         </div>
       </details>
       <div class="field">
-        <button type="button" class="btn btn-outline btn-sm" id="rg-locBtn">📍 Compartir mi ubicación</button>
+        <button type="button" class="btn btn-outline btn-sm" id="rg-locBtn">${actIco('pin')}Compartir mi ubicación</button>
         <div class="loc-status" id="rg-locStatus">Así apareces ordenado por cercanía. Es opcional.</div>
       </div>
       <button class="btn btn-primary btn-block" id="rg-submit">Publicar mi perfil</button>
@@ -3551,7 +3575,7 @@ function renderDashboard(){
           <h2 style="font-size:22px; margin:0;">${escapeHtml(account.name)}</h2>
           <span class="pro-oficio">${escapeHtml(account.oficio||'Sin oficio')}</span>
         </div>
-        <button type="button" class="edit-pill" id="dash-edit-btn">✎ Editar</button>
+        <button type="button" class="edit-pill" id="dash-edit-btn">${actIco('edit')}Editar</button>
         <div class="stamp ${stats.avg==null?'empty':''}">
           <span class="num">${stats.avg==null?'—':stats.avg.toFixed(1)}</span>
           <span class="lbl">${stats.count} reseña${stats.count===1?'':'s'}</span>
@@ -3559,8 +3583,8 @@ function renderDashboard(){
       </div>
       <div class="pro-desc">${escapeHtml(account.bio) || 'Todavía no agregaste una descripción.'}</div>
       <div class="pro-meta" style="margin-bottom:14px;">
-        ${account.zona ? `<span>📍 ${escapeHtml(account.zona)}</span>` : ''}
-        ${account.phone ? `<span>☎️ ${escapeHtml(account.phone)}</span>` : ''}
+        ${account.zona ? `<span>${actIco('pin')}${escapeHtml(account.zona)}</span>` : ''}
+        ${account.phone ? `<span>${actIco('phone')}${escapeHtml(account.phone)}</span>` : ''}
       </div>
       <div style="text-align:center;">
         <button type="button" class="muted-link" id="dash-view">Ver ficha completa y reseñas →</button>
@@ -3581,7 +3605,7 @@ function renderDashboard(){
   return `
   <div class="pro-dash">
   ${negocioBannerHTML}
-  <a href="javascript:void(0)" class="back-link" id="dash-back-to-ficha">← Volver a mi ficha</a>
+  <a href="javascript:void(0)" class="back-link" id="dash-back-to-ficha"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:4px;"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Volver a mi ficha</a>
   <div class="dash-head">
     ${account.photo ? `<img src="${account.photo}" alt="Foto de perfil de ${escapeHtml(account.name||'')}">` : `<div class="ph-fallback">${(account.name||'?').charAt(0)}</div>`}
     <div>
@@ -3633,7 +3657,7 @@ function renderDashboard(){
           </div>
         </details>
         <div class="field">
-          <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">📍 ${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
+          <button type="button" class="btn btn-outline btn-sm" id="dash-locBtn">${actIco('pin')}${account.lat?'Actualizar':'Compartir'} mi ubicación</button>
           <div class="loc-status ${account.lat?'ok':''}" id="dash-locStatus">${account.lat?'Ubicación activa para búsquedas por cercanía.':'Todavía no compartiste tu ubicación.'}</div>
         </div>
       </div>
@@ -3714,7 +3738,7 @@ function bindPro(){
             ${repliesHTML}
             ${m.clientEmail ? `
             <div class="pro-msg-reply-zone" style="margin-top:10px;">
-              <button type="button" class="btn btn-outline btn-sm pro-msg-reply-toggle">✉ ${replies.length ? 'Responder de nuevo' : 'Responder'}</button>
+              <button type="button" class="btn btn-outline btn-sm pro-msg-reply-toggle">${actIco('mail')}${replies.length ? 'Responder de nuevo' : 'Responder'}</button>
               <div class="pro-msg-reply-form" hidden>
                 <textarea class="pro-msg-reply-text" style="min-height:80px; margin-top:8px;" placeholder="Escribe tu respuesta..."></textarea>
                 <div style="display:flex; gap:8px; margin-top:8px;">
@@ -3825,7 +3849,7 @@ function bindPro(){
       const pos = await getPosition();
       if(pos){
         dashLoc = pos;
-        statusEl.textContent = '📍 Ubicación actualizada.';
+        statusEl.textContent = 'Ubicación actualizada.';
         statusEl.className = 'loc-status ok';
       } else {
         statusEl.textContent = 'No pudimos obtener tu ubicación.';
@@ -3919,7 +3943,7 @@ function bindPro(){
       const pos = await getPosition();
       if(pos){
         regLoc = pos;
-        statusEl.textContent = '📍 Ubicación compartida correctamente.';
+        statusEl.textContent = 'Ubicación compartida correctamente.';
         statusEl.className = 'loc-status ok';
       } else {
         statusEl.textContent = 'No pudimos obtener tu ubicación. Puedes registrarte igual con tu zona.';
@@ -4067,14 +4091,14 @@ function bindPro(){
 function clienteRowHTML(c){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(c.nombre)}</strong> <span class="badge">${escapeHtml(c.tipo||'Particular')}</span>${c.favorito?' <span class="badge ok">★ Habitual</span>':''}<br><span class="drow-meta">${escapeHtml(c.telefono||'Sin teléfono')}${c.email?' · '+escapeHtml(c.email):''}</span></div>
-    <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">🗑</button>
+    <button type="button" class="pp-mini-btn bad" data-del-cliente="${c.id}" title="Eliminar cliente">${actIco('trash')}</button>
   </div>`;
 }
 function gastoRowHTML(g){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(g.concepto || g.categoria)}</strong><br><span class="drow-meta">${formatDateES(g.fecha)} · ${escapeHtml(g.proveedor||'Sin proveedor')} · ${escapeHtml(g.categoria||'')}</span></div>
     <div class="drow-amount">${formatEUR(g.total)}</div>
-    <button type="button" class="pp-mini-btn bad" data-del-gasto="${g.id}" title="Eliminar gasto">🗑</button>
+    <button type="button" class="pp-mini-btn bad" data-del-gasto="${g.id}" title="Eliminar gasto">${actIco('trash')}</button>
   </div>`;
 }
 function googleCalendarUrl(c){
@@ -4111,8 +4135,8 @@ function googleCalendarUrl(c){
 function citaRowHTML(c){
   return `<div class="data-row">
     <div class="drow-main"><strong>${escapeHtml(c.tipoTrabajo||'Cita')}</strong> con ${escapeHtml(c.cliente||'cliente')}<br><span class="drow-meta">${formatDateES(c.fecha)}${c.horaInicio?' · '+c.horaInicio+(c.horaFin?'–'+c.horaFin:''):''}${c.direccion?' · '+escapeHtml(c.direccion):''}</span>
-    <div class="drow-row-actions"><a class="pp-mini-btn" href="${escapeHtml(googleCalendarUrl(c))}" target="_blank" rel="noopener noreferrer">📅 Añadir a Google Calendar</a></div></div>
-    <button type="button" class="pp-mini-btn bad" data-del-cita="${c.id}" title="Eliminar cita">🗑</button>
+    <div class="drow-row-actions"><a class="pp-mini-btn" href="${escapeHtml(googleCalendarUrl(c))}" target="_blank" rel="noopener noreferrer">${actIco('calendar')}Añadir a Google Calendar</a></div></div>
+    <button type="button" class="pp-mini-btn bad" data-del-cita="${c.id}" title="Eliminar cita">${actIco('trash')}</button>
   </div>`;
 }
 function presupuestoRowHTML(p){
@@ -4124,7 +4148,7 @@ function presupuestoRowHTML(p){
     <div class="drow-main">
       <strong>${escapeHtml(p.numero||'')}</strong> — ${escapeHtml(p.cliente)}${p.concepto?' · '+escapeHtml(p.concepto):''}<br>
       <span class="badge ${badgeClass}">${escapeHtml(p.estado||'Pendiente')}</span>
-      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">🔗 Compartir con el cliente</button>${p.clienteEmail?`<button type="button" class="pp-mini-btn" data-email-presupuesto="${p.id}">📧 Enviar por email</button>`:''}${p.clienteTelefono?`<button type="button" class="pp-mini-btn" data-whatsapp-presupuesto="${p.id}">${WA_ICON} Enviar por WhatsApp</button>`:''}<button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">✏️ Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">🗐 Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">🗑 Eliminar</button></div>
+      <div class="drow-row-actions">${acciones}<button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">${actIco('doc')}Ver / descargar PDF</button><button type="button" class="pp-mini-btn" data-share-presupuesto="${p.id}">${actIco('link')}Compartir con el cliente</button>${p.clienteEmail?`<button type="button" class="pp-mini-btn" data-email-presupuesto="${p.id}">${actIco('mail')}Enviar por email</button>`:''}${p.clienteTelefono?`<button type="button" class="pp-mini-btn" data-whatsapp-presupuesto="${p.id}">${WA_ICON} Enviar por WhatsApp</button>`:''}<button type="button" class="pp-mini-btn" data-edit-presupuesto="${p.id}">${actIco('edit')}Editar</button><button type="button" class="pp-mini-btn" data-dup-presupuesto="${p.id}">${actIco('copy')}Duplicar</button><button type="button" class="pp-mini-btn bad" data-del-presupuesto="${p.id}">${actIco('trash')}Eliminar</button></div>
     </div>
     <div class="drow-amount">${formatEUR(p.total)}</div>
   </div>`;
@@ -4134,7 +4158,7 @@ function materialRowHTML(m){
     <div class="mat-ic">${NG_ICONS.materiales}</div>
     <div class="mat-info"><strong>${escapeHtml(m.nombre)}</strong><span>${escapeHtml(m.unidad)}</span></div>
     <div class="mat-price">${formatEUR(m.precio)}</div>
-    <button type="button" class="pp-mini-btn bad" data-del-material="${m.id}">🗑 Eliminar</button>
+    <button type="button" class="pp-mini-btn bad" data-del-material="${m.id}">${actIco('trash')}Eliminar</button>
   </div>`;
 }
 
@@ -4660,7 +4684,7 @@ async function renderNegocio(){
       <details class="ng-add">
         <summary>Añadir gasto</summary>
         <div class="ng-add-body">
-          <button type="button" class="btn btn-outline btn-block file-btn" id="ng-gas-scan-btn">📷 Escanear factura (rellena los datos solo)
+          <button type="button" class="btn btn-outline btn-block file-btn" id="ng-gas-scan-btn">${actIco('camera')}Escanear factura (rellena los datos solo)
             <input type="file" accept="image/*" capture="environment" id="ng-gas-foto">
           </button>
           <div id="ng-gas-scan-msg"></div>
@@ -4716,10 +4740,10 @@ async function renderNegocio(){
       <div class="pp-stale-banner">
         <strong>${presupuestosSinRespuesta.length} presupuesto${presupuestosSinRespuesta.length>1?'s':''} sin respuesta desde hace 5 días o más</strong>
         <div class="pp-stale-list">
-          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">📄 Reenviar PDF</button></span>`).join('')}
+          ${presupuestosSinRespuesta.map(p=>`<span>${escapeHtml(p.numero)} — ${escapeHtml(p.cliente)} (${diasSinRespuesta(p.fecha)} días) <button type="button" class="pp-mini-btn" data-pdf-id="${p.id}">${actIco('doc')}Reenviar PDF</button></span>`).join('')}
         </div>
       </div>` : ''}
-      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">🔄 Comprobar si algún cliente respondió</button>` : ''}
+      ${negocio.presupuestos.some(p=>p.shareId) ? `<button type="button" class="btn btn-outline btn-sm" id="pp-check-respuestas" style="margin-bottom:12px;">${actIco('refresh')}Comprobar si algún cliente respondió</button>` : ''}
       ${negocio.presupuestos.length > 3 ? `<input type="text" id="pp-filtro" class="pp-filtro-input" placeholder="Buscar por cliente, número o estado…">` : ''}
       <div id="negocio-presupuestos-list">${presupuestosPendientes.length ? presupuestosPendientes.slice().reverse().map(presupuestoRowHTML).join('') : (negocio.presupuestos.length ? '<div class="empty-state">No tienes presupuestos pendientes de respuesta.</div>' : '<div class="empty-state">Todavía no registraste presupuestos.</div>')}</div>
       ${presupuestosCerrados.length ? `
@@ -5228,7 +5252,7 @@ function bindNegocio(){
       const yaExistia = !!p.shareId;
       const shareId = await publicarPresupuesto(p);
       shareBtn.disabled = false;
-      shareBtn.textContent = '🔗 Compartir con el cliente';
+      shareBtn.innerHTML = `${actIco('link')}Compartir con el cliente`;
       if(!shareId){ showToast('No se pudo generar el enlace. Inténtalo de nuevo.'); return; }
       if(!yaExistia) await saveNegocio(account.email, negocio);
       const url = `${location.origin}${location.pathname.replace(/[^/]*$/,'')}presupuesto-publico.html?id=${shareId}`;
@@ -5263,7 +5287,7 @@ function bindNegocio(){
       }
       if(cambios) await saveNegocio(account.email, negocio);
       checkRespuestasBtn.disabled = false;
-      checkRespuestasBtn.textContent = '🔄 Comprobar si algún cliente respondió';
+      checkRespuestasBtn.innerHTML = `${actIco('refresh')}Comprobar si algún cliente respondió`;
       showToast(cambios ? `${cambios} presupuesto${cambios>1?'s':''} actualizado${cambios>1?'s':''}.` : 'Sin novedades por ahora.');
       if(cambios) showView('negocio');
     };
@@ -5774,7 +5798,7 @@ function bindPresupuestoForm(){
     negocioEditPresupuestoId = null;
 
     const accionesEnvio = [
-      clienteEmail ? `<button type="button" class="pp-mini-btn" data-quick-email="${presupuestoFinal.id}">📧 Enviar por email</button>` : '',
+      clienteEmail ? `<button type="button" class="pp-mini-btn" data-quick-email="${presupuestoFinal.id}">${actIco('mail')}Enviar por email</button>` : '',
       clienteTelefono ? `<button type="button" class="pp-mini-btn" data-quick-wa="${presupuestoFinal.id}">${WA_ICON} Enviar por WhatsApp</button>` : ''
     ].filter(Boolean).join('');
     msgBox.innerHTML = `<div class="msg ok">
@@ -5810,22 +5834,22 @@ function renderApp(){
   <div class="section-heading">Qué encontrarás cuando llegue</div>
   <div class="how-grid-ic">
     <div class="how-card-ic">
-      <div class="ic-circle" style="background:#C77C1E;"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-agente);"><svg viewBox="0 0 24 24"><rect x="5" y="3.5" width="14" height="17" rx="2"/><rect x="7.5" y="6" width="9" height="3.2" rx="0.6"/><circle cx="8.3" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="13" r="1" fill="currentColor" stroke="none"/><circle cx="8.3" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none"/><circle cx="15.7" cy="16.5" r="1" fill="currentColor" stroke="none"/></svg></div>
       <h3>Más de 90 calculadoras</h3>
       <p>Pintura, pladur, azulejos, hormigón, electricidad (ley de Ohm, sección de cable...), fontanería y geometría — ya disponibles hoy en la web, sin necesidad de cuenta de la app.</p>
     </div>
     <div class="how-card-ic">
-      <div class="ic-circle" style="background:#3E5FBF;"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17.5v-10z"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-clientes);"><svg viewBox="0 0 24 24"><path d="M3.5 7.5a1.5 1.5 0 0 1 1.5-1.5h4l2 2h8a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H5A1.5 1.5 0 0 1 3.5 17.5v-10z"/></svg></div>
       <h3>Mis proyectos</h3>
       <p>Ya puedes ir guardando partidas de varias calculadoras distintas para el mismo trabajo — se acumulan en un indicador en la barra superior de Calculadoras hasta que las uses todas juntas en un presupuesto.</p>
     </div>
     <div class="how-card-ic">
-      <div class="ic-circle" style="background:#7458C2;"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-presupuestos);"><svg viewBox="0 0 24 24"><path d="M7 3.2h6.8l3.6 3.6v14H7z"/><path d="M13.8 3.2v3.6h3.6"/><path d="M9.3 12h5.4M9.3 15.2h5.4M9.3 18.4h3.2"/></svg></div>
       <h3>Presupuesto en PDF</h3>
       <p>Ya puedes generarlo desde tu Panel de negocio: con tus datos fiscales, IVA y listo para compartir por WhatsApp o correo.</p>
     </div>
     <div class="how-card-ic">
-      <div class="ic-circle" style="background:#2E8F6E;"><svg viewBox="0 0 24 24"><path d="M4 12h13M12 6l7 6-7 6"/></svg></div>
+      <div class="ic-circle" style="background:var(--c-agenda);"><svg viewBox="0 0 24 24"><path d="M4 12h13M12 6l7 6-7 6"/></svg></div>
       <h3>De la calculadora al presupuesto</h3>
       <p>Desde cualquier calculadora, pulsa "Añadir a un presupuesto" y esa partida te espera lista para usar en tu Panel de negocio. Pruébalo ya en las calculadoras de la web.</p>
     </div>
@@ -5887,7 +5911,7 @@ function proCardHTML(p){
     </div>
     <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
     <div class="pro-meta">
-      <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
+      <span>${actIco('pin')}${escapeHtml(p.zona) || 'Sin zona'}</span>
       ${dist != null ? `<span class="distance-tag">≈ ${dist.toFixed(1)} km</span>` : ''}
       ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
       ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
@@ -5928,7 +5952,7 @@ async function renderBuscar(){
       <div class="search-combo" id="searchCombo">
         <div style="display:flex; gap:6px;">
           <div class="search-input-wrap">
-            <span class="search-icon" aria-hidden="true">🔍</span>
+            <span class="search-icon" aria-hidden="true">${actIco('search')}</span>
             <input type="text" id="sf-text" placeholder="Ej. electricista Chamberí" autocomplete="off" style="width:100%;">
           </div>
           <button type="button" class="btn btn-outline btn-sm" id="voiceSearchBtn" title="Buscar por voz" style="display:none; flex:0 0 auto; width:auto; padding:10px 14px;">${MIC_ICON}</button>
@@ -5938,7 +5962,7 @@ async function renderBuscar(){
     </div>
     <div class="field" style="flex:0 0 auto;">
       <label>&nbsp;</label>
-      <button class="btn btn-outline btn-sm" id="locBtn">📍 Ordenar por cercanía</button>
+      <button class="btn btn-outline btn-sm" id="locBtn">${actIco('pin')}Ordenar por cercanía</button>
     </div>
   </div>
   <div class="loc-status" id="clientLocStatus" style="margin:-8px 0 20px;">${myLoc ? 'Ubicación activa — mostrando los más cercanos primero.' : 'Comparte tu ubicación para ver quién está más cerca.'}</div>
@@ -6042,7 +6066,7 @@ function bindBuscar(){
     const pos = await getPosition();
     if(pos){
       myLoc = pos;
-      statusEl.textContent = '📍 Ubicación activa — mostrando los más cercanos primero.';
+      statusEl.textContent = 'Ubicación activa — mostrando los más cercanos primero.';
       statusEl.className = 'loc-status ok';
       doFilter();
     } else {
@@ -6076,7 +6100,7 @@ async function renderDetalle(){
   window.__currentDetailPro = p;
 
   return `
-  <a href="javascript:void(0)" class="back-link" data-view="buscar">← Volver a la búsqueda</a>
+  <a href="javascript:void(0)" class="back-link" data-view="buscar"><svg viewBox="0 0 24 24" width="13" height="13" style="stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;vertical-align:-2px;margin-right:4px;"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Volver a la búsqueda</a>
   <div class="ticket ticket-split" style="margin-bottom:26px;">
     <div class="ticket-main">
       <div class="ticket-top">
@@ -6088,8 +6112,8 @@ async function renderDetalle(){
       </div>
       <div class="pro-desc">${escapeHtml(p.bio) || 'Este profesional todavía no agregó una descripción.'}</div>
       <div class="pro-meta">
-        <span>📍 ${escapeHtml(p.zona) || 'Sin zona'}</span>
-        ${clientSession && p.phone ? `<span>☎️ ${escapeHtml(p.phone)}</span>` : ''}
+        <span>${actIco('pin')}${escapeHtml(p.zona) || 'Sin zona'}</span>
+        ${clientSession && p.phone ? `<span>${actIco('phone')}${escapeHtml(p.phone)}</span>` : ''}
         ${p.featuredUntil && p.featuredUntil > Date.now() ? '<span class="featured-tag">★ Destacado</span>' : ''}
         ${p.verificado ? '<span class="verified-tag">✓ Verificado</span>' : ''}
       </div>
