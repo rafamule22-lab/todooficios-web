@@ -2810,15 +2810,15 @@
     elHome.innerHTML = html;
     Array.prototype.forEach.call(elHome.querySelectorAll('[data-oficio]'), function(node){
       node.addEventListener('click', function(){ goToOficio(node.getAttribute('data-oficio')); });
-      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToOficio(node.getAttribute('data-oficio')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToOficio(node.getAttribute('data-oficio')); } });
     });
     Array.prototype.forEach.call(elHome.querySelectorAll('[data-cat]'), function(node){
       node.addEventListener('click', function(){ goToCategory(node.getAttribute('data-cat')); });
-      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCategory(node.getAttribute('data-cat')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToCategory(node.getAttribute('data-cat')); } });
     });
     Array.prototype.forEach.call(elHome.querySelectorAll('[data-calc]'), function(node){
       node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
-      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToCalculadora(node.getAttribute('data-calc')); } });
     });
     attachFavStarHandlers(elHome, renderHome);
   }
@@ -2891,7 +2891,7 @@
     }
     Array.prototype.forEach.call(elOfc.querySelectorAll('[data-calc]'), function(node){
       node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
-      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToCalculadora(node.getAttribute('data-calc')); } });
     });
     attachFavStarHandlers(elOfc, function(){ renderOficio(oficioId, oficioActualTab); });
   }
@@ -2914,7 +2914,7 @@
     elCat.innerHTML = html;
     Array.prototype.forEach.call(elCat.querySelectorAll('[data-calc]'), function(node){
       node.addEventListener('click', function(){ goToCalculadora(node.getAttribute('data-calc')); });
-      node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToCalculadora(node.getAttribute('data-calc')); });
+      node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToCalculadora(node.getAttribute('data-calc')); } });
     });
     attachFavStarHandlers(elCat, function(){ renderCategoria(catId); });
   }

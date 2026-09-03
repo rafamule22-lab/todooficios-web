@@ -123,7 +123,7 @@
         elListBody.innerHTML = '<div class="blog-list">' + posts.map(cardHTML).join('') + '</div>';
         Array.prototype.forEach.call(elListBody.querySelectorAll('[data-slug]'), function(node){
           node.addEventListener('click', function(){ goToArticle(node.getAttribute('data-slug')); });
-          node.addEventListener('keydown', function(e){ if(e.key === 'Enter') goToArticle(node.getAttribute('data-slug')); });
+          node.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); goToArticle(node.getAttribute('data-slug')); } });
         });
       }
 
